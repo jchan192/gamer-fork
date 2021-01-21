@@ -1523,6 +1523,8 @@ void Check_SymConst( const char *FileName, const int FormatVersion )
    LoadField( "Flu_NIn",              &RS.Flu_NIn,              SID, TID, NonFatal, &RT.Flu_NIn,               1, NonFatal );
    LoadField( "Flu_NOut",             &RS.Flu_NOut,             SID, TID, NonFatal, &RT.Flu_NOut,              1, NonFatal );
    LoadField( "Flu_NIn_T",            &RS.Flu_NIn_T,            SID, TID, NonFatal, &RT.Flu_NIn_T,             1, NonFatal );
+   LoadField( "Flu_NIn_S",            &RS.Flu_NIn_S,            SID, TID, NonFatal, &RT.Flu_NIn_S,             1, NonFatal );
+   LoadField( "Flu_NOut_S",           &RS.Flu_NOut_S,           SID, TID, NonFatal, &RT.Flu_NOut_S,            1, NonFatal );
    LoadField( "NFluxFluid",           &RS.NFluxFluid,           SID, TID, NonFatal, &RT.NFluxFluid,            1, NonFatal );
    LoadField( "NFluxPassive",         &RS.NFluxPassive,         SID, TID, NonFatal, &RT.NFluxPassive,          1, NonFatal );
    LoadField( "Flu_GhostSize",        &RS.Flu_GhostSize,        SID, TID, NonFatal, &RT.Flu_GhostSize,         1, NonFatal );
@@ -1624,6 +1626,11 @@ void Check_SymConst( const char *FileName, const int FormatVersion )
    LoadField( "dt_Gra_BlockSize",     &RS.dt_Gra_BlockSize,     SID, TID, NonFatal, &RT.dt_Gra_BlockSize,      1, NonFatal );
    LoadField( "dt_Gra_UseShuffle",    &RS.dt_Gra_UseShuffle,    SID, TID, NonFatal, &RT.dt_Gra_UseShuffle,     1, NonFatal );
 #  endif
+
+   LoadField( "Src_BlockSize",        &RS.Src_BlockSize,        SID, TID, NonFatal, &RT.Src_BlockSize,         1, NonFatal );
+   LoadField( "Src_GhostSize",        &RS.Src_GhostSize,        SID, TID, NonFatal, &RT.Src_GhostSize,         1, NonFatal );
+   LoadField( "Src_NAuxDlep",         &RS.Src_NAuxDlep,         SID, TID, NonFatal, &RT.Src_NAuxDlep,          1, NonFatal );
+   LoadField( "Src_NAuxUser",         &RS.Src_NAuxUser,         SID, TID, NonFatal, &RT.Src_NAuxUser,          1, NonFatal );
 
 
 // 5. close all objects
@@ -1900,6 +1907,11 @@ void Check_InputPara( const char *FileName, const int FormatVersion )
    LoadField( "GREP_MaxRadius",          &RS.GREP_MaxRadius,          SID, TID, NonFatal, &RT.GREP_MaxRadius,           1, NonFatal );
    LoadField( "GREP_MinBinSize",         &RS.GREP_MinBinSize,         SID, TID, NonFatal, &RT.GREP_MinBinSize,          1, NonFatal );
 #  endif // #ifdef GRAVITY
+
+// source terms
+   LoadField( "Src_Deleptonization",     &RS.Src_Deleptonization,     SID, TID, NonFatal, &RT.Src_Deleptonization,      1, NonFatal );
+   LoadField( "Src_User",                &RS.Src_User,                SID, TID, NonFatal, &RT.Src_User,                 1, NonFatal );
+   LoadField( "Src_GPU_NPGroup",         &RS.Src_GPU_NPGroup,         SID, TID, NonFatal, &RT.Src_GPU_NPGroup,          1, NonFatal );
 
 // Grackle
 #  ifdef SUPPORT_GRACKLE
