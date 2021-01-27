@@ -33,6 +33,13 @@ SET_GLOBAL( __constant__ double c_GREP_Lv_Data_New  [EXT_POT_GREP_NAUX_MAX] );
 SET_GLOBAL( __constant__ double c_GREP_Lv_Radius_New[EXT_POT_GREP_NAUX_MAX] );
 SET_GLOBAL( __constant__ int    c_GREP_Lv_NBin_New                          );
 
+#if ( MODEL == HYDRO )
+SET_GLOBAL( __constant__ double c_Src_Dlep_AuxArray_Flt[SRC_NAUX_DLEP] );
+SET_GLOBAL( __constant__ int    c_Src_Dlep_AuxArray_Int[SRC_NAUX_DLEP] );
+#endif
+SET_GLOBAL( __constant__ double c_Src_User_AuxArray_Flt[SRC_NAUX_USER] );
+SET_GLOBAL( __constant__ int    c_Src_User_AuxArray_Int[SRC_NAUX_USER] );
+
 
 
 #endif // #ifndef __CUDA_CONSTMEMORY_H__

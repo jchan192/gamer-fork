@@ -70,7 +70,6 @@ extern bool       OPT__CK_CONSERVATION, OPT__RESET_FLUID, OPT__RECORD_USER, OPT_
 extern bool       OPT__OPTIMIZE_AGGRESSIVE, OPT__INIT_GRID_WITH_OMP, OPT__NO_FLAG_NEAR_BOUNDARY;
 extern bool       OPT__RECORD_NOTE, OPT__RECORD_UNPHY, INT_OPP_SIGN_0TH_ORDER;
 
-extern SrcTerms_t         SRC_TERMS;
 extern UM_IC_Format_t     OPT__UM_IC_FORMAT;
 extern TestProbID_t       TESTPROB_ID;
 extern OptInit_t          OPT__INIT;
@@ -261,6 +260,16 @@ extern double GREP_MAXRADIUS;
 extern double GREP_MINBINSIZE;
 
 
+// (2-11) source terms
+// =======================================================================================================
+extern SrcTerms_t SrcTerms;
+#if ( MODEL == HYDRO )
+extern double     Src_Dlep_AuxArray_Flt[SRC_NAUX_DLEP];
+extern int        Src_Dlep_AuxArray_Int[SRC_NAUX_DLEP];
+#endif
+extern double     Src_User_AuxArray_Flt[SRC_NAUX_USER];
+extern int        Src_User_AuxArray_Int[SRC_NAUX_USER];
+
 
 
 // 3. CPU (host) arrays for transferring data between CPU and GPU
@@ -327,6 +336,10 @@ extern real       (*h_Flu_Array_S_Out[2])[FLU_NOUT_S][ CUBE(PS1)               ]
 extern real       (*h_Mag_Array_S_In [2])[NCOMP_MAG ][ SRC_NXT_P1*SQR(SRC_NXT) ];
 #endif
 extern double     (*h_Corner_Array_S[2])[3];
+#if ( MODEL == HYDRO )
+extern real       (*h_SrcDlepProf_Data)[SRC_DLEP_PROF_NBINMAX];
+extern real        *h_SrcDlepProf_Radius;
+#endif
 
 
 

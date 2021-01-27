@@ -573,9 +573,11 @@ void Aux_TakeNote()
 #     ifdef GRAVITY
       fprintf( Note, "#define EXT_POT_NAUX_MAX        %d\n",      EXT_POT_NAUX_MAX      );
       fprintf( Note, "#define EXT_ACC_NAUX_MAX        %d\n",      EXT_ACC_NAUX_MAX      );
-      fprintf( Note, "EXT_POT_GREP_NAUX_MAX           %d\n",      EXT_POT_GREP_NAUX_MAX );
+      fprintf( Note, "#define EXT_POT_GREP_NAUX_MAX   %d\n",      EXT_POT_GREP_NAUX_MAX );
 #     endif
       fprintf( Note, "#define SRC_NAUX_DLEP           %d\n",      SRC_NAUX_DLEP         );
+      fprintf( Note, "#define SRC_DLEP_PROF_NVAR      %d\n",      SRC_DLEP_PROF_NVAR    );
+      fprintf( Note, "#define SRC_DLEP_PROF_NBINMAX   %d\n",      SRC_DLEP_PROF_NBINMAX );
       fprintf( Note, "#define SRC_NAUX_USER           %d\n",      SRC_NAUX_USER         );
 #     ifdef GPU
       fprintf( Note, "#define FLU_BLOCK_SIZE_X        %d\n",      FLU_BLOCK_SIZE_X      );
@@ -848,9 +850,9 @@ void Aux_TakeNote()
 //    record the parameters of source terms
       fprintf( Note, "Parameters of Source Terms\n" );
       fprintf( Note, "***********************************************************************************\n" );
-      fprintf( Note, "SRC_ANY                         %d\n",      SRC_TERMS.Any             );
-      fprintf( Note, "SRC_DELEPTONIZATION             %d\n",      SRC_TERMS.Deleptonization );
-      fprintf( Note, "SRC_USER                        %d\n",      SRC_TERMS.User            );
+      fprintf( Note, "SRC_ANY                         %d\n",      SrcTerms.Any              );
+      fprintf( Note, "SRC_DELEPTONIZATION             %d\n",      SrcTerms.Deleptonization  );
+      fprintf( Note, "SRC_USER                        %d\n",      SrcTerms.User             );
       fprintf( Note, "SRC_GPU_NPGROUP                 %d\n",      SRC_GPU_NPGROUP           );
       fprintf( Note, "***********************************************************************************\n" );
       fprintf( Note, "\n\n");

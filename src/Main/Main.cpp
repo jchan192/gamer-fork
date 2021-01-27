@@ -64,7 +64,6 @@ bool                 OPT__CK_CONSERVATION, OPT__RESET_FLUID, OPT__RECORD_USER, O
 bool                 OPT__OPTIMIZE_AGGRESSIVE, OPT__INIT_GRID_WITH_OMP, OPT__NO_FLAG_NEAR_BOUNDARY;
 bool                 OPT__RECORD_NOTE, OPT__RECORD_UNPHY, INT_OPP_SIGN_0TH_ORDER;
 
-SrcTerms_t           SRC_TERMS;
 UM_IC_Format_t       OPT__UM_IC_FORMAT;
 TestProbID_t         TESTPROB_ID;
 OptInit_t            OPT__INIT;
@@ -244,6 +243,15 @@ double GREP_LOGBINRATIO;
 double GREP_MAXRADIUS;
 double GREP_MINBINSIZE;
 
+// (2-11) source terms
+SrcTerms_t SrcTerms;
+#if ( MODEL == HYDRO )
+double     Src_Dlep_AuxArray_Flt[SRC_NAUX_DLEP];
+int        Src_Dlep_AuxArray_Int[SRC_NAUX_DLEP];
+#endif
+double     Src_User_AuxArray_Flt[SRC_NAUX_USER];
+int        Src_User_AuxArray_Int[SRC_NAUX_USER];
+
 
 // 3. CPU (host) arrays for transferring data between CPU and GPU
 // =======================================================================================================
@@ -323,6 +331,10 @@ real (*h_Flu_Array_S_Out[2])[FLU_NOUT_S][ CUBE(PS1)      ]         = { NULL, NUL
 real (*h_Mag_Array_S_In [2])[NCOMP_MAG][ SRC_NXT_P1*SQR(SRC_NXT) ] = { NULL, NULL };
 #endif
 double (*h_Corner_Array_S[2])[3]                                   = { NULL, NULL };
+#if ( MODEL == HYDRO )
+real (*h_SrcDlepProf_Data)[SRC_DLEP_PROF_NBINMAX]                  = NULL;
+real  *h_SrcDlepProf_Radius                                        = NULL;
+#endif
 
 
 // 4. GPU (device) global memory arrays
@@ -399,6 +411,10 @@ real (*d_Flu_Array_S_Out)[FLU_NOUT_S][ CUBE(PS1)      ]            = NULL;
 real (*d_Mag_Array_S_In)[NCOMP_MAG  ][ SRC_NXT_P1*SQR(SRC_NXT) ]   = NULL;
 #endif
 double (*d_Corner_Array_S)[3]                                      = NULL;
+#if ( MODEL == HYDRO )
+real (*d_SrcDlepProf_Data)[SRC_DLEP_PROF_NBINMAX]                  = NULL;
+real  *d_SrcDlepProf_Radius                                        = NULL;
+#endif
 
 #endif // #ifdef GPU
 
