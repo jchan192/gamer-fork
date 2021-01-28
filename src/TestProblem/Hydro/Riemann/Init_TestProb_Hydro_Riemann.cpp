@@ -280,6 +280,9 @@ void SetParameter()
 
 #  ifdef MHD
    if (  (int)Riemann_Prob != RJ2A  &&  (int)Riemann_Prob != TORRILHON  &&  (int)Riemann_Prob != BRIO_WU  )
+#  if ( EOS == EOS_NUCLEAR )
+   if (  (int)Riemann_Prob != NUCLEAR1  &&  (int)Riemann_Prob != NUCLEAR2  )
+#  endif
       Aux_Message( stderr, "WARNING : B field is zero in the %s Riemann problem (Riemann_Prob = %d) !!\n",
                    Riemann_Name, Riemann_Prob );
 #  endif
