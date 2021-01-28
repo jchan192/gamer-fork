@@ -153,13 +153,15 @@ bool Nuc_Overflow( const real x )
 //                Passive_Code : Passive scalars             (in code unit)
 //                AuxArray_*   : Auxiliary arrays (see the Note above)
 //                Table        : EoS tables
+//                ExtraInOut   : Array to store extra input and output variables if required
+//                               --> Optional and only used when it is not NULL
 //
 // Return      :  Gas pressure (in code unit)
 //-------------------------------------------------------------------------------------------------------
 GPU_DEVICE_NOINLINE
 static real EoS_DensEint2Pres_Nuclear( const real Dens_Code, const real Eint_Code, const real Passive_Code[],
                                        const double AuxArray_Flt[], const int AuxArray_Int[],
-                                       const real *const Table[EOS_NTABLE_MAX] )
+                                       const real *const Table[EOS_NTABLE_MAX], real ExtraInOut[] )
 {
 
 // check
@@ -245,6 +247,15 @@ static real EoS_DensEint2Pres_Nuclear( const real Dens_Code, const real Eint_Cod
 #  endif // GAMER_DEBUG
 
 
+// store extra output variables if required
+   /*
+   if ( ExtraInOut != NULL )
+   {
+      ExtraInOut[...] = ...;
+   }
+   */
+
+
    return Pres_Code;
 
 } // FUNCTION : EoS_DensEint2Pres_Nuclear
@@ -262,13 +273,15 @@ static real EoS_DensEint2Pres_Nuclear( const real Dens_Code, const real Eint_Cod
 //                Passive_Code : Passive scalars  (in code unit)
 //                AuxArray_*   : Auxiliary arrays (see the Note above)
 //                Table        : EoS tables
+//                ExtraInOut   : Array to store extra input and output variables if required
+//                               --> Optional and only used when it is not NULL
 //
 // Return      :  Gas internal energy density (in code unit)
 //-------------------------------------------------------------------------------------------------------
 GPU_DEVICE_NOINLINE
 static real EoS_DensPres2Eint_Nuclear( const real Dens_Code, const real Pres_Code, const real Passive_Code[],
                                        const double AuxArray_Flt[], const int AuxArray_Int[],
-                                       const real *const Table[EOS_NTABLE_MAX] )
+                                       const real *const Table[EOS_NTABLE_MAX], real ExtraInOut[] )
 {
 
 // check
@@ -355,6 +368,15 @@ static real EoS_DensPres2Eint_Nuclear( const real Dens_Code, const real Pres_Cod
 #  endif // GAMER_DEBUG
 
 
+// store extra output variables if required
+   /*
+   if ( ExtraInOut != NULL )
+   {
+      ExtraInOut[...] = ...;
+   }
+   */
+
+
    return Eint_Code;
 
 } // FUNCTION : EoS_DensPres2Eint_Nuclear
@@ -372,13 +394,15 @@ static real EoS_DensPres2Eint_Nuclear( const real Dens_Code, const real Pres_Cod
 //                Passive_Code : Passive scalars  (in code unit)
 //                AuxArray_*   : Auxiliary arrays (see the Note above)
 //                Table        : EoS tables
+//                ExtraInOut   : Array to store extra input and output variables if required
+//                               --> Optional and only used when it is not NULL
 //
 // Return      :  Sound speed square (in code unit)
 //-------------------------------------------------------------------------------------------------------
 GPU_DEVICE_NOINLINE
 static real EoS_DensPres2CSqr_Nuclear( const real Dens_Code, const real Pres_Code, const real Passive_Code[],
                                        const double AuxArray_Flt[], const int AuxArray_Int[],
-                                       const real *const Table[EOS_NTABLE_MAX] )
+                                       const real *const Table[EOS_NTABLE_MAX], real ExtraInOut[] )
 {
 
 // check
@@ -461,6 +485,15 @@ static real EoS_DensPres2CSqr_Nuclear( const real Dens_Code, const real Pres_Cod
       printf( "        EoS error code: %d\n", Err );
    }
 #  endif // GAMER_DEBUG
+
+
+// store extra output variables if required
+   /*
+   if ( ExtraInOut != NULL )
+   {
+      ExtraInOut[...] = ...;
+   }
+   */
 
 
    return Cs2_Code;
