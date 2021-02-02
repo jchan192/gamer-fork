@@ -198,7 +198,7 @@ static real EoS_DensPres2CSqr_Isothermal( const real Dens, const real Pres, cons
 //                3. Useless for this EoS
 //
 // Parameter   :  Mode       : To support multiple modes in this general converter
-//                           : Output array
+//                Out        : Output array
 //                In         : Input array
 //                AuxArray_* : Auxiliary arrays (see the Note above)
 //                Table      : EoS tables
