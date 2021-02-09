@@ -209,6 +209,7 @@ struct SymConst_t
    int    ExtPotNAuxMax;
    int    ExtAccNAuxMax;
    int    ExtPotGREPNAuxMax;
+   int    ExtPotNGeneMax;
 
 #  if   ( POT_SCHEME == SOR )
    int    Pot_BlockSize_z;
