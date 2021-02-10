@@ -15,7 +15,7 @@
 extern void **d_ExtPotGenePtr;
 extern real  *d_ExtPotGREP;
 
-#else // #ifdef __CUDACC__ ... else ...
+#else // #ifdef __CUDACC__
 
 extern Profile_t *DensAve [NLEVEL+1][2];
 extern Profile_t *EngyAve [NLEVEL+1][2];
@@ -33,7 +33,7 @@ extern double GREP_Prof_MinBinSize;
 extern void (*Poi_UserWorkBeforePoisson_Ptr)( const double Time, const int lv );
 extern void Poi_UserWorkBeforePoisson_GREP( const double Time, const int lv );
 
-#endif // #ifdef __CUDACC__
+#endif // #ifdef __CUDACC__ ... else ...
 
 
 
@@ -187,7 +187,7 @@ static real ExtPot_GREP( const double x, const double y, const double z, const d
    const real r  = SQRT( SQR(dx) + SQR(dy) + SQR(dz) );
 
 
-// use Usage to determine which Data and Radius profiles, and NBin are used
+// use Usage to determine which GREP profile to be used
 #ifdef __CUDACC__
    if ( Usage == EXT_POT_USAGE_ADD )
    {
