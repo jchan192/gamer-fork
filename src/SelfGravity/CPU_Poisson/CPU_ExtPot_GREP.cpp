@@ -30,19 +30,9 @@ extern double GREP_Prof_Center   [3];
 extern double GREP_Prof_MaxRadius;
 extern double GREP_Prof_MinBinSize;
 
-double *h_GREP_Lv_Data_New;
-double *h_GREP_FaLv_Data_New;
-double *h_GREP_FaLv_Data_Old;
-double *h_GREP_Lv_Radius_New;
-double *h_GREP_FaLv_Radius_New;
-double *h_GREP_FaLv_Radius_Old;
-int     h_GREP_Lv_NBin_New;
-int     h_GREP_FaLv_NBin_New;
-int     h_GREP_FaLv_NBin_Old;
-
-
 extern void (*Poi_UserWorkBeforePoisson_Ptr)( const double Time, const int lv );
 extern void Poi_UserWorkBeforePoisson_GREP( const double Time, const int lv );
+
 #endif // #ifdef __CUDACC__
 
 
@@ -139,15 +129,15 @@ void SetExtPotAuxArray_GREP( double AuxArray_Flt[], int AuxArray_Int[] )
    const int Sg_Lv   = GREPSg[Lv];
    const int Sg_FaLv = GREPSg[FaLv];
 
-   AuxArray_Flt[0] = GREP_Prof_Center[0];                // x coordinate of the GREP profile center
-   AuxArray_Flt[1] = GREP_Prof_Center[1];                // y coordinate of the GREP profile center
-   AuxArray_Flt[2] = GREP_Prof_Center[2];                // z coordinate of the GREP profile center
-   AuxArray_Flt[3] = GREPSgTime[ FaLv ][     Sg_FaLv ];  // new physical time of GREP on father level
-   AuxArray_Flt[4] = GREPSgTime[ FaLv ][ 1 - Sg_FaLv ];  // old physical time of GREP on father level
+   AuxArray_Flt[0] = GREP_Prof_Center[0];                   // x coordinate of the GREP profile center
+   AuxArray_Flt[1] = GREP_Prof_Center[1];                   // y coordinate of the GREP profile center
+   AuxArray_Flt[2] = GREP_Prof_Center[2];                   // z coordinate of the GREP profile center
+   AuxArray_Flt[3] = GREPSgTime[ FaLv ][     Sg_FaLv ];     // new physical time of GREP on father level
+   AuxArray_Flt[4] = GREPSgTime[ FaLv ][ 1 - Sg_FaLv ];     // old physical time of GREP on father level
 
-   AuxArray_Int[0] = Phi_eff[ Lv   ][     Sg_Lv   ]->NBin;
-   AuxArray_Int[1] = Phi_eff[ FaLv ][     Sg_FaLv ]->NBin;
-   AuxArray_Int[2] = Phi_eff[ FaLv ][ 1 - Sg_FaLv ]->NBin;
+   AuxArray_Int[0] = Phi_eff[ Lv   ][     Sg_Lv   ]->NBin;  // number of bin at new physical time on current level
+   AuxArray_Int[1] = Phi_eff[ FaLv ][     Sg_FaLv ]->NBin;  // number of bin at new physical time on  father level
+   AuxArray_Int[2] = Phi_eff[ FaLv ][ 1 - Sg_FaLv ]->NBin;  // number of bin at old physical time on  father level
 
 } // FUNCTION : SetExtPotAuxArray_GREP
 #endif // #ifndef __CUDACC__
@@ -201,11 +191,6 @@ static real ExtPot_GREP( const double x, const double y, const double z, const d
 #ifdef __CUDACC__
    if ( Usage == EXT_POT_USAGE_ADD )
    {
-/*
-      effpot = c_GREP_Lv_Data_New;
-      radius = c_GREP_Lv_Radius_New;
-      NBin   = c_GREP_Lv_NBin_New;
-*/
       effpot = (real*) GenePtr[0];
       radius = (real*) GenePtr[1];
       NBin   = UserArray_Int[0];
@@ -214,11 +199,6 @@ static real ExtPot_GREP( const double x, const double y, const double z, const d
    switch ( Usage )
    {
       case EXT_POT_USAGE_ADD:
-      /*
-         effpot = h_GREP_Lv_Data_New;
-         radius = h_GREP_Lv_Radius_New;
-         NBin   = h_GREP_Lv_NBin_New;
-      */
          effpot = (real*) GenePtr[0];
          radius = (real*) GenePtr[1];
          NBin   = UserArray_Int[0];
@@ -228,11 +208,6 @@ static real ExtPot_GREP( const double x, const double y, const double z, const d
       case EXT_POT_USAGE_SUB_TINT:
          if      (  Mis_CompareRealValue( Time, UserArray_Flt[3], NULL, false )  )
          {
-            /*
-            effpot = h_GREP_FaLv_Data_New;
-            radius = h_GREP_FaLv_Radius_New;
-            NBin   = h_GREP_FaLv_NBin_New;
-            */
             effpot = (real*) GenePtr[2];
             radius = (real*) GenePtr[3];
             NBin   = UserArray_Int[1];
@@ -240,11 +215,6 @@ static real ExtPot_GREP( const double x, const double y, const double z, const d
 
          else if (  Mis_CompareRealValue( Time, UserArray_Flt[4], NULL, false )  )
          {
-            /*
-            effpot = h_GREP_FaLv_Data_Old;
-            radius = h_GREP_FaLv_Radius_Old;
-            NBin   = h_GREP_FaLv_NBin_Old;
-            */
             effpot = (real*) GenePtr[4];
             radius = (real*) GenePtr[5];
             NBin   = UserArray_Int[2];
@@ -261,11 +231,9 @@ static real ExtPot_GREP( const double x, const double y, const double z, const d
 
 
 // compute the potential
-//   if ( r < (real)radius[0] )
    if ( r < radius[0] )
       pot = effpot[0];
 
-//   else if ( r < (real)radius[NBin-1] )
    else if ( r < radius[NBin-1] )
    {
       int Idx;
@@ -274,17 +242,10 @@ static real ExtPot_GREP( const double x, const double y, const double z, const d
 
       while (  ( Idx=(Min+Max)/2 ) != Min  )
       {
-//         if   ( (real)radius[Idx] > r )   Max = Idx;
          if   ( radius[Idx] > r )   Max = Idx;
-         else                             Min = Idx;
+         else                       Min = Idx;
       }
 
-/*
-      const real rL      = (real)radius[Idx  ];
-      const real rR      = (real)radius[Idx+1];
-      const real effpotL = (real)effpot[Idx  ];
-      const real effpotR = (real)effpot[Idx+1];
-*/
       const real rL      = radius[Idx  ];
       const real rR      = radius[Idx+1];
       const real effpotL = effpot[Idx  ];

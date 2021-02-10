@@ -35,17 +35,6 @@ double GREP_Prof_Center   [3];
 static bool Do_TEMPINT_in_ComputeProfile = true;
 
 
-extern double *h_GREP_Lv_Data_New;
-extern double *h_GREP_FaLv_Data_New;
-extern double *h_GREP_FaLv_Data_Old;
-extern double *h_GREP_Lv_Radius_New;
-extern double *h_GREP_FaLv_Radius_New;
-extern double *h_GREP_FaLv_Radius_Old;
-extern int     h_GREP_Lv_NBin_New;
-extern int     h_GREP_FaLv_NBin_New;
-extern int     h_GREP_FaLv_NBin_Old;
-
-
 
 
 //-------------------------------------------------------------------------------------------------------
@@ -71,7 +60,7 @@ void Poi_UserWorkBeforePoisson_GREP( const double Time, const int lv )
    SetExtPotAuxArray_GREP( ExtPot_AuxArray_Flt, ExtPot_AuxArray_Int );
 
 
-// copy GREP profiles to h_ExtPotGREP in type of real
+// copy GREP profiles to h_ExtPotGREP in datatype of real
    const int Lv   = GREP_LvUpdate;
    const int FaLv = ( Lv > 0 ) ? Lv - 1 : Lv;
 
@@ -82,32 +71,25 @@ void Poi_UserWorkBeforePoisson_GREP( const double Time, const int lv )
    Profile_t *Phi_FaLv_New = Phi_eff[ FaLv ][     Sg_FaLv ];
    Profile_t *Phi_FaLv_Old = Phi_eff[ FaLv ][ 1 - Sg_FaLv ];
 
-   for (int b=0; b<Phi_Lv_New->NBin;   b++) {
-
-      if ( Phi_Lv_New->NBin   > EXT_POT_GREP_NAUX_MAX )
+   for (int b=0; b<Phi_Lv_New->NBin; b++)
+   {
+//    Phi_FaLv_New and Phi_FaLv_Old are skipped since they have been checked eariler
+      if ( Phi_Lv_New->NBin > EXT_POT_GREP_NAUX_MAX )
          Aux_Error( ERROR_INFO, "Number of bins = %d > EXT_POT_GREP_NAUX_MAX for GREP at lv = %d and SaveSg = %d !!\n",
-                    Phi_Lv_New->NBin,   Lv,   Sg_Lv   );
+                    Phi_Lv_New->NBin, Lv, Sg_Lv );
 
       h_ExtPotGREP[b                         ] = (real) Phi_Lv_New->Data     [b];
       h_ExtPotGREP[b +  EXT_POT_GREP_NAUX_MAX] = (real) Phi_Lv_New->Radius   [b];
    }
 
-   for (int b=0; b<Phi_FaLv_New->NBin; b++) {
-
-      if ( Phi_FaLv_New->NBin > EXT_POT_GREP_NAUX_MAX )
-         Aux_Error( ERROR_INFO, "Number of bins = %d > EXT_POT_GREP_NAUX_MAX for GREP at lv = %d and SaveSg = %d !!\n",
-                    Phi_FaLv_New->NBin, FaLv, Sg_FaLv   );
-
+   for (int b=0; b<Phi_FaLv_New->NBin; b++)
+   {
       h_ExtPotGREP[b + 2*EXT_POT_GREP_NAUX_MAX] = (real) Phi_FaLv_New->Data  [b];
       h_ExtPotGREP[b + 3*EXT_POT_GREP_NAUX_MAX] = (real) Phi_FaLv_New->Radius[b];
    }
 
-   for (int b=0; b<Phi_FaLv_Old->NBin; b++) {
-
-      if ( Phi_FaLv_Old->NBin > EXT_POT_GREP_NAUX_MAX )
-         Aux_Error( ERROR_INFO, "Number of bins = %d > EXT_POT_GREP_NAUX_MAX for GREP at lv = %d and SaveSg = %d !!\n",
-                    Phi_FaLv_Old->NBin, FaLv, 1-Sg_FaLv );
-
+   for (int b=0; b<Phi_FaLv_Old->NBin; b++)
+   {
       h_ExtPotGREP[b + 4*EXT_POT_GREP_NAUX_MAX] = (real) Phi_FaLv_Old->Data  [b];
       h_ExtPotGREP[b + 5*EXT_POT_GREP_NAUX_MAX] = (real) Phi_FaLv_Old->Radius[b];
    }
@@ -121,22 +103,12 @@ void Poi_UserWorkBeforePoisson_GREP( const double Time, const int lv )
    h_ExtPotGenePtr[4] = (real**) (h_ExtPotGREP + 4*EXT_POT_GREP_NAUX_MAX);
    h_ExtPotGenePtr[5] = (real**) (h_ExtPotGREP + 5*EXT_POT_GREP_NAUX_MAX);
 
-/*
-   h_GREP_Lv_Data_New     = Phi_Lv_New  ->Data;
-   h_GREP_FaLv_Data_New   = Phi_FaLv_New->Data;
-   h_GREP_FaLv_Data_Old   = Phi_FaLv_Old->Data;
-   h_GREP_Lv_Radius_New   = Phi_Lv_New  ->Radius;
-   h_GREP_FaLv_Radius_New = Phi_FaLv_New->Radius;
-   h_GREP_FaLv_Radius_Old = Phi_FaLv_Old->Radius;
-   h_GREP_Lv_NBin_New     = Phi_Lv_New  ->NBin;
-   h_GREP_FaLv_NBin_New   = Phi_FaLv_New->NBin;
-   h_GREP_FaLv_NBin_Old   = Phi_FaLv_Old->NBin;
-*/
 
-// update the auxiliary GPU arrays
 #  ifdef GPU
+// update the auxiliary GPU arrays
    CUAPI_SetConstMemory_ExtAccPot();
 
+// transfer GREP profiles to GPU
    ExtPot_PassData2GPU_GREP( h_ExtPotGREP );
 #  endif
 
