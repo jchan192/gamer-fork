@@ -73,7 +73,8 @@ void Poi_UserWorkBeforePoisson_GREP( const double Time, const int lv )
 
    for (int b=0; b<Phi_Lv_New->NBin; b++)
    {
-//    Phi_FaLv_New and Phi_FaLv_Old are skipped since they have been checked eariler
+//    check if the number of bin exceeds EXT_POT_GREP_NAUX_MAX
+//    Phi_FaLv_New and Phi_FaLv_Old are skipped since they have been checked earlier
       if ( Phi_Lv_New->NBin > EXT_POT_GREP_NAUX_MAX )
          Aux_Error( ERROR_INFO, "Number of bins = %d > EXT_POT_GREP_NAUX_MAX for GREP at lv = %d and SaveSg = %d !!\n",
                     Phi_Lv_New->NBin, Lv, Sg_Lv );
@@ -196,14 +197,14 @@ static void Update_GREP_Profile( const int lv, const int Sg, const double PrepTi
 //###CHECK: does leaf patch transit to non-leaf path at sub-cycling?
 //    update the profile from leaf patches on level <= lv and non-leaf patches on level = lv
       Aux_ComputeProfile   ( Prof_NonLeaf,  GREP_Prof_Center, GREP_Prof_MaxRadius, GREP_Prof_MinBinSize,
-                             GREP_LOGBIN,   GREP_LOGBINRATIO, true, TVar, 4, 0, lv, PATCH_LEAF_PLUS_MAXNONLEAF, PrepTime );
+                             GREP_LOGBIN,   GREP_LOGBINRATIO, true,  TVar, 4,  0, lv, PATCH_LEAF_PLUS_MAXNONLEAF, PrepTime );
    }
 
    else
    {
 //    update the profile from leaf patches on level = lv
       Aux_ComputeProfile   ( Prof_Leaf,     GREP_Prof_Center, GREP_Prof_MaxRadius, GREP_Prof_MinBinSize,
-                             GREP_LOGBIN,   GREP_LOGBINRATIO, false, TVar, 4, lv, lv, PATCH_LEAF,    PrepTime );
+                             GREP_LOGBIN,   GREP_LOGBINRATIO, false, TVar, 4, lv, lv, PATCH_LEAF,                PrepTime );
 
 //###CHECK: does the refinment correction affect leaf patch? If no, this part is not necesary.
 //    update the USG profile from leaf patches on level = lv to account the correction from finer level
@@ -214,12 +215,12 @@ static void Update_GREP_Profile( const int lv, const int Sg, const double PrepTi
          Profile_t *Prof_Leaf_USG [] = { DensAve[lv][Sg_USG], VrAve[lv][Sg_USG], PresAve[lv][Sg_USG], EngyAve[lv][Sg_USG] };
 
          Aux_ComputeProfile( Prof_Leaf_USG, GREP_Prof_Center, GREP_Prof_MaxRadius, GREP_Prof_MinBinSize,
-                             GREP_LOGBIN,   GREP_LOGBINRATIO, false, TVar, 4, lv, lv, PATCH_LEAF,    Time_USG );
+                             GREP_LOGBIN,   GREP_LOGBINRATIO, false, TVar, 4, lv, lv, PATCH_LEAF,                Time_USG );
       }
 
 //    update the profile from the non-leaf patches on level = lv
       Aux_ComputeProfile   ( Prof_NonLeaf,  GREP_Prof_Center, GREP_Prof_MaxRadius, GREP_Prof_MinBinSize,
-                             GREP_LOGBIN,   GREP_LOGBINRATIO, false, TVar, 4, lv, lv, PATCH_NONLEAF, PrepTime );
+                             GREP_LOGBIN,   GREP_LOGBINRATIO, false, TVar, 4, lv, lv, PATCH_NONLEAF,             PrepTime );
    }
 
 } // FUNCTION : Update_GREP_Profile

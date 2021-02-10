@@ -26,6 +26,7 @@ extern real  *d_ExtPotGREP;
 
 
 
+
 //-------------------------------------------------------------------------------------------------------
 // Function    :  CUAPI_MemAllocate_PoissonGravity
 // Description :  Allocate device and host memory for the Poisson and Gravity solvers

@@ -61,7 +61,7 @@ void Init_MemAllocate_PoissonGravity( const int Pot_NPG )
    h_ExtPotGenePtr = new void* [EXT_POT_NGENE_MAX];
 
 
-// GREP potential profile
+// GREP profiles
    if ( OPT__EXT_POT == EXT_POT_GREP ) {
 
       const long TableSize = EXT_POT_GREP_NAUX_MAX*6;
