@@ -299,6 +299,7 @@ real   (*h_Emag_Array_G    [2])[PS1][PS1][PS1]                     = { NULL, NUL
 #endif
 real    *h_ExtPotTable                                             = NULL;
 void   **h_ExtPotGenePtr                                           = NULL;
+real    *h_ExtPotGREP                                              = NULL;
 
 // (3-3) unsplit gravity correction
 #ifdef UNSPLIT_GRAVITY
@@ -385,6 +386,7 @@ real   (*d_Emag_Array_G   )[ CUBE(PS1) ]                           = NULL;
 #endif
 real    *d_ExtPotTable                                             = NULL;
 void   **d_ExtPotGenePtr                                           = NULL;
+real    *d_ExtPotGREP                                              = NULL;
 
 // (4-3) unsplit gravity correction
 #ifdef UNSPLIT_GRAVITY

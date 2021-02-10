@@ -77,22 +77,23 @@ extern double (*d_Corner_Array_PGT)[3];
 extern real (*d_Pot_Array_USG_G)[ CUBE(USG_NXT_G) ];
 extern real (*d_Flu_Array_USG_G)[GRA_NIN-1][ CUBE(PS1) ];
 #else
-static real (*d_Pot_Array_USG_G)[ CUBE(USG_NXT_G) ] = NULL;
-static real (*d_Flu_Array_USG_G)[GRA_NIN-1][ CUBE(PS1) ] = NULL;
+static real  (*d_Pot_Array_USG_G)[ CUBE(USG_NXT_G) ] = NULL;
+static real  (*d_Flu_Array_USG_G)[GRA_NIN-1][ CUBE(PS1) ] = NULL;
 #endif
 #ifdef DUAL_ENERGY
-extern char (*d_DE_Array_G)[ CUBE(PS1) ];
+extern char  (*d_DE_Array_G)[ CUBE(PS1) ];
 #else
-static char (*d_DE_Array_G)[ CUBE(PS1) ] = NULL;
+static char  (*d_DE_Array_G)[ CUBE(PS1) ] = NULL;
 #endif
 #ifdef MHD
-extern real (*d_Emag_Array_G)[ CUBE(PS1) ];
+extern real  (*d_Emag_Array_G)[ CUBE(PS1) ];
 #else
-static real (*d_Emag_Array_G)[ CUBE(PS1) ] = NULL;
+static real  (*d_Emag_Array_G)[ CUBE(PS1) ] = NULL;
 #endif
 #endif // #if ( MODEL == HYDRO )
-extern real  *d_ExtPotTable;
-extern void **d_ExtPotGenePtr;
+extern real   *d_ExtPotTable;
+extern void  **d_ExtPotGenePtr;
+extern real   *d_ExtPotGREP;
 
 extern cudaStream_t *Stream;
 
@@ -243,6 +244,8 @@ void CUAPI_Asyn_PoissonGravitySolver( const real h_Rho_Array    [][RHO_NXT][RHO_
          if ( ExtPot == EXT_POT_TABLE  &&  d_ExtPotTable == NULL )
                                              Aux_Error( ERROR_INFO, "d_ExtPotTable == NULL !!\n" );
          if ( d_ExtPotGenePtr    == NULL )   Aux_Error( ERROR_INFO, "d_ExtPotGenePtr == NULL !!\n" );
+         if ( ExtPot == EXT_POT_GREP   &&  d_ExtPotGREP  == NULL )
+                                             Aux_Error( ERROR_INFO, "d_ExtPotGREP == NULL !!\n" );
       }
    } // if ( Poisson )
 

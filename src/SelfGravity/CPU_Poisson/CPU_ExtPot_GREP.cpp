@@ -10,7 +10,13 @@
 #define LinearInterp( x, xa, xb, ya, yb )   (  ( ((x) - (xa)) * (yb) + ((xb) - (x)) * (ya) ) / ((xb) - (xa))  )
 
 
-#ifndef __CUDACC__
+#ifdef __CUDACC__
+
+extern void **d_ExtPotGenePtr;
+extern real  *d_ExtPotGREP;
+
+#else // #ifdef __CUDACC__ ... else ...
+
 extern Profile_t *DensAve [NLEVEL+1][2];
 extern Profile_t *EngyAve [NLEVEL+1][2];
 extern Profile_t *VrAve   [NLEVEL+1][2];
@@ -37,7 +43,7 @@ int     h_GREP_FaLv_NBin_Old;
 
 extern void (*Poi_UserWorkBeforePoisson_Ptr)( const double Time, const int lv );
 extern void Poi_UserWorkBeforePoisson_GREP( const double Time, const int lv );
-#endif // #ifndef __CUDACC__
+#endif // #ifdef __CUDACC__
 
 
 
@@ -139,6 +145,10 @@ void SetExtPotAuxArray_GREP( double AuxArray_Flt[], int AuxArray_Int[] )
    AuxArray_Flt[3] = GREPSgTime[ FaLv ][     Sg_FaLv ];  // new physical time of GREP on father level
    AuxArray_Flt[4] = GREPSgTime[ FaLv ][ 1 - Sg_FaLv ];  // old physical time of GREP on father level
 
+   AuxArray_Int[0] = Phi_eff[ Lv   ][     Sg_Lv   ]->NBin;
+   AuxArray_Int[1] = Phi_eff[ FaLv ][     Sg_FaLv ]->NBin;
+   AuxArray_Int[2] = Phi_eff[ FaLv ][ 1 - Sg_FaLv ]->NBin;
+
 } // FUNCTION : SetExtPotAuxArray_GREP
 #endif // #ifndef __CUDACC__
 
@@ -155,6 +165,7 @@ void SetExtPotAuxArray_GREP( double AuxArray_Flt[], int AuxArray_Int[] )
 // Note        :  1. This function is shared by CPU and GPU
 //                2. Auxiliary arrays UserArray_Flt/Int[] are set by SetExtPotAuxArray_GREP()
 //                3. Currently it does not support the soften length
+//                4. GenePtr has the size of EXT_POT_NGENE_MAX defined in Macro.h (default = 6)
 //
 // Parameter   :  x/y/z             : Target spatial coordinates
 //                Time              : Target physical time
@@ -175,10 +186,10 @@ static real ExtPot_GREP( const double x, const double y, const double z, const d
                          const ExtPotUsage_t Usage, const real PotTable[], void **GenePtr )
 {
 
-   int     NBin;
-   double  pot;
-   double *effpot;
-   double *radius;
+   int   NBin;
+   real  pot;
+   real *effpot;
+   real *radius;
 
    const real dx = (real)( x - UserArray_Flt[0] );
    const real dy = (real)( y - UserArray_Flt[1] );
@@ -190,33 +201,53 @@ static real ExtPot_GREP( const double x, const double y, const double z, const d
 #ifdef __CUDACC__
    if ( Usage == EXT_POT_USAGE_ADD )
    {
+/*
       effpot = c_GREP_Lv_Data_New;
       radius = c_GREP_Lv_Radius_New;
       NBin   = c_GREP_Lv_NBin_New;
+*/
+      effpot = (real*) GenePtr[0];
+      radius = (real*) GenePtr[1];
+      NBin   = UserArray_Int[0];
    }
 #else // #ifdef __CUDACC__
    switch ( Usage )
    {
       case EXT_POT_USAGE_ADD:
+      /*
          effpot = h_GREP_Lv_Data_New;
          radius = h_GREP_Lv_Radius_New;
          NBin   = h_GREP_Lv_NBin_New;
+      */
+         effpot = (real*) GenePtr[0];
+         radius = (real*) GenePtr[1];
+         NBin   = UserArray_Int[0];
       break;
 
       case EXT_POT_USAGE_SUB:
       case EXT_POT_USAGE_SUB_TINT:
          if      (  Mis_CompareRealValue( Time, UserArray_Flt[3], NULL, false )  )
          {
+            /*
             effpot = h_GREP_FaLv_Data_New;
             radius = h_GREP_FaLv_Radius_New;
             NBin   = h_GREP_FaLv_NBin_New;
+            */
+            effpot = (real*) GenePtr[2];
+            radius = (real*) GenePtr[3];
+            NBin   = UserArray_Int[1];
          }
 
          else if (  Mis_CompareRealValue( Time, UserArray_Flt[4], NULL, false )  )
          {
+            /*
             effpot = h_GREP_FaLv_Data_Old;
             radius = h_GREP_FaLv_Radius_Old;
             NBin   = h_GREP_FaLv_NBin_Old;
+            */
+            effpot = (real*) GenePtr[4];
+            radius = (real*) GenePtr[5];
+            NBin   = UserArray_Int[2];
          }
 
          else
@@ -230,10 +261,12 @@ static real ExtPot_GREP( const double x, const double y, const double z, const d
 
 
 // compute the potential
-   if ( r < (real)radius[0] )
+//   if ( r < (real)radius[0] )
+   if ( r < radius[0] )
       pot = effpot[0];
 
-   else if ( r < (real)radius[NBin-1] )
+//   else if ( r < (real)radius[NBin-1] )
+   else if ( r < radius[NBin-1] )
    {
       int Idx;
       int Min = 0;
@@ -241,14 +274,21 @@ static real ExtPot_GREP( const double x, const double y, const double z, const d
 
       while (  ( Idx=(Min+Max)/2 ) != Min  )
       {
-         if   ( (real)radius[Idx] > r )   Max = Idx;
+//         if   ( (real)radius[Idx] > r )   Max = Idx;
+         if   ( radius[Idx] > r )   Max = Idx;
          else                             Min = Idx;
       }
 
+/*
       const real rL      = (real)radius[Idx  ];
       const real rR      = (real)radius[Idx+1];
       const real effpotL = (real)effpot[Idx  ];
       const real effpotR = (real)effpot[Idx+1];
+*/
+      const real rL      = radius[Idx  ];
+      const real rR      = radius[Idx+1];
+      const real effpotL = effpot[Idx  ];
+      const real effpotR = effpot[Idx+1];
 
       pot = LinearInterp( r, rL, rR, effpotL, effpotR );
    }
@@ -373,3 +413,35 @@ void End_ExtPot_GREP()
 } // FUNCTION : End_ExtPot_GREP
 
 #endif // #ifndef __CUDACC__
+
+
+
+#ifdef __CUDACC__
+//-------------------------------------------------------------------------------------------------------
+// Function    :  ExtPot_PassData2GPU_GREP
+// Description :  Transfer GREP profiles to GPU
+//
+// Note        :  1. Invoked by Poi_UserWorkBeforePoisson_GREP()
+//                2. Use synchronous transfer
+//                3. Only transfer the profile at current level and time
+//
+// Parameter   :  None
+//
+// Return      :  None
+//-------------------------------------------------------------------------------------------------------
+void ExtPot_PassData2GPU_GREP( const real *h_Table )
+{
+
+   const long MemSize = sizeof(real)*EXT_POT_GREP_NAUX_MAX*2;
+
+// use synchronous transfer
+   CUDA_CHECK_ERROR(  cudaMemcpy( d_ExtPotGREP, h_Table, MemSize, cudaMemcpyHostToDevice )  );
+
+// assign the value of d_ExtPotGenePtr
+   real** d_ExtPotGREP_Ptr[2] = { (real**)  d_ExtPotGREP,
+                                  (real**) (d_ExtPotGREP + EXT_POT_GREP_NAUX_MAX) };
+
+   CUDA_CHECK_ERROR(  cudaMemcpy( d_ExtPotGenePtr, d_ExtPotGREP_Ptr, sizeof(real*)*2, cudaMemcpyHostToDevice )  );
+
+} // FUNCTION : ExtPot_PassData2GPU_GREP
+#endif // #ifdef __CUDACC__

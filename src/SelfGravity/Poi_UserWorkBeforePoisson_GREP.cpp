@@ -10,6 +10,10 @@ extern void SetExtPotAuxArray_GREP( double AuxArray_Flt[], int AuxArray_Int[] );
 extern void SetTempIntPara( const int lv, const int Sg_Current, const double PrepTime, const double Time0, const double Time1,
                             bool &IntTime, int &Sg, int &Sg_IntT, real &Weighting, real &Weighting_IntT );
 
+#ifdef GPU
+extern void ExtPot_PassData2GPU_GREP( const real *h_Table );
+#endif
+
 
 Profile_t *DensAve [NLEVEL+1][2];
 Profile_t *EngyAve [NLEVEL+1][2];
@@ -67,7 +71,7 @@ void Poi_UserWorkBeforePoisson_GREP( const double Time, const int lv )
    SetExtPotAuxArray_GREP( ExtPot_AuxArray_Flt, ExtPot_AuxArray_Int );
 
 
-// update the CPU pointer
+// copy GREP profiles to h_ExtPotGREP in type of real
    const int Lv   = GREP_LvUpdate;
    const int FaLv = ( Lv > 0 ) ? Lv - 1 : Lv;
 
@@ -78,6 +82,46 @@ void Poi_UserWorkBeforePoisson_GREP( const double Time, const int lv )
    Profile_t *Phi_FaLv_New = Phi_eff[ FaLv ][     Sg_FaLv ];
    Profile_t *Phi_FaLv_Old = Phi_eff[ FaLv ][ 1 - Sg_FaLv ];
 
+   for (int b=0; b<Phi_Lv_New->NBin;   b++) {
+
+      if ( Phi_Lv_New->NBin   > EXT_POT_GREP_NAUX_MAX )
+         Aux_Error( ERROR_INFO, "Number of bins = %d > EXT_POT_GREP_NAUX_MAX for GREP at lv = %d and SaveSg = %d !!\n",
+                    Phi_Lv_New->NBin,   Lv,   Sg_Lv   );
+
+      h_ExtPotGREP[b                         ] = (real) Phi_Lv_New->Data     [b];
+      h_ExtPotGREP[b +  EXT_POT_GREP_NAUX_MAX] = (real) Phi_Lv_New->Radius   [b];
+   }
+
+   for (int b=0; b<Phi_FaLv_New->NBin; b++) {
+
+      if ( Phi_FaLv_New->NBin > EXT_POT_GREP_NAUX_MAX )
+         Aux_Error( ERROR_INFO, "Number of bins = %d > EXT_POT_GREP_NAUX_MAX for GREP at lv = %d and SaveSg = %d !!\n",
+                    Phi_FaLv_New->NBin, FaLv, Sg_FaLv   );
+
+      h_ExtPotGREP[b + 2*EXT_POT_GREP_NAUX_MAX] = (real) Phi_FaLv_New->Data  [b];
+      h_ExtPotGREP[b + 3*EXT_POT_GREP_NAUX_MAX] = (real) Phi_FaLv_New->Radius[b];
+   }
+
+   for (int b=0; b<Phi_FaLv_Old->NBin; b++) {
+
+      if ( Phi_FaLv_Old->NBin > EXT_POT_GREP_NAUX_MAX )
+         Aux_Error( ERROR_INFO, "Number of bins = %d > EXT_POT_GREP_NAUX_MAX for GREP at lv = %d and SaveSg = %d !!\n",
+                    Phi_FaLv_Old->NBin, FaLv, 1-Sg_FaLv );
+
+      h_ExtPotGREP[b + 4*EXT_POT_GREP_NAUX_MAX] = (real) Phi_FaLv_Old->Data  [b];
+      h_ExtPotGREP[b + 5*EXT_POT_GREP_NAUX_MAX] = (real) Phi_FaLv_Old->Radius[b];
+   }
+
+
+// assign the value of h_ExtPotGenePtr
+   h_ExtPotGenePtr[0] = (real**) (h_ExtPotGREP                          );
+   h_ExtPotGenePtr[1] = (real**) (h_ExtPotGREP +   EXT_POT_GREP_NAUX_MAX);
+   h_ExtPotGenePtr[2] = (real**) (h_ExtPotGREP + 2*EXT_POT_GREP_NAUX_MAX);
+   h_ExtPotGenePtr[3] = (real**) (h_ExtPotGREP + 3*EXT_POT_GREP_NAUX_MAX);
+   h_ExtPotGenePtr[4] = (real**) (h_ExtPotGREP + 4*EXT_POT_GREP_NAUX_MAX);
+   h_ExtPotGenePtr[5] = (real**) (h_ExtPotGREP + 5*EXT_POT_GREP_NAUX_MAX);
+
+/*
    h_GREP_Lv_Data_New     = Phi_Lv_New  ->Data;
    h_GREP_FaLv_Data_New   = Phi_FaLv_New->Data;
    h_GREP_FaLv_Data_Old   = Phi_FaLv_Old->Data;
@@ -87,11 +131,13 @@ void Poi_UserWorkBeforePoisson_GREP( const double Time, const int lv )
    h_GREP_Lv_NBin_New     = Phi_Lv_New  ->NBin;
    h_GREP_FaLv_NBin_New   = Phi_FaLv_New->NBin;
    h_GREP_FaLv_NBin_Old   = Phi_FaLv_Old->NBin;
-
+*/
 
 // update the auxiliary GPU arrays
 #  ifdef GPU
    CUAPI_SetConstMemory_ExtAccPot();
+
+   ExtPot_PassData2GPU_GREP( h_ExtPotGREP );
 #  endif
 
 } // FUNCTION : Poi_UserWorkBeforePoisson_GREP
@@ -172,8 +218,10 @@ static void Update_GREP_Profile( const int lv, const int Sg, const double PrepTi
    if ( Do_TEMPINT_in_ComputeProfile )
 //###CHECK: does leaf patch transit to non-leaf path at sub-cycling?
 //    update the profile from leaf patches on level <= lv
+//      Aux_ComputeProfile   ( Prof_Leaf,     GREP_Prof_Center, GREP_Prof_MaxRadius, GREP_Prof_MinBinSize,
+//                             GREP_LOGBIN,   GREP_LOGBINRATIO, false, TVar, 4, -1, lv, PATCH_LEAF,    PrepTime );
       Aux_ComputeProfile   ( Prof_Leaf,     GREP_Prof_Center, GREP_Prof_MaxRadius, GREP_Prof_MinBinSize,
-                             GREP_LOGBIN,   GREP_LOGBINRATIO, false, TVar, 4, -1, lv, PATCH_LEAF,    PrepTime );
+                             GREP_LOGBIN,   GREP_LOGBINRATIO, false, TVar, 4, 0, lv, PATCH_LEAF,    PrepTime );
 
    else
    {
@@ -196,8 +244,10 @@ static void Update_GREP_Profile( const int lv, const int Sg, const double PrepTi
 
 
 // update the profile from the non-leaf patches on level = lv
+//   Aux_ComputeProfile      ( Prof_NonLeaf,  GREP_Prof_Center, GREP_Prof_MaxRadius, GREP_Prof_MinBinSize,
+//                             GREP_LOGBIN,   GREP_LOGBINRATIO, false, TVar, 4, lv, -1, PATCH_NONLEAF, PrepTime );
    Aux_ComputeProfile      ( Prof_NonLeaf,  GREP_Prof_Center, GREP_Prof_MaxRadius, GREP_Prof_MinBinSize,
-                             GREP_LOGBIN,   GREP_LOGBINRATIO, false, TVar, 4, lv, -1, PATCH_NONLEAF, PrepTime );
+                             GREP_LOGBIN,   GREP_LOGBINRATIO, false, TVar, 4, lv, lv, PATCH_NONLEAF, PrepTime );
 
 } // FUNCTION : Update_GREP_Profile
 
