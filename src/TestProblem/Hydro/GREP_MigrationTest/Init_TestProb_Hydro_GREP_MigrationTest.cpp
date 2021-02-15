@@ -52,6 +52,10 @@ void Validate()
       Aux_Error( ERROR_INFO, "must set OPT__EXT_POT = EXT_POT_GREP !!\n" );
 #  endif
 
+#  if ( EOS != EOS_GAMMA )
+   Aux_Error( ERROR_INFO, "EOS != EOS_GAMMA !!\n" );
+#  endif
+
    if ( !OPT__UNIT )
       Aux_Error( ERROR_INFO, "OPT__UNIT must be enabled !!\n" );
 
