@@ -174,13 +174,12 @@ void nuc_eos_C_short( const real xrho, real *xenr, const real xye,
    nuc_eos_C_cubinterp_some( lr, leps, xye, res, alltables, nrho, neps, nye, 5,
                              logrho, logeps, yes );
 
-   if ( keymode != NUC_MODE_ENGY )  *xenr = POW( (real)10.0, leps ) - energy_shift;
-
-
 // assign results
-   *xprs  = POW( (real)10.0, res[0] );
-   *xtemp = POW( (real)10.0, res[1] );
-   *xent  = res[2];
+   if ( keymode != NUC_MODE_ENGY )  *xenr  = POW( (real)10.0, leps ) - energy_shift;
+   if ( keymode != NUC_MODE_PRES )  *xprs  = POW( (real)10.0, res[0] );
+   if ( keymode != NUC_MODE_TEMP )  *xtemp = POW( (real)10.0, res[1] );
+   if ( keymode != NUC_MODE_ENTR )  *xent  = res[2];
+
    *xmunu = res[3];
    *xcs2  = res[4];
 
