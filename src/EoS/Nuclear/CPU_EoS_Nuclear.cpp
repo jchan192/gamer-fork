@@ -11,6 +11,8 @@
 #ifdef __CUDACC__
 
 #include "NuclearEoS.cu"
+__device__ static void EoS_General_Nuclear( const int Mode, real Out[], const real In[], const double AuxArray_Flt[],
+                                            const int AuxArray_Int[], const real *const Table[EOS_NTABLE_MAX] );
 
 #else
 
@@ -41,6 +43,8 @@ void nuc_eos_C_short( const real xrho, real *xenr, const real xye,
                       const int keymode, int *keyerr, const real rfeps );
 void nuc_eos_C_ReadTable( char *nuceos_table_name );
 void CUAPI_PassNuclearEoSTable2GPU();
+static void EoS_General_Nuclear( const int Mode, real Out[], const real In[], const double AuxArray_Flt[],
+                                 const int AuxArray_Int[], const real *const Table[EOS_NTABLE_MAX] );
 #endif // #ifdef __CUDACC__ ... else ...
 
 
@@ -628,25 +632,33 @@ static real EoS_DensEint2Temp_Nuclear( const real Dens_Code, const real Eint_Cod
 // Note        :  1. See EoS_SetAuxArray_Nuclear() for the values stored in AuxArray_Flt/Int[]
 //                2. Temperature is in kelvin
 //
-// Parameter   :  Dens       : Gas mass density
-//                Temp       : Gas temperature in kelvin
-//                Passive    : Passive scalars (must not used here)
-//                AuxArray_* : Auxiliary arrays (see the Note above)
-//                Table      : EoS tables
+// Parameter   :  Dens_Code    : Gas mass density (in code unit)
+//                Temp_Kelv    : Gas temperature  (in kelvin   )
+//                Passive_Code : Passive scalars  (in code unit)
+//                AuxArray_*   : Auxiliary arrays (see the Note above)
+//                Table        : EoS tables
 //                ExtraInOut   : Array to store extra input and output variables if required
 //                               --> Optional and only used when it is not NULL
 //
-// Return      :  Gas pressure
+// Return      :  Gas pressure (in code unit)
 //-------------------------------------------------------------------------------------------------------
 GPU_DEVICE_NOINLINE
-static real EoS_DensTemp2Pres_Nuclear( const real Dens, const real Temp, const real Passive[],
+static real EoS_DensTemp2Pres_Nuclear( const real Dens_Code, const real Temp_Kelv, const real Passive_Code[],
                                        const double AuxArray_Flt[], const int AuxArray_Int[],
                                        const real *const Table[EOS_NTABLE_MAX], real ExtraInOut[] )
 {
 
-   real Pres;
+   real In[3], Out[3], Pres_Code;
 
-   return Pres;
+   In[0] = Dens_Code;
+   In[1] = Temp_Kelv;
+   In[2] = Passive_Code[ YE - NCOMP_FLUID ] / Dens_Code;
+
+   EoS_General_Nuclear( NUC_MODE_TEMP, Out, In, AuxArray_Flt, AuxArray_Int, Table );
+
+   Pres_Code = Out[2];
+
+   return Pres_Code;
 
 } // FUNCTION : EoS_DensTemp2Pres_Nuclear
 
@@ -665,6 +677,7 @@ static real EoS_DensTemp2Pres_Nuclear( const real Dens, const real Temp, const r
 //                         In [2] = Ye
 //                         Out[0] = volume energy density in code units (with energy shift)
 //                         Out[1] = entropy in kB/baryon
+//                         Out[2] = pressure in code units
 //                   (2) Entropy mode:
 //                         In [0] = mass density in code units
 //                         In [1] = entropy in kB/baryon
@@ -699,6 +712,7 @@ static void EoS_General_Nuclear( const int Mode, real Out[], const real In[], co
    const real Dens2CGS    = AuxArray_Flt[NUC_AUX_DENS2CGS  ];
    const real Kelvin2MeV  = AuxArray_Flt[NUC_AUX_KELVIN2MEV];
    const real sEint2Code  = AuxArray_Flt[NUC_AUX_VSQR2CODE ];
+   const real Pres2Code   = AuxArray_Flt[NUC_AUX_PRES2CODE];
 
    const int  NRho        = AuxArray_Int[NUC_AUX_NRHO ];
    const int  NEps        = AuxArray_Int[NUC_AUX_NEPS ];
@@ -735,6 +749,7 @@ static void EoS_General_Nuclear( const int Mode, real Out[], const real In[], co
          real Temp_MeV  = Temp_Kelv * Kelvin2MeV;
          real sEint_CGS = NULL_REAL;
          real Entr      = NULL_REAL;
+         real Pres_CGS  = NULL_REAL;
          real Useless   = NULL_REAL;
          int  Err       = NULL_INT;
 
@@ -755,7 +770,7 @@ static void EoS_General_Nuclear( const int Mode, real Out[], const real In[], co
 
 
 //       invoke the nuclear EoS driver
-         nuc_eos_C_short( Dens_CGS, &sEint_CGS, Ye, &Temp_MeV, &Entr, &Useless, &Useless, &Useless,
+         nuc_eos_C_short( Dens_CGS, &sEint_CGS, Ye, &Temp_MeV, &Entr, &Pres_CGS, &Useless, &Useless,
                           EnergyShift, NRho, NEps, NYe, NMode,
                           Table[NUC_TAB_ALL], Table[NUC_TAB_ALL_MODE], Table[NUC_TAB_RHO], Table[NUC_TAB_EPS],
                           Table[NUC_TAB_YE], Table[NUC_TAB_TEMP_MODE], Table[NUC_TAB_ENTR_MODE], Table[NUC_TAB_PRES_MODE],
@@ -766,13 +781,16 @@ static void EoS_General_Nuclear( const int Mode, real Out[], const real In[], co
          {
             sEint_CGS = NAN;
             Entr      = NAN;
+            Pres_CGS  = NAN;
          }
 
 
 //       store the output results
          const real Eint_Code = (  ( sEint_CGS + EnergyShift ) * sEint2Code  ) * Dens_Code;
+         const real Pres_Code = Pres_CGS * Pres2Code;
          Out[0] = Eint_Code;  // volume energy density in code units (with energy shift)
          Out[1] = Entr;       // entropy in kB/baryon
+         Out[2] = Pres_Code;  // pressure in code units
 
 
 //       final check
@@ -788,6 +806,13 @@ static void EoS_General_Nuclear( const int Mode, real Out[], const real In[], co
          if ( Hydro_CheckNegative(Entr) )
          {
             printf( "ERROR : invalid output entropy (%13.7e code units) in %s() !!\n", Entr, __FUNCTION__ );
+            printf( "        Dens=%13.7e code units, Temp=%13.7e K, Ye=%13.7e, Mode %d\n", Dens_Code, Temp_Kelv, Ye, Mode );
+            printf( "        EoS error code: %d\n", Err );
+         }
+
+         if ( Hydro_CheckNegative(Pres_Code) )
+         {
+            printf( "ERROR : invalid output pressure (%13.7e code units) in %s() !!\n", Pres_Code, __FUNCTION__ );
             printf( "        Dens=%13.7e code units, Temp=%13.7e K, Ye=%13.7e, Mode %d\n", Dens_Code, Temp_Kelv, Ye, Mode );
             printf( "        EoS error code: %d\n", Err );
          }
