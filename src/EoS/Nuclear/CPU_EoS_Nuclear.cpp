@@ -113,7 +113,9 @@ void EoS_SetAuxArray_Nuclear( double AuxArray_Flt[], int AuxArray_Int[] )
 //     (1) EoS_DensEint2Pres_*
 //     (2) EoS_DensPres2Eint_*
 //     (3) EoS_DensPres2CSqr_*
-//     (4) EoS_General_*
+//     (4) EoS_DensEint2Temp_*
+//     (5) EoS_DensTemp2Pres_*
+//     (6) EoS_General_*
 // =============================================
 
 #ifdef GAMER_DEBUG
@@ -503,6 +505,154 @@ static real EoS_DensPres2CSqr_Nuclear( const real Dens_Code, const real Pres_Cod
 
 
 //-------------------------------------------------------------------------------------------------------
+// Function    :  EoS_DensEint2Temp_Nuclear
+// Description :  Convert gas mass density and internal energy density to gas temperature
+//
+// Note        :  1. Internal energy density here is per unit volume instead of per unit mass
+//                2. See EoS_SetAuxArray_Nuclear() for the values stored in AuxArray_Flt/Int[]
+//                3. Temperature is in kelvin
+//
+// Parameter   :  Dens_Code    : Gas mass density            (in code unit)
+//                Eint_Code    : Gas internal energy density (in code unit)
+//                Passive_Code : Passive scalars             (in code unit)
+//                AuxArray_*   : Auxiliary arrays (see the Note above)
+//                Table        : EoS tables
+//                ExtraInOut   : Array to store extra input and output variables if required
+//                               --> Optional and only used when it is not NULL
+//
+// Return      :  Gas temperature in kelvin
+//-------------------------------------------------------------------------------------------------------
+GPU_DEVICE_NOINLINE
+static real EoS_DensEint2Temp_Nuclear( const real Dens_Code, const real Eint_Code, const real Passive_Code[],
+                                       const double AuxArray_Flt[], const int AuxArray_Int[],
+                                       const real *const Table[EOS_NTABLE_MAX], real ExtraInOut[] )
+{
+
+// check
+#  ifdef GAMER_DEBUG
+#  if ( NCOMP_PASSIVE > 0 )
+   if ( Passive_Code == NULL )   printf( "ERROR : Passive_Code == NULL in %s !!\n", __FUNCTION__ );
+#  endif
+   if ( AuxArray_Flt == NULL )   printf( "ERROR : AuxArray_Flt == NULL in %s !!\n", __FUNCTION__ );
+   if ( AuxArray_Int == NULL )   printf( "ERROR : AuxArray_Int == NULL in %s !!\n", __FUNCTION__ );
+
+   if ( Hydro_CheckNegative(Dens_Code) )
+      printf( "ERROR : invalid input density (%14.7e) at file <%s>, line <%d>, function <%s>\n",
+              Dens_Code, __FILE__, __LINE__, __FUNCTION__ );
+
+// still require Eint>0 for the nuclear EoS
+   if ( Hydro_CheckNegative(Eint_Code) )
+      printf( "ERROR : invalid input internal energy (%14.7e) at file <%s>, line <%d>, function <%s>\n",
+              Eint_Code, __FILE__, __LINE__, __FUNCTION__ );
+#  endif // GAMER_DEBUG
+
+
+   const real EnergyShift = AuxArray_Flt[NUC_AUX_ESHIFT    ];
+   const real Dens2CGS    = AuxArray_Flt[NUC_AUX_DENS2CGS  ];
+   const real sEint2CGS   = AuxArray_Flt[NUC_AUX_VSQR2CGS  ];
+   const real MeV2Kelvin  = AuxArray_Flt[NUC_AUX_MEV2KELVIN];
+
+   const int  NRho        = AuxArray_Int[NUC_AUX_NRHO ];
+   const int  NEps        = AuxArray_Int[NUC_AUX_NEPS ];
+   const int  NYe         = AuxArray_Int[NUC_AUX_NYE  ];
+   const int  NMode       = AuxArray_Int[NUC_AUX_NMODE];
+
+   int  Mode      = NUC_MODE_ENGY;
+   real Dens_CGS  = Dens_Code * Dens2CGS;
+   real sEint_CGS = ( Eint_Code / Dens_Code ) * sEint2CGS - EnergyShift;
+   real Ye        = Passive_Code[ YE - NCOMP_FLUID ] / Dens_Code;
+   real Temp_MeV  = NULL_REAL;
+   real Useless   = NULL_REAL;
+   int  Err       = NULL_INT;
+
+
+// check floating-point overflow and Ye
+#  ifdef GAMER_DEBUG
+   if ( Nuc_Overflow(Dens_CGS) )
+      printf( "ERROR : EoS overflow (Dens_CGS %13.7e, Dens_Code %13.7e, Dens2CGS %13.7e) in %s() !!\n",
+              Dens_CGS, Dens_Code, Dens2CGS, __FUNCTION__ );
+
+   if ( Nuc_Overflow(sEint_CGS) )
+      printf( "ERROR : EoS overflow (sEint_CGS %13.7e, Eint_Code %13.7e, Dens_Code %13.7e, sEint2CGS %13.7e) in %s() !!\n",
+              sEint_CGS, Eint_Code, Dens_Code, sEint2CGS, __FUNCTION__ );
+
+   if ( Ye < (real)Table[NUC_TAB_YE][0]  ||  Ye > (real)Table[NUC_TAB_YE][NYe-1] )
+      printf( "ERROR : invalid Ye = %13.7e (min = %13.7e, max = %13.7e) in %s() !!\n",
+              Ye, Table[NUC_TAB_YE][0], Table[NUC_TAB_YE][NYe-1], __FUNCTION__ );
+#  endif // GAMER_DEBUG
+
+
+// invoke the nuclear EoS driver
+   nuc_eos_C_short( Dens_CGS, &sEint_CGS, Ye, &Temp_MeV, &Useless, &Useless, &Useless, &Useless,
+                    EnergyShift, NRho, NEps, NYe, NMode,
+                    Table[NUC_TAB_ALL], Table[NUC_TAB_ALL_MODE], Table[NUC_TAB_RHO], Table[NUC_TAB_EPS],
+                    Table[NUC_TAB_YE], Table[NUC_TAB_TEMP_MODE], Table[NUC_TAB_ENTR_MODE], Table[NUC_TAB_PRES_MODE],
+                    Mode, &Err, NULL_REAL );
+
+// trigger a *hard failure* if the EoS driver fails
+   if ( Err )  Temp_MeV = NAN;
+
+   const real Temp_Kelv = Temp_MeV * MeV2Kelvin;
+
+
+// final check
+#  ifdef GAMER_DEBUG
+   if ( Hydro_CheckNegative(Temp_Kelv) )
+   {
+      printf( "ERROR : invalid output temperature (%13.7e K) in %s() !!\n", Temp_Kelv, __FUNCTION__ );
+      printf( "        Dens=%13.7e code units, Eint=%13.7e code units, Ye=%13.7e, Mode %d\n", Dens_Code, Eint_Code, Ye, Mode );
+      printf( "        EoS error code: %d\n", Err );
+   }
+#  endif // GAMER_DEBUG
+
+
+// store extra output variables if required
+   /*
+   if ( ExtraInOut != NULL )
+   {
+      ExtraInOut[...] = ...;
+   }
+   */
+
+
+   return Temp_Kelv;
+
+} // FUNCTION : EoS_DensEint2Temp_Nuclear
+
+
+
+//-------------------------------------------------------------------------------------------------------
+// Function    :  EoS_DensTemp2Pres_Nuclear
+// Description :  Convert gas mass density and temperature to gas pressure
+//
+// Note        :  1. See EoS_SetAuxArray_Nuclear() for the values stored in AuxArray_Flt/Int[]
+//                2. Temperature is in kelvin
+//
+// Parameter   :  Dens       : Gas mass density
+//                Temp       : Gas temperature in kelvin
+//                Passive    : Passive scalars (must not used here)
+//                AuxArray_* : Auxiliary arrays (see the Note above)
+//                Table      : EoS tables
+//                ExtraInOut   : Array to store extra input and output variables if required
+//                               --> Optional and only used when it is not NULL
+//
+// Return      :  Gas pressure
+//-------------------------------------------------------------------------------------------------------
+GPU_DEVICE_NOINLINE
+static real EoS_DensTemp2Pres_Nuclear( const real Dens, const real Temp, const real Passive[],
+                                       const double AuxArray_Flt[], const int AuxArray_Int[],
+                                       const real *const Table[EOS_NTABLE_MAX], real ExtraInOut[] )
+{
+
+   real Pres;
+
+   return Pres;
+
+} // FUNCTION : EoS_DensTemp2Pres_Nuclear
+
+
+
+//-------------------------------------------------------------------------------------------------------
 // Function    :  EoS_General_Nuclear
 // Description :  General EoS converter: In[] -> Out[]
 //
@@ -746,6 +896,8 @@ static void EoS_General_Nuclear( const int Mode, real Out[], const real In[], co
 FUNC_SPACE EoS_DE2P_t EoS_DensEint2Pres_Ptr = EoS_DensEint2Pres_Nuclear;
 FUNC_SPACE EoS_DP2E_t EoS_DensPres2Eint_Ptr = EoS_DensPres2Eint_Nuclear;
 FUNC_SPACE EoS_DP2C_t EoS_DensPres2CSqr_Ptr = EoS_DensPres2CSqr_Nuclear;
+FUNC_SPACE EoS_DE2T_t EoS_DensEint2Temp_Ptr = EoS_DensEint2Temp_Nuclear;
+FUNC_SPACE EoS_DT2P_t EoS_DensTemp2Pres_Ptr = EoS_DensTemp2Pres_Nuclear;
 FUNC_SPACE EoS_GENE_t EoS_General_Ptr       = EoS_General_Nuclear;
 
 //-----------------------------------------------------------------------------------------
@@ -764,21 +916,28 @@ FUNC_SPACE EoS_GENE_t EoS_General_Ptr       = EoS_General_Nuclear;
 // Parameter   :  EoS_DensEint2Pres_CPU/GPUPtr : CPU/GPU function pointers to be set
 //                EoS_DensPres2Eint_CPU/GPUPtr : ...
 //                EoS_DensPres2CSqr_CPU/GPUPtr : ...
+//                EoS_DensEint2Temp_CPU/GPUPtr : ...
+//                EoS_DensTemp2Pres_CPU/GPUPtr : ...
 //                EoS_General_CPU/GPUPtr       : ...
 //
 // Return      :  EoS_DensEint2Pres_CPU/GPUPtr, EoS_DensPres2Eint_CPU/GPUPtr,
-//                EoS_DensPres2CSqr_CPU/GPUPtr, EoS_General_CPU/GPUPtr
+//                EoS_DensPres2CSqr_CPU/GPUPtr, EoS_DensEint2Temp_CPU/GPUPtr,
+//                EoS_DensTemp2Pres_CPU/GPUPtr, EoS_General_CPU/GPUPtr
 //-----------------------------------------------------------------------------------------
 #ifdef __CUDACC__
 __host__
 void EoS_SetGPUFunc_Nuclear( EoS_DE2P_t &EoS_DensEint2Pres_GPUPtr,
                              EoS_DP2E_t &EoS_DensPres2Eint_GPUPtr,
                              EoS_DP2C_t &EoS_DensPres2CSqr_GPUPtr,
+                             EoS_DE2T_t &EoS_DensEint2Temp_GPUPtr,
+                             EoS_DT2P_t &EoS_DensTemp2Pres_GPUPtr,
                              EoS_GENE_t &EoS_General_GPUPtr )
 {
    CUDA_CHECK_ERROR(  cudaMemcpyFromSymbol( &EoS_DensEint2Pres_GPUPtr, EoS_DensEint2Pres_Ptr, sizeof(EoS_DE2P_t) )  );
    CUDA_CHECK_ERROR(  cudaMemcpyFromSymbol( &EoS_DensPres2Eint_GPUPtr, EoS_DensPres2Eint_Ptr, sizeof(EoS_DP2E_t) )  );
    CUDA_CHECK_ERROR(  cudaMemcpyFromSymbol( &EoS_DensPres2CSqr_GPUPtr, EoS_DensPres2CSqr_Ptr, sizeof(EoS_DP2C_t) )  );
+   CUDA_CHECK_ERROR(  cudaMemcpyFromSymbol( &EoS_DensEint2Temp_GPUPtr, EoS_DensEint2Temp_Ptr, sizeof(EoS_DE2T_t) )  );
+   CUDA_CHECK_ERROR(  cudaMemcpyFromSymbol( &EoS_DensTemp2Pres_GPUPtr, EoS_DensTemp2Pres_Ptr, sizeof(EoS_DT2P_t) )  );
    CUDA_CHECK_ERROR(  cudaMemcpyFromSymbol( &EoS_General_GPUPtr,       EoS_General_Ptr,       sizeof(EoS_GENE_t) )  );
 }
 
@@ -787,11 +946,15 @@ void EoS_SetGPUFunc_Nuclear( EoS_DE2P_t &EoS_DensEint2Pres_GPUPtr,
 void EoS_SetCPUFunc_Nuclear( EoS_DE2P_t &EoS_DensEint2Pres_CPUPtr,
                              EoS_DP2E_t &EoS_DensPres2Eint_CPUPtr,
                              EoS_DP2C_t &EoS_DensPres2CSqr_CPUPtr,
+                             EoS_DE2T_t &EoS_DensEint2Temp_CPUPtr,
+                             EoS_DT2P_t &EoS_DensTemp2Pres_CPUPtr,
                              EoS_GENE_t &EoS_General_CPUPtr )
 {
    EoS_DensEint2Pres_CPUPtr = EoS_DensEint2Pres_Ptr;
    EoS_DensPres2Eint_CPUPtr = EoS_DensPres2Eint_Ptr;
    EoS_DensPres2CSqr_CPUPtr = EoS_DensPres2CSqr_Ptr;
+   EoS_DensEint2Temp_CPUPtr = EoS_DensEint2Temp_Ptr;
+   EoS_DensTemp2Pres_CPUPtr = EoS_DensTemp2Pres_Ptr;
    EoS_General_CPUPtr       = EoS_General_Ptr;
 }
 
@@ -803,9 +966,9 @@ void EoS_SetCPUFunc_Nuclear( EoS_DE2P_t &EoS_DensEint2Pres_CPUPtr,
 
 // local function prototypes
 void EoS_SetAuxArray_Nuclear( double [], int [] );
-void EoS_SetCPUFunc_Nuclear( EoS_DE2P_t &, EoS_DP2E_t &, EoS_DP2C_t &, EoS_GENE_t & );
+void EoS_SetCPUFunc_Nuclear( EoS_DE2P_t &, EoS_DP2E_t &, EoS_DP2C_t &, EoS_DE2T_t &, EoS_DT2P_t &, EoS_GENE_t & );
 #ifdef GPU
-void EoS_SetGPUFunc_Nuclear( EoS_DE2P_t &, EoS_DP2E_t &, EoS_DP2C_t &, EoS_GENE_t & );
+void EoS_SetGPUFunc_Nuclear( EoS_DE2P_t &, EoS_DP2E_t &, EoS_DP2C_t &, EoS_DE2T_t &, EoS_DT2P_t &, EoS_GENE_t & );
 #endif
 
 //-----------------------------------------------------------------------------------------
@@ -841,10 +1004,12 @@ void EoS_Init_Nuclear()
 
    EoS_SetAuxArray_Nuclear( EoS_AuxArray_Flt, EoS_AuxArray_Int );
    EoS_SetCPUFunc_Nuclear( EoS_DensEint2Pres_CPUPtr, EoS_DensPres2Eint_CPUPtr,
-                           EoS_DensPres2CSqr_CPUPtr, EoS_General_CPUPtr );
+                           EoS_DensPres2CSqr_CPUPtr, EoS_DensEint2Temp_CPUPtr,
+                           EoS_DensTemp2Pres_CPUPtr, EoS_General_CPUPtr );
 #  ifdef GPU
    EoS_SetGPUFunc_Nuclear( EoS_DensEint2Pres_GPUPtr, EoS_DensPres2Eint_GPUPtr,
-                           EoS_DensPres2CSqr_GPUPtr, EoS_General_GPUPtr );
+                           EoS_DensPres2CSqr_GPUPtr, EoS_DensEint2Temp_GPUPtr,
+                           EoS_DensTemp2Pres_GPUPtr, EoS_General_GPUPtr );
 #  endif
 
 #  ifdef GPU
