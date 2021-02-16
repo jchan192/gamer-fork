@@ -69,7 +69,7 @@ Procedure for outputting new variables:
 
 
 //-------------------------------------------------------------------------------------------------------
-// Function    :  Output_DumpData_Total_HDF5 (FormatVersion = 2437)
+// Function    :  Output_DumpData_Total_HDF5 (FormatVersion = 2438)
 // Description :  Output all simulation data in the HDF5 format, which can be used as a restart file
 //                or loaded by YT
 //
@@ -208,6 +208,7 @@ Procedure for outputting new variables:
 //                2435 : 2021/02/13 --> output DER_GHOST_SIZE, DER_NXT, DER_NOUT_MAX, SRC_NXT
 //                2436 : 2021/02/13 --> output OPT__OUTPUT_* of various derived fields
 //                2437 : 2021/02/14 --> output MIN_TEMP
+//                2438 : 2021/02/16 --> output OPT__OUTPUT_ENTR
 //-------------------------------------------------------------------------------------------------------
 void Output_DumpData_Total_HDF5( const char *FileName )
 {
@@ -1729,7 +1730,7 @@ void FillIn_KeyInfo( KeyInfo_t &KeyInfo )
 
    const time_t CalTime = time( NULL );   // calendar time
 
-   KeyInfo.FormatVersion        = 2437;
+   KeyInfo.FormatVersion        = 2438;
    KeyInfo.Model                = MODEL;
    KeyInfo.NLevel               = NLEVEL;
    KeyInfo.NCompFluid           = NCOMP_FLUID;
@@ -2604,6 +2605,7 @@ void FillIn_InputPara( InputPara_t &InputPara )
 #  if ( MODEL == HYDRO )
    InputPara.Opt__Output_Pres        = OPT__OUTPUT_PRES;
    InputPara.Opt__Output_Temp        = OPT__OUTPUT_TEMP;
+   InputPara.Opt__Output_Entr        = OPT__OUTPUT_ENTR;
    InputPara.Opt__Output_Cs          = OPT__OUTPUT_CS;
    InputPara.Opt__Output_DivVel      = OPT__OUTPUT_DIVVEL;
    InputPara.Opt__Output_Mach        = OPT__OUTPUT_MACH;
@@ -3417,6 +3419,7 @@ void GetCompound_InputPara( hid_t &H5_TypeID )
 #  if ( MODEL == HYDRO )
    H5Tinsert( H5_TypeID, "Opt__Output_Pres",        HOFFSET(InputPara_t,Opt__Output_Pres       ), H5T_NATIVE_INT              );
    H5Tinsert( H5_TypeID, "Opt__Output_Temp",        HOFFSET(InputPara_t,Opt__Output_Temp       ), H5T_NATIVE_INT              );
+   H5Tinsert( H5_TypeID, "Opt__Output_Entr",        HOFFSET(InputPara_t,Opt__Output_Entr       ), H5T_NATIVE_INT              );
    H5Tinsert( H5_TypeID, "Opt__Output_Cs",          HOFFSET(InputPara_t,Opt__Output_Cs         ), H5T_NATIVE_INT              );
    H5Tinsert( H5_TypeID, "Opt__Output_DivVel",      HOFFSET(InputPara_t,Opt__Output_DivVel     ), H5T_NATIVE_INT              );
    H5Tinsert( H5_TypeID, "Opt__Output_Mach",        HOFFSET(InputPara_t,Opt__Output_Mach       ), H5T_NATIVE_INT              );
