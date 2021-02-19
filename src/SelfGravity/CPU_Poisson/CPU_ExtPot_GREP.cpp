@@ -220,7 +220,7 @@ static real ExtPot_GREP( const double x, const double y, const double z, const d
    const real r  = SQRT( SQR(dx) + SQR(dy) + SQR(dz) );
 
 
-// use Usage to determine which GREP profile to be used
+// use Usage to determine which GREP profile is to be used
 #ifdef __CUDACC__
    if ( Usage == EXT_POT_USAGE_ADD )
    {
