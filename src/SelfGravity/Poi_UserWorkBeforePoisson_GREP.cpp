@@ -73,26 +73,23 @@ void Poi_UserWorkBeforePoisson_GREP( const double Time, const int lv )
    Profile_t *Phi_FaLv_New = Phi_eff[ FaLv ][     Sg_FaLv ];
    Profile_t *Phi_FaLv_Old = Phi_eff[ FaLv ][ 1 - Sg_FaLv ];
 
-   for (int b=0; b<Phi_Lv_New->NBin; b++)
-   {
+   for (int b=0; b<Phi_Lv_New->NBin; b++) {
 //    check if the number of bin exceeds EXT_POT_GREP_NAUX_MAX
 //    Phi_FaLv_New and Phi_FaLv_Old are skipped since they have been checked earlier
       if ( Phi_Lv_New->NBin > EXT_POT_GREP_NAUX_MAX )
          Aux_Error( ERROR_INFO, "Number of bins = %d > EXT_POT_GREP_NAUX_MAX for GREP at lv = %d and SaveSg = %d !!\n",
                     Phi_Lv_New->NBin, Lv, Sg_Lv );
 
-      h_ExtPotGREP[b                         ] = (real) Phi_Lv_New   ->Data  [b];
-      h_ExtPotGREP[b +  EXT_POT_GREP_NAUX_MAX] = (real) Phi_Lv_New   ->Radius[b];
+      h_ExtPotGREP[b                          ] = (real) Phi_Lv_New   ->Data  [b];
+      h_ExtPotGREP[b +   EXT_POT_GREP_NAUX_MAX] = (real) Phi_Lv_New   ->Radius[b];
    }
 
-   for (int b=0; b<Phi_FaLv_New->NBin; b++)
-   {
+   for (int b=0; b<Phi_FaLv_New->NBin; b++) {
       h_ExtPotGREP[b + 2*EXT_POT_GREP_NAUX_MAX] = (real) Phi_FaLv_New->Data  [b];
       h_ExtPotGREP[b + 3*EXT_POT_GREP_NAUX_MAX] = (real) Phi_FaLv_New->Radius[b];
    }
 
-   for (int b=0; b<Phi_FaLv_Old->NBin; b++)
-   {
+   for (int b=0; b<Phi_FaLv_Old->NBin; b++) {
       h_ExtPotGREP[b + 4*EXT_POT_GREP_NAUX_MAX] = (real) Phi_FaLv_Old->Data  [b];
       h_ExtPotGREP[b + 5*EXT_POT_GREP_NAUX_MAX] = (real) Phi_FaLv_Old->Radius[b];
    }
