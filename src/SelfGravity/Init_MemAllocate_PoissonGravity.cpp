@@ -60,15 +60,6 @@ void Init_MemAllocate_PoissonGravity( const int Pot_NPG )
 // general potential table
    h_ExtPotGenePtr = new void* [EXT_POT_NGENE_MAX];
 
-
-// GREP profiles
-   if ( OPT__EXT_POT == EXT_POT_GREP ) {
-
-      const long TableSize = EXT_POT_GREP_NAUX_MAX*6;
-
-      h_ExtPotGREP = new real [TableSize];
-   }
-
 } // FUNCTION : Init_MemAllocate_PoissonGravity
 
 

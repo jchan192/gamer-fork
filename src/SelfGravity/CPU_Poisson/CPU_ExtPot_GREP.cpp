@@ -12,17 +12,12 @@
 
 #ifdef __CUDACC__
 
+       real  *d_ExtPotGREP;
 extern void **d_ExtPotGenePtr;
-extern real  *d_ExtPotGREP;
 
 #else // #ifdef __CUDACC__
 
-extern Profile_t *DensAve [NLEVEL+1][2];
-extern Profile_t *EngyAve [NLEVEL+1][2];
-extern Profile_t *VrAve   [NLEVEL+1][2];
-extern Profile_t *PresAve [NLEVEL+1][2];
-extern Profile_t *Phi_eff [NLEVEL  ][2];
-
+       real  *h_ExtPotGREP;
 extern int    GREP_LvUpdate;
 extern int    GREPSg     [NLEVEL];
 extern double GREPSgTime [NLEVEL][2];
@@ -30,8 +25,16 @@ extern double GREP_Prof_Center   [3];
 extern double GREP_Prof_MaxRadius;
 extern double GREP_Prof_MinBinSize;
 
+extern Profile_t *DensAve [NLEVEL+1][2];
+extern Profile_t *EngyAve [NLEVEL+1][2];
+extern Profile_t *VrAve   [NLEVEL+1][2];
+extern Profile_t *PresAve [NLEVEL+1][2];
+extern Profile_t *Phi_eff [NLEVEL  ][2];
+
 extern void (*Poi_UserWorkBeforePoisson_Ptr)( const double Time, const int lv );
 extern void Poi_UserWorkBeforePoisson_GREP( const double Time, const int lv );
+extern void Init_GREP_MemAllocate();
+extern void End_ExtPot_GREP_MemFree();
 
 #endif // #ifdef __CUDACC__ ... else ...
 
@@ -40,6 +43,26 @@ extern void Poi_UserWorkBeforePoisson_GREP( const double Time, const int lv );
 // =========================================================
 // I. Initialize the GREP Profile_t objects and parameters
 // =========================================================
+
+#ifdef __CUDACC__
+//-------------------------------------------------------------------------------------------------------
+// Function    :  Init_GREP_MemAllocate
+// Description :  Allocate the device memory for storing GREP profiles in datatype of real
+//
+// Note        :  1. Invoked by Init_GREP()
+//-------------------------------------------------------------------------------------------------------
+void Init_GREP_MemAllocate()
+{
+
+   const long GREPPot_MemSize = sizeof(real)*EXT_POT_GREP_NAUX_MAX*2;
+
+// allocate the device memory
+   CUDA_CHECK_ERROR(  cudaMalloc( (void**) &d_ExtPotGREP, GREPPot_MemSize )  );
+
+} // FUNCTION : Init_GREP_MemAllocate
+#endif // #ifdef __CUDACC__
+
+
 
 #ifndef __CUDACC__
 //-------------------------------------------------------------------------------------------------------
@@ -99,6 +122,16 @@ void Init_GREP()
                         : SQRT( SQR( MAX( amr->BoxSize[0] - GREP_Prof_Center[0], GREP_Prof_Center[0] ) )
                         +       SQR( MAX( amr->BoxSize[1] - GREP_Prof_Center[1], GREP_Prof_Center[1] ) )
                         +       SQR( MAX( amr->BoxSize[2] - GREP_Prof_Center[2], GREP_Prof_Center[2] ) ) );
+
+
+// (4) allocate device and host memory for the GREP profiles in datatype of real
+   const long TableSize = EXT_POT_GREP_NAUX_MAX*6;
+
+   h_ExtPotGREP = new real [TableSize];
+
+#  ifdef GPU
+   Init_GREP_MemAllocate();
+#  endif
 
 } // FUNCTION : Init_GREP
 
@@ -371,6 +404,12 @@ void End_ExtPot_GREP()
       Phi_eff [lv][Sg]->FreeMemory();
    }
 
+   delete [] h_ExtPotGREP;
+
+#  ifdef GPU
+   End_ExtPot_GREP_MemFree();
+#  endif
+
 } // FUNCTION : End_ExtPot_GREP
 
 #endif // #ifndef __CUDACC__
@@ -378,6 +417,21 @@ void End_ExtPot_GREP()
 
 
 #ifdef __CUDACC__
+//-------------------------------------------------------------------------------------------------------
+// Function    :  End_ExtPot_GREP_MemFree
+// Description :  Free memory previously allocated by Init_GREP_MemAllocate()
+//
+// Parameter   :  None
+//-------------------------------------------------------------------------------------------------------
+void End_ExtPot_GREP_MemFree()
+{
+
+   CUDA_CHECK_ERROR(  cudaFree( d_ExtPotGREP )  );
+
+} // FUNCTION : End_ExtPot_GREP_MemFree
+
+
+
 //-------------------------------------------------------------------------------------------------------
 // Function    :  ExtPot_PassData2GPU_GREP
 // Description :  Transfer GREP profiles to GPU

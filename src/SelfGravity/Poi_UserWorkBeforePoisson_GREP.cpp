@@ -29,6 +29,8 @@ int    GREPSg     [NLEVEL];
 double GREPSgTime [NLEVEL][2];
 double GREP_Prof_Center   [3];
 
+extern real *h_ExtPotGREP;
+
 // temporary switch for test different schemes for temporal interpolation:
 //   True : apply temporal interpolation in Aux_ComputeProfile()
 //   False: apply temporal interpolation when combining the stored profiles
@@ -97,12 +99,7 @@ void Poi_UserWorkBeforePoisson_GREP( const double Time, const int lv )
 
 
 // assign the value of h_ExtPotGenePtr
-   h_ExtPotGenePtr[0] = (real**) (h_ExtPotGREP                          );
-   h_ExtPotGenePtr[1] = (real**) (h_ExtPotGREP +   EXT_POT_GREP_NAUX_MAX);
-   h_ExtPotGenePtr[2] = (real**) (h_ExtPotGREP + 2*EXT_POT_GREP_NAUX_MAX);
-   h_ExtPotGenePtr[3] = (real**) (h_ExtPotGREP + 3*EXT_POT_GREP_NAUX_MAX);
-   h_ExtPotGenePtr[4] = (real**) (h_ExtPotGREP + 4*EXT_POT_GREP_NAUX_MAX);
-   h_ExtPotGenePtr[5] = (real**) (h_ExtPotGREP + 5*EXT_POT_GREP_NAUX_MAX);
+   for (int i=0; i<6; i++)   h_ExtPotGenePtr[i] = (real**) (h_ExtPotGREP + i*EXT_POT_GREP_NAUX_MAX);
 
 
 #  ifdef GPU

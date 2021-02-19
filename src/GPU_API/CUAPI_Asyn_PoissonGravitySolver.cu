@@ -93,7 +93,6 @@ static real (*d_Emag_Array_G)[ CUBE(PS1) ] = NULL;
 #endif // #if ( MODEL == HYDRO )
 extern real  *d_ExtPotTable;
 extern void **d_ExtPotGenePtr;
-extern real  *d_ExtPotGREP;
 
 extern cudaStream_t *Stream;
 
@@ -244,8 +243,6 @@ void CUAPI_Asyn_PoissonGravitySolver( const real h_Rho_Array    [][RHO_NXT][RHO_
          if ( ExtPot == EXT_POT_TABLE  &&  d_ExtPotTable == NULL )
                                              Aux_Error( ERROR_INFO, "d_ExtPotTable == NULL !!\n" );
          if ( d_ExtPotGenePtr    == NULL )   Aux_Error( ERROR_INFO, "d_ExtPotGenePtr == NULL !!\n" );
-         if ( ExtPot == EXT_POT_GREP   &&  d_ExtPotGREP  == NULL )
-                                             Aux_Error( ERROR_INFO, "d_ExtPotGREP == NULL !!\n" );
       }
    } // if ( Poisson )
 
