@@ -31,10 +31,10 @@ extern Profile_t *VrAve   [NLEVEL+1][2];
 extern Profile_t *PresAve [NLEVEL+1][2];
 extern Profile_t *Phi_eff [NLEVEL  ][2];
 
+       void Init_GREP_MemAllocate();
+       void End_ExtPot_GREP_MemFree();
 extern void (*Poi_UserWorkBeforePoisson_Ptr)( const double Time, const int lv );
 extern void Poi_UserWorkBeforePoisson_GREP( const double Time, const int lv );
-extern void Init_GREP_MemAllocate();
-extern void End_ExtPot_GREP_MemFree();
 
 #endif // #ifdef __CUDACC__ ... else ...
 
