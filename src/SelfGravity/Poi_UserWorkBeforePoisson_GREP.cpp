@@ -77,8 +77,8 @@ void Poi_UserWorkBeforePoisson_GREP( const double Time, const int lv )
 //    check if the number of bin exceeds EXT_POT_GREP_NAUX_MAX
 //    Phi_FaLv_New and Phi_FaLv_Old are skipped since they have been checked earlier
       if ( Phi_Lv_New->NBin > EXT_POT_GREP_NAUX_MAX )
-         Aux_Error( ERROR_INFO, "Number of bins = %d > EXT_POT_GREP_NAUX_MAX for GREP at lv = %d and SaveSg = %d !!\n",
-                    Phi_Lv_New->NBin, Lv, Sg_Lv );
+         Aux_Error( ERROR_INFO, "Number of bins = %d > EXT_POT_GREP_NAUX_MAX = %d for GREP at lv = %d and SaveSg = %d !!\n",
+                    Phi_Lv_New->NBin, EXT_POT_GREP_NAUX_MAX, Lv, Sg_Lv );
 
       h_ExtPotGREP[b                          ] = (real) Phi_Lv_New   ->Data  [b];
       h_ExtPotGREP[b +   EXT_POT_GREP_NAUX_MAX] = (real) Phi_Lv_New   ->Radius[b];

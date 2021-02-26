@@ -404,7 +404,7 @@ void End_ExtPot_GREP()
       Phi_eff [lv][Sg]->FreeMemory();
    }
 
-   delete [] h_ExtPotGREP;
+   delete [] h_ExtPotGREP;  h_ExtPotGREP = NULL;
 
 #  ifdef GPU
    End_ExtPot_GREP_MemFree();
@@ -426,7 +426,7 @@ void End_ExtPot_GREP()
 void End_ExtPot_GREP_MemFree()
 {
 
-   CUDA_CHECK_ERROR(  cudaFree( d_ExtPotGREP )  );
+   if ( d_ExtPotGREP != NULL ) {  CUDA_CHECK_ERROR(  cudaFree( d_ExtPotGREP )  );  d_ExtPotGREP = NULL;  }
 
 } // FUNCTION : End_ExtPot_GREP_MemFree
 
@@ -453,8 +453,7 @@ void ExtPot_PassData2GPU_GREP( const real *h_Table )
    CUDA_CHECK_ERROR(  cudaMemcpy( d_ExtPotGREP, h_Table, MemSize, cudaMemcpyHostToDevice )  );
 
 // assign the value of d_ExtPotGenePtr
-   real** d_ExtPotGREP_Ptr[2] = { (real**)  d_ExtPotGREP,
-                                  (real**) (d_ExtPotGREP + EXT_POT_GREP_NAUX_MAX) };
+   real *d_ExtPotGREP_Ptr[2] = {  d_ExtPotGREP, d_ExtPotGREP+EXT_POT_GREP_NAUX_MAX  };
 
    CUDA_CHECK_ERROR(  cudaMemcpy( d_ExtPotGenePtr, d_ExtPotGREP_Ptr, sizeof(real*)*2, cudaMemcpyHostToDevice )  );
 
