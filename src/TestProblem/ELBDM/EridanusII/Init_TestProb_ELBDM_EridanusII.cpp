@@ -21,15 +21,15 @@ static double   Soliton_CM_MaxR;                         // maximum radius for d
 static double   Soliton_CM_TolErrR;                      // maximum allowed errors for determining CM
 
        bool     Tidal_Enabled;                           // enable tidal field (as an external potential)
-static bool     Tidal_RotatingFrame;                     // true/false --> rotating/inertial frame
-static double   Tidal_Mass;                              // point mass
-static double   Tidal_R;                                 // point mass distance
-static double   Tidal_Angle0;                            // initial angle of the point mass
-static bool     Tidal_FixedPos;                          // Fix the point mass position
-static bool     Tidal_Centrifugal;                       // Add the centrifugal pseudo force
+       bool     Tidal_RotatingFrame;                     // true/false --> rotating/inertial frame
+       double   Tidal_Mass;                              // point mass
+       double   Tidal_R;                                 // point mass distance
+       double   Tidal_Angle0;                            // initial angle of the point mass
+       bool     Tidal_FixedPos;                          // Fix the point mass position
+       bool     Tidal_Centrifugal;                       // Add the centrifugal pseudo force
        double   Tidal_CutoffR;                           // Cut-off radius
 
-static double   Tidal_Vrot;                              // rotational velocity due to the point mass
+       double   Tidal_Vrot;                              // rotational velocity due to the point mass
        double   Tidal_CM[3] = { __DBL_MAX__, __DBL_MAX__, __DBL_MAX__ }; // Center of mass of the satellite
 
 static int      Sponge_Mode;                             // 1/2/3: sponge BC/truncation BC/none
@@ -74,10 +74,7 @@ void Init_User_EridanusII();
 #endif
 
 // external potential routines
-void SetCPUExtPot_EridanusII( ExtPot_t &CPUExtPot_Ptr );
-# ifdef GPU
-void SetGPUExtPot_EridanusII( ExtPot_t &GPUExtPot_Ptr );
-# endif
+void Init_ExtPot_EridanusII();
 
 
 
@@ -287,26 +284,17 @@ void SetParameter()
 
    if ( Tidal_Enabled )
    {
-      if ( !OPT__EXTERNAL_POT )
-      {
-         OPT__EXTERNAL_POT = true;
-         PRINT_WARNING( "OPT__EXTERNAL_POT", OPT__EXTERNAL_POT, FORMAT_BOOL );
-      }
+      if ( OPT__EXT_POT != EXT_POT_FUNC )
+         Aux_Error( ERROR_INFO, "must set OPT__EXT_POT = EXT_POT_FUNC for Tidal_Enabled !!\n" );
 
       if ( !OPT__RECORD_USER )
-      {
-         OPT__RECORD_USER = true;
-         PRINT_WARNING( "OPT__RECORD_USER", OPT__RECORD_USER, FORMAT_BOOL );
-      }
+         Aux_Error( ERROR_INFO, "must enable OPT__RECORD_USER for Tidal_Enabled !!\n" );
    }
 
    if ( Sponge_Mode != 3 )
    {
       if ( !OPT__RESET_FLUID )
-      {
-         OPT__RESET_FLUID = true;
-         PRINT_WARNING( "OPT__RESET_FLUID", OPT__RESET_FLUID, FORMAT_BOOL );
-      }
+         Aux_Error( ERROR_INFO, "must enable OPT__RESET_FLUID for Sponge_Mode != 3!!\n" );
    }
 
 
@@ -524,6 +512,7 @@ void GetCenterOfMass( const double CM_Old[], double CM_New[], const double CM_Ma
    const bool   IntPhase_No       = false;
    const real   MinDens_No        = -1.0;
    const real   MinPres_No        = -1.0;
+   const real   MinTemp_No        = -1.0;
    const bool   DE_Consistency_No = false;
 #  ifdef PARTICLE
    const bool   TimingSendPar_No  = false;
@@ -564,7 +553,7 @@ void GetCenterOfMass( const double CM_Old[], double CM_New[], const double CM_Ma
 
       Prepare_PatchData( lv, Time[lv], TotalDens[0][0][0], NULL, 0, amr->NPatchComma[lv][1]/8, PID0List, _TOTAL_DENS, _NONE,
                          OPT__RHO_INT_SCHEME, INT_NONE, UNIT_PATCH, NSIDE_00, IntPhase_No, OPT__BC_FLU, BC_POT_NONE,
-                         MinDens_No, MinPres_No, DE_Consistency_No );
+                         MinDens_No, MinPres_No, MinTemp_No, DE_Consistency_No );
 
       delete [] PID0List;
 
@@ -681,6 +670,7 @@ void Record_EridanusII()
    const bool   IntPhase_No       = false;
    const real   MinDens_No        = -1.0;
    const real   MinPres_No        = -1.0;
+   const real   MinTemp_No        = -1.0;
    const bool   DE_Consistency_No = false;
 #  ifdef PARTICLE
    const bool   TimingSendPar_No  = false;
@@ -715,7 +705,7 @@ void Record_EridanusII()
 
       Prepare_PatchData( lv, Time[lv], TotalDens[0][0][0], NULL, 0, amr->NPatchComma[lv][1]/8, PID0List, DensMode, _NONE,
                          OPT__RHO_INT_SCHEME, INT_NONE, UNIT_PATCH, NSIDE_00, IntPhase_No, OPT__BC_FLU, BC_POT_NONE,
-                         MinDens_No, MinPres_No, DE_Consistency_No );
+                         MinDens_No, MinPres_No, MinTemp_No, DE_Consistency_No );
 
       delete [] PID0List;
 
@@ -1038,11 +1028,7 @@ void Init_TestProb_ELBDM_EridanusII()
    Aux_Record_User_Ptr      = Record_EridanusII;
    End_User_Ptr             = End_EridanusII;
 #  ifdef GRAVITY
-   Init_ExtPotAuxArray_Ptr  = Init_ExtPotAuxArray_EridanusII;
-   SetCPUExtPot_Ptr         = SetCPUExtPot_EridanusII;
-#  ifdef GPU
-   SetGPUExtPot_Ptr         = SetGPUExtPot_EridanusII;
-#  endif
+   Init_ExtPot_Ptr          = Init_ExtPot_EridanusII;
 #  endif // #ifdef GRAVITY
 #  ifdef PARTICLE
    Par_Init_ByFunction_Ptr  = Par_Init_ByFunction_EridanusII;
