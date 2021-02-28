@@ -75,6 +75,7 @@ void Init_User_EridanusII();
 
 // external potential routines
 void Init_ExtPot_EridanusII();
+void SetExtPotAuxArray_EridanusII( double AuxArray_Flt[], int AuxArray_Int[] );
 
 
 
@@ -985,6 +986,33 @@ bool Reset( real fluid[], const double x, const double y, const double z, const 
    }
 
 } // FUNCTION : Reset
+
+
+
+//-------------------------------------------------------------------------------------------------------
+// Function    :  Poi_UserWorkBeforePoisson_EridanusII
+// Description :  User-specified work before invoking the Poisson solver
+//
+// Note        :  1. Invoked by Gra_AdvanceDt() using the function pointer "Poi_UserWorkBeforePoisson_Ptr"
+//
+// Parameter   :  Time : Target physical time
+//                lv   : Target refinement level
+//
+// Return      :  None
+//-------------------------------------------------------------------------------------------------------
+void Poi_UserWorkBeforePoisson_EridanusII( const double Time, const int lv )
+{
+
+   if ( OPT__EXT_POT )
+   {
+      SetExtPotAuxArray_EridanusII( ExtPot_AuxArray_Flt, ExtPot_AuxArray_Int );
+
+#     ifdef GPU
+      CUAPI_SetConstMemory_ExtAccPot();
+#     endif
+   }
+
+} // FUNCTION : Poi_UserWorkBeforePoisson_EridanusII
 #endif // #if ( MODEL == ELBDM  &&  defined GRAVITY )
 
 
@@ -1014,24 +1042,25 @@ void Init_TestProb_ELBDM_EridanusII()
    SetParameter();
 
 
-   Init_Function_User_Ptr   = SetGridIC;
+   Init_Function_User_Ptr        = SetGridIC;
 #  ifdef PARTICLE
-   Init_User_Ptr            = Init_User_EridanusII;
+   Init_User_Ptr                 = Init_User_EridanusII;
 #  else
-   Init_User_Ptr            = NULL;
+   Init_User_Ptr                 = NULL;
 #  endif
-   Flag_User_Ptr            = NULL;
-   Mis_GetTimeStep_User_Ptr = NULL;
-   BC_User_Ptr              = BC_EridanusII;
-   Flu_ResetByUser_Func_Ptr = Reset;
-   Output_User_Ptr          = NULL;
-   Aux_Record_User_Ptr      = Record_EridanusII;
-   End_User_Ptr             = End_EridanusII;
+   Flag_User_Ptr                 = NULL;
+   Mis_GetTimeStep_User_Ptr      = NULL;
+   BC_User_Ptr                   = BC_EridanusII;
+   Flu_ResetByUser_Func_Ptr      = Reset;
+   Output_User_Ptr               = NULL;
+   Aux_Record_User_Ptr           = Record_EridanusII;
+   End_User_Ptr                  = End_EridanusII;
 #  ifdef GRAVITY
-   Init_ExtPot_Ptr          = Init_ExtPot_EridanusII;
+   Init_ExtPot_Ptr               = Init_ExtPot_EridanusII;
+   Poi_UserWorkBeforePoisson_Ptr = Poi_UserWorkBeforePoisson_EridanusII;
 #  endif // #ifdef GRAVITY
 #  ifdef PARTICLE
-   Par_Init_ByFunction_Ptr  = Par_Init_ByFunction_EridanusII;
+   Par_Init_ByFunction_Ptr       = Par_Init_ByFunction_EridanusII;
 #  endif
 #  endif // #if ( MODEL == ELBDM  &&  defined GRAVITY )
 
