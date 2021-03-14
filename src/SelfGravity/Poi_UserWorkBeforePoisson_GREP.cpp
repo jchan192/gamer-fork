@@ -10,6 +10,10 @@ extern void SetExtPotAuxArray_GREP( double AuxArray_Flt[], int AuxArray_Int[] );
 extern void SetTempIntPara( const int lv, const int Sg_Current, const double PrepTime, const double Time0, const double Time1,
                             bool &IntTime, int &Sg, int &Sg_IntT, real &Weighting, real &Weighting_IntT );
 
+#ifdef GPU
+extern void ExtPot_PassData2GPU_GREP( const real *h_Table );
+#endif
+
 
 Profile_t *DensAve [NLEVEL+1][2];
 Profile_t *EngyAve [NLEVEL+1][2];
@@ -25,21 +29,12 @@ int    GREPSg     [NLEVEL];
 double GREPSgTime [NLEVEL][2];
 double GREP_Prof_Center   [3];
 
+extern real *h_ExtPotGREP;
+
 // temporary switch for test different schemes for temporal interpolation:
 //   True : apply temporal interpolation in Aux_ComputeProfile()
 //   False: apply temporal interpolation when combining the stored profiles
 static bool Do_TEMPINT_in_ComputeProfile = true;
-
-
-extern double *h_GREP_Lv_Data_New;
-extern double *h_GREP_FaLv_Data_New;
-extern double *h_GREP_FaLv_Data_Old;
-extern double *h_GREP_Lv_Radius_New;
-extern double *h_GREP_FaLv_Radius_New;
-extern double *h_GREP_FaLv_Radius_Old;
-extern int     h_GREP_Lv_NBin_New;
-extern int     h_GREP_FaLv_NBin_New;
-extern int     h_GREP_FaLv_NBin_Old;
 
 
 
@@ -67,7 +62,7 @@ void Poi_UserWorkBeforePoisson_GREP( const double Time, const int lv )
    SetExtPotAuxArray_GREP( ExtPot_AuxArray_Flt, ExtPot_AuxArray_Int );
 
 
-// update the CPU pointer
+// copy GREP profiles to h_ExtPotGREP in datatype of real
    const int Lv   = GREP_LvUpdate;
    const int FaLv = ( Lv > 0 ) ? Lv - 1 : Lv;
 
@@ -78,20 +73,38 @@ void Poi_UserWorkBeforePoisson_GREP( const double Time, const int lv )
    Profile_t *Phi_FaLv_New = Phi_eff[ FaLv ][     Sg_FaLv ];
    Profile_t *Phi_FaLv_Old = Phi_eff[ FaLv ][ 1 - Sg_FaLv ];
 
-   h_GREP_Lv_Data_New     = Phi_Lv_New  ->Data;
-   h_GREP_FaLv_Data_New   = Phi_FaLv_New->Data;
-   h_GREP_FaLv_Data_Old   = Phi_FaLv_Old->Data;
-   h_GREP_Lv_Radius_New   = Phi_Lv_New  ->Radius;
-   h_GREP_FaLv_Radius_New = Phi_FaLv_New->Radius;
-   h_GREP_FaLv_Radius_Old = Phi_FaLv_Old->Radius;
-   h_GREP_Lv_NBin_New     = Phi_Lv_New  ->NBin;
-   h_GREP_FaLv_NBin_New   = Phi_FaLv_New->NBin;
-   h_GREP_FaLv_NBin_Old   = Phi_FaLv_Old->NBin;
+   for (int b=0; b<Phi_Lv_New->NBin; b++) {
+//    check if the number of bin exceeds EXT_POT_GREP_NAUX_MAX
+//    Phi_FaLv_New and Phi_FaLv_Old are skipped since they have been checked earlier
+      if ( Phi_Lv_New->NBin > EXT_POT_GREP_NAUX_MAX )
+         Aux_Error( ERROR_INFO, "Number of bins = %d > EXT_POT_GREP_NAUX_MAX = %d for GREP at lv = %d and SaveSg = %d !!\n",
+                    Phi_Lv_New->NBin, EXT_POT_GREP_NAUX_MAX, Lv, Sg_Lv );
+
+      h_ExtPotGREP[b                          ] = (real) Phi_Lv_New   ->Data  [b];
+      h_ExtPotGREP[b +   EXT_POT_GREP_NAUX_MAX] = (real) Phi_Lv_New   ->Radius[b];
+   }
+
+   for (int b=0; b<Phi_FaLv_New->NBin; b++) {
+      h_ExtPotGREP[b + 2*EXT_POT_GREP_NAUX_MAX] = (real) Phi_FaLv_New->Data  [b];
+      h_ExtPotGREP[b + 3*EXT_POT_GREP_NAUX_MAX] = (real) Phi_FaLv_New->Radius[b];
+   }
+
+   for (int b=0; b<Phi_FaLv_Old->NBin; b++) {
+      h_ExtPotGREP[b + 4*EXT_POT_GREP_NAUX_MAX] = (real) Phi_FaLv_Old->Data  [b];
+      h_ExtPotGREP[b + 5*EXT_POT_GREP_NAUX_MAX] = (real) Phi_FaLv_Old->Radius[b];
+   }
 
 
-// update the auxiliary GPU arrays
+// assign the value of h_ExtPotGenePtr
+   for (int i=0; i<6; i++)   h_ExtPotGenePtr[i] = (real**) (h_ExtPotGREP + i*EXT_POT_GREP_NAUX_MAX);
+
+
 #  ifdef GPU
+// update the auxiliary GPU arrays
    CUAPI_SetConstMemory_ExtAccPot();
+
+// transfer GREP profiles to GPU
+   ExtPot_PassData2GPU_GREP( h_ExtPotGREP );
 #  endif
 
 } // FUNCTION : Poi_UserWorkBeforePoisson_GREP
@@ -127,15 +140,19 @@ void Poi_Prepare_GREP( const double Time, const int lv )
 
 
 // update the spherical-averaged profiles
-   if ( Do_TEMPINT_in_ComputeProfile )   Update_GREP_Profile( lv, Sg, Time );
-   else                                  Update_GREP_Profile( lv, Sg, -1.0 );
+   if ( Do_TEMPINT_in_ComputeProfile )
+      Update_GREP_Profile( lv, Sg, Time );
 
+   else
+   {
+      Update_GREP_Profile( lv, Sg, -1.0 );
 
-// combine the profile at each level
-   Combine_GREP_Profile( DensAve, lv, Sg, Time, true );
-   Combine_GREP_Profile( EngyAve, lv, Sg, Time, true );
-   Combine_GREP_Profile( VrAve,   lv, Sg, Time, true );
-   Combine_GREP_Profile( PresAve, lv, Sg, Time, true );
+//    combine the profile at each level
+      Combine_GREP_Profile( DensAve, lv, Sg, Time, true );
+      Combine_GREP_Profile( EngyAve, lv, Sg, Time, true );
+      Combine_GREP_Profile( VrAve,   lv, Sg, Time, true );
+      Combine_GREP_Profile( PresAve, lv, Sg, Time, true );
+   }
 
 
 // compute the effective GR potential
@@ -170,16 +187,18 @@ static void Update_GREP_Profile( const int lv, const int Sg, const double PrepTi
 
 
    if ( Do_TEMPINT_in_ComputeProfile )
+   {
 //###CHECK: does leaf patch transit to non-leaf path at sub-cycling?
-//    update the profile from leaf patches on level <= lv
-      Aux_ComputeProfile   ( Prof_Leaf,     GREP_Prof_Center, GREP_Prof_MaxRadius, GREP_Prof_MinBinSize,
-                             GREP_LOGBIN,   GREP_LOGBINRATIO, false, TVar, 4, -1, lv, PATCH_LEAF,    PrepTime );
+//    update the profile from leaf patches on level <= lv and non-leaf patches on level = lv
+      Aux_ComputeProfile   ( Prof_NonLeaf,  GREP_Prof_Center, GREP_Prof_MaxRadius, GREP_Prof_MinBinSize,
+                             GREP_LOGBIN,   GREP_LOGBINRATIO, true,  TVar, 4,  0, lv, PATCH_LEAF_PLUS_MAXNONLEAF, PrepTime );
+   }
 
    else
    {
 //    update the profile from leaf patches on level = lv
       Aux_ComputeProfile   ( Prof_Leaf,     GREP_Prof_Center, GREP_Prof_MaxRadius, GREP_Prof_MinBinSize,
-                             GREP_LOGBIN,   GREP_LOGBINRATIO, false, TVar, 4, lv, -1, PATCH_LEAF,    PrepTime );
+                             GREP_LOGBIN,   GREP_LOGBINRATIO, false, TVar, 4, lv, lv, PATCH_LEAF,                PrepTime );
 
 //###CHECK: does the refinment correction affect leaf patch? If no, this part is not necesary.
 //    update the USG profile from leaf patches on level = lv to account the correction from finer level
@@ -190,14 +209,13 @@ static void Update_GREP_Profile( const int lv, const int Sg, const double PrepTi
          Profile_t *Prof_Leaf_USG [] = { DensAve[lv][Sg_USG], VrAve[lv][Sg_USG], PresAve[lv][Sg_USG], EngyAve[lv][Sg_USG] };
 
          Aux_ComputeProfile( Prof_Leaf_USG, GREP_Prof_Center, GREP_Prof_MaxRadius, GREP_Prof_MinBinSize,
-                             GREP_LOGBIN,   GREP_LOGBINRATIO, false, TVar, 4, lv, -1, PATCH_LEAF,    Time_USG );
+                             GREP_LOGBIN,   GREP_LOGBINRATIO, false, TVar, 4, lv, lv, PATCH_LEAF,                Time_USG );
       }
+
+//    update the profile from the non-leaf patches on level = lv
+      Aux_ComputeProfile   ( Prof_NonLeaf,  GREP_Prof_Center, GREP_Prof_MaxRadius, GREP_Prof_MinBinSize,
+                             GREP_LOGBIN,   GREP_LOGBINRATIO, false, TVar, 4, lv, lv, PATCH_NONLEAF,             PrepTime );
    }
-
-
-// update the profile from the non-leaf patches on level = lv
-   Aux_ComputeProfile      ( Prof_NonLeaf,  GREP_Prof_Center, GREP_Prof_MaxRadius, GREP_Prof_MinBinSize,
-                             GREP_LOGBIN,   GREP_LOGBINRATIO, false, TVar, 4, lv, -1, PATCH_NONLEAF, PrepTime );
 
 } // FUNCTION : Update_GREP_Profile
 
