@@ -37,7 +37,7 @@ const TestProbID_t
    TESTPROB_HYDRO_BLAST_WAVE                   =    1,
    TESTPROB_HYDRO_ACOUSTIC_WAVE                =    2,
    TESTPROB_HYDRO_BONDI                        =    3,
-   TESTPROB_HYDRO_CLUSTER_MERGER_VS_FLASH      =    4,
+   TESTPROB_HYDRO_CLUSTER_MERGER               =    4,
    TESTPROB_HYDRO_AGORA_ISOLATED_GALAXY        =    5,
    TESTPROB_HYDRO_CAUSTIC                      =    6,
    TESTPROB_HYDRO_SPHERICAL_COLLAPSE           =    7,
@@ -352,11 +352,16 @@ const OptTimeStepLevel_t
    DT_LEVEL_FLEXIBLE  = 3;
 
 
-// AddField() option
+// AddField() options
 typedef int NormPassive_t;
 const NormPassive_t
    NORMALIZE_NO  = 0,
    NORMALIZE_YES = 1;
+
+typedef int IntFracPassive_t;
+const IntFracPassive_t
+   INTERP_FRAC_NO  = 0,
+   INTERP_FRAC_YES = 1;
 
 
 // field types
