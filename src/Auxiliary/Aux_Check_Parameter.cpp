@@ -1129,10 +1129,15 @@ void Aux_Check_Parameter()
 #  ifdef GREP
    if ( OPT__EXT_POT != EXT_POT_GREP )
       Aux_Error( ERROR_INFO, "OPT__EXT_POT != EXT_POT_GREP even though GREP is enabled in the Makefile !!\n" );
+
+#  ifdef UNSPLIT_GRAVITY
+#     error : ERROR : GREP and UNSPLIT_GRAVITY are incompatible !!
+#  endif
+
 #  else
    if ( OPT__EXT_POT == EXT_POT_GREP )
       Aux_Error( ERROR_INFO, "must enable GREP in the Makefile for OPT__EXT_POT == EXT_POT_GREP !!\n" );
-#  endif
+#  endif // #ifdef GREP ... else ...
 
 
 // warnings
