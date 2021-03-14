@@ -69,7 +69,7 @@ Procedure for outputting new variables:
 
 
 //-------------------------------------------------------------------------------------------------------
-// Function    :  Output_DumpData_Total_HDF5 (FormatVersion = 2438)
+// Function    :  Output_DumpData_Total_HDF5 (FormatVersion = 2439)
 // Description :  Output all simulation data in the HDF5 format, which can be used as a restart file
 //                or loaded by YT
 //
@@ -208,7 +208,8 @@ Procedure for outputting new variables:
 //                2435 : 2021/02/13 --> output DER_GHOST_SIZE, DER_NXT, DER_NOUT_MAX, SRC_NXT
 //                2436 : 2021/02/13 --> output OPT__OUTPUT_* of various derived fields
 //                2437 : 2021/02/14 --> output MIN_TEMP
-//                2438 : 2021/03/12 --> output OPT__INT_FRAC_PASSIVE_LR, PassiveIntFrac_NVar, and PassiveIntFrac_VarIdx
+//                2438 : 2021/02/16 --> output OPT__OUTPUT_ENTR
+//                2439 : 2021/03/12 --> output OPT__INT_FRAC_PASSIVE_LR, PassiveIntFrac_NVar, and PassiveIntFrac_VarIdx
 //-------------------------------------------------------------------------------------------------------
 void Output_DumpData_Total_HDF5( const char *FileName )
 {
@@ -789,6 +790,9 @@ void Output_DumpData_Total_HDF5( const char *FileName )
    int TempDumpIdx = -1;
    if ( OPT__OUTPUT_TEMP )    TempDumpIdx   = NFieldOut ++;
 
+   int EntrDumpIdx = -1;
+   if ( OPT__OUTPUT_ENTR )    EntrDumpIdx   = NFieldOut ++;
+
    int CsDumpIdx = -1;
    if ( OPT__OUTPUT_CS )      CsDumpIdx     = NFieldOut ++;
 
@@ -840,6 +844,7 @@ void Output_DumpData_Total_HDF5( const char *FileName )
 #  if ( MODEL == HYDRO )
    if ( OPT__OUTPUT_PRES   )  sprintf( FieldName[PresDumpIdx  ], "Pres"   );
    if ( OPT__OUTPUT_TEMP   )  sprintf( FieldName[TempDumpIdx  ], "Temp"   );
+   if ( OPT__OUTPUT_ENTR   )  sprintf( FieldName[EntrDumpIdx  ], "Entr"   );
    if ( OPT__OUTPUT_CS     )  sprintf( FieldName[CsDumpIdx    ], "Cs"     );
    if ( OPT__OUTPUT_DIVVEL )  sprintf( FieldName[DivVelDumpIdx], "DivVel" );
    if ( OPT__OUTPUT_MACH   )  sprintf( FieldName[MachDumpIdx  ], "Mach"   );
@@ -1099,7 +1104,38 @@ void Output_DumpData_Total_HDF5( const char *FileName )
                } // if ( v == TempDumpIdx )
                else
 
-//             d-3. sound speed
+//             d-3. gas entropy
+               if ( v == EntrDumpIdx )
+               {
+                  const bool CheckMinEint_No = false;
+
+                  for (int PID=0; PID<amr->NPatchComma[lv][1]; PID++)
+                  for (int k=0; k<PS1; k++)
+                  for (int j=0; j<PS1; j++)
+                  for (int i=0; i<PS1; i++)
+                  {
+                     real u[NCOMP_TOTAL], Out[2], Eint, Pres, Emag=NULL_REAL, Entr=NULL_REAL;
+
+                     for (int v=0; v<NCOMP_TOTAL; v++)   u[v] = amr->patch[ amr->FluSg[lv] ][lv][PID]->fluid[v][k][j][i];
+
+#                    ifdef MHD
+                     Emag = MHD_GetCellCenteredBEnergyInPatch( lv, PID, i, j, k, amr->MagSg[lv] );
+#                    endif
+
+#                    if ( EOS == EOS_NUCLEAR )
+                     Eint = Hydro_Con2Eint( u[DENS], u[MOMX], u[MOMY], u[MOMZ], u[ENGY], CheckMinEint_No, NULL_REAL, Emag );
+                     Pres = EoS_DensEint2Pres_CPUPtr( u[DENS], Eint, u+NCOMP_FLUID, EoS_AuxArray_Flt, EoS_AuxArray_Int,
+                                                      h_EoS_Table, Out );
+                     Entr = Out[1];
+#                    else
+                     Aux_Error( ERROR_INFO, "OPT__OUTPUT_ENTR is only supported by EOS_NUCLEAR !!\n" );
+#                    endif
+                     FieldData[PID][k][j][i] = Entr;
+                  }
+               } // if ( v == EntrDumpIdx )
+               else
+
+//             d-4. sound speed
                if ( v == CsDumpIdx )
                {
                   const bool CheckMinPres_No = false;
@@ -1126,7 +1162,7 @@ void Output_DumpData_Total_HDF5( const char *FileName )
                } // if ( v == CsDumpIdx )
                else
 
-//             d-4. divergence(velocity)
+//             d-5. divergence(velocity)
                if ( v == DivVelDumpIdx )
                {
                   for (int PID0=0; PID0<amr->NPatchComma[lv][1]; PID0+=8)
@@ -1162,7 +1198,7 @@ void Output_DumpData_Total_HDF5( const char *FileName )
                } // if ( v == DivVelDumpIdx )
                else
 
-//             d-5. Mach number
+//             d-6. Mach number
                if ( v == MachDumpIdx )
                {
                   for (int PID0=0; PID0<amr->NPatchComma[lv][1]; PID0+=8)
@@ -1205,7 +1241,7 @@ void Output_DumpData_Total_HDF5( const char *FileName )
                else
 #              endif // #if ( MODEL == HYDRO )
 
-//             d-6. divergence(B field)
+//             d-7. divergence(B field)
 #              ifdef MHD
                if ( v == DivMagDumpIdx )
                {
@@ -1221,7 +1257,7 @@ void Output_DumpData_Total_HDF5( const char *FileName )
                else
 #              endif
 
-//             d-7. user-defined derived fields
+//             d-8. user-defined derived fields
 //             the following check also works for OPT__OUTPUT_USER_FIELD==false since UserDerField_Num is initialized as -1
                if ( v >= UserDumpIdx0  &&  v < UserDumpIdx0 + UserDerField_Num )
                {
@@ -1695,7 +1731,7 @@ void FillIn_KeyInfo( KeyInfo_t &KeyInfo )
 
    const time_t CalTime = time( NULL );   // calendar time
 
-   KeyInfo.FormatVersion        = 2438;
+   KeyInfo.FormatVersion        = 2439;
    KeyInfo.Model                = MODEL;
    KeyInfo.NLevel               = NLEVEL;
    KeyInfo.NCompFluid           = NCOMP_FLUID;
@@ -2577,6 +2613,7 @@ void FillIn_InputPara( InputPara_t &InputPara )
 #  if ( MODEL == HYDRO )
    InputPara.Opt__Output_Pres        = OPT__OUTPUT_PRES;
    InputPara.Opt__Output_Temp        = OPT__OUTPUT_TEMP;
+   InputPara.Opt__Output_Entr        = OPT__OUTPUT_ENTR;
    InputPara.Opt__Output_Cs          = OPT__OUTPUT_CS;
    InputPara.Opt__Output_DivVel      = OPT__OUTPUT_DIVVEL;
    InputPara.Opt__Output_Mach        = OPT__OUTPUT_MACH;
@@ -3395,6 +3432,7 @@ void GetCompound_InputPara( hid_t &H5_TypeID )
 #  if ( MODEL == HYDRO )
    H5Tinsert( H5_TypeID, "Opt__Output_Pres",        HOFFSET(InputPara_t,Opt__Output_Pres       ), H5T_NATIVE_INT              );
    H5Tinsert( H5_TypeID, "Opt__Output_Temp",        HOFFSET(InputPara_t,Opt__Output_Temp       ), H5T_NATIVE_INT              );
+   H5Tinsert( H5_TypeID, "Opt__Output_Entr",        HOFFSET(InputPara_t,Opt__Output_Entr       ), H5T_NATIVE_INT              );
    H5Tinsert( H5_TypeID, "Opt__Output_Cs",          HOFFSET(InputPara_t,Opt__Output_Cs         ), H5T_NATIVE_INT              );
    H5Tinsert( H5_TypeID, "Opt__Output_DivVel",      HOFFSET(InputPara_t,Opt__Output_DivVel     ), H5T_NATIVE_INT              );
    H5Tinsert( H5_TypeID, "Opt__Output_Mach",        HOFFSET(InputPara_t,Opt__Output_Mach       ), H5T_NATIVE_INT              );
