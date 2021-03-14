@@ -17,6 +17,7 @@ static char    NeutronStar_ICFile[MAX_STRING];  // Filename of initial condition
 // ===============================================================================================
 
 
+static void LoadICTable();
 static void Record_CentralDens();
 
 
@@ -49,6 +50,10 @@ void Validate()
 #  ifdef GRAVITY
    if ( OPT__EXT_POT != EXT_POT_GREP )
       Aux_Error( ERROR_INFO, "must set OPT__EXT_POT = EXT_POT_GREP !!\n" );
+#  endif
+
+#  if ( EOS != EOS_GAMMA )
+   Aux_Error( ERROR_INFO, "EOS != EOS_GAMMA !!\n" );
 #  endif
 
    if ( !OPT__UNIT )

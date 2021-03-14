@@ -1,13 +1,15 @@
 Compilation flags:
 ========================================
-Enable : MODEL=HYDRO, GRAVITY, GREP, NLEVEL=4
+Enable : MODEL=HYDRO, GRAVITY, GREP, EOS=GAMMA, NLEVEL=4
 Disable:
 
 Default setup:
 ========================================
 1. Enable external potential
-   --> OPT__EXT_POT = 1
+   --> OPT__EXT_POT = 3
 2. Maximum refinement level (MAX_LEVEL) = 3 or modify the Input_Flag_Rho
+3. Use Gamma-law EoS
+   --> GAMMA = 2.0, K = 1.455e5 (cgs)
 
 Note:
 ========================================
@@ -20,7 +22,7 @@ Note:
 
       Init_ExtPot_Ptr               = Init_ExtPot_GREP;
       Poi_UserWorkBeforePoisson_Ptr = Poi_UserWorkBeforePoisson_GREP;
-      End_ExtPot_Ptr                = End_GREP;
+      End_ExtPot_Ptr                = End_ExtPot_GREP;
 
 3. If `GAMER_DEBUG` compilation flag is enabled, additional information will be output
    to standard output for debugging the constructed GREP
