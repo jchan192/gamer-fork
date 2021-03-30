@@ -37,7 +37,7 @@ const TestProbID_t
    TESTPROB_HYDRO_BLAST_WAVE                   =    1,
    TESTPROB_HYDRO_ACOUSTIC_WAVE                =    2,
    TESTPROB_HYDRO_BONDI                        =    3,
-   TESTPROB_HYDRO_CLUSTER_MERGER_VS_FLASH      =    4,
+   TESTPROB_HYDRO_CLUSTER_MERGER               =    4,
    TESTPROB_HYDRO_AGORA_ISOLATED_GALAXY        =    5,
    TESTPROB_HYDRO_CAUSTIC                      =    6,
    TESTPROB_HYDRO_SPHERICAL_COLLAPSE           =    7,
@@ -186,6 +186,7 @@ const Solver_t
 #ifdef GRAVITY
   ,DT_GRA_SOLVER              = 6
 #endif
+  ,SRC_SOLVER                 = 7
   ;
 
 
@@ -276,13 +277,31 @@ const ParPass2Son_t
 #endif // #ifdef PARTICLE
 
 
-// the gravity types (this type needs to be defined for the Fluid solver even when GRAVITY is off)
-typedef int OptGravityType_t;
-const OptGravityType_t
-   GRAVITY_NONE     = 0,
-   GRAVITY_SELF     = 1,
-   GRAVITY_EXTERNAL = 2,
-   GRAVITY_BOTH     = 3;
+// external acceleration (must be defined for the fluid solver even when GRAVITY is off)
+typedef int OptExtAcc_t;
+const OptExtAcc_t
+   EXT_ACC_NONE  = 0,
+   EXT_ACC_FUNC  = 1,
+   EXT_ACC_TABLE = 2;
+
+
+// external potential (must be defined for the fluid solver even when GRAVITY is off)
+typedef int OptExtPot_t;
+const OptExtPot_t
+   EXT_POT_NONE  = 0,
+   EXT_POT_FUNC  = 1,
+   EXT_POT_TABLE = 2;
+
+
+// different usages of external potential when computing total potential on level Lv
+// --> ADD     : add external potential on Lv
+//     SUB     : subtract external potential for preparing self-gravity potential on Lv-1
+//     SUB_TINT: like SUB but for temporal interpolation
+typedef int ExtPotUsage_t;
+const ExtPotUsage_t
+   EXT_POT_USAGE_ADD      = 0,
+   EXT_POT_USAGE_SUB      = 1,
+   EXT_POT_USAGE_SUB_TINT = 2;
 
 
 // forms of the Lohner's error estimator
@@ -304,12 +323,12 @@ const Opt1stFluxCorr_t
 
 typedef int OptRSolver1st_t;
 const OptRSolver1st_t
-   RSOLVER_1ST_NONE    = 0
-  ,RSOLVER_1ST_ROE     = 1
-  ,RSOLVER_1ST_HLLC    = 2
-  ,RSOLVER_1ST_HLLE    = 3
-  ,RSOLVER_1ST_HLLD    = 4
-  ;
+   RSOLVER_1ST_DEFAULT = -1,
+   RSOLVER_1ST_NONE    = 0,
+   RSOLVER_1ST_ROE     = 1,
+   RSOLVER_1ST_HLLC    = 2,
+   RSOLVER_1ST_HLLE    = 3,
+   RSOLVER_1ST_HLLD    = 4;
 #endif // #if ( MODEL == HYDRO )
 
 
@@ -330,11 +349,16 @@ const OptTimeStepLevel_t
    DT_LEVEL_FLEXIBLE  = 3;
 
 
-// AddField() option
+// AddField() options
 typedef int NormPassive_t;
 const NormPassive_t
    NORMALIZE_NO  = 0,
    NORMALIZE_YES = 1;
+
+typedef int IntFracPassive_t;
+const IntFracPassive_t
+   INTERP_FRAC_NO  = 0,
+   INTERP_FRAC_YES = 1;
 
 
 // field types
@@ -361,6 +385,41 @@ const SF_CreateStarScheme_t
    SF_CREATE_STAR_SCHEME_NONE  = 0,
    SF_CREATE_STAR_SCHEME_AGORA = 1;
 #endif
+
+
+// options in Aux_ComputeProfile()
+typedef int PatchType_t;
+const PatchType_t
+   PATCH_LEAF                 = 0,
+   PATCH_NONLEAF              = 1,
+   PATCH_BOTH                 = 2,
+   PATCH_LEAF_PLUS_MAXNONLEAF = 3;
+
+
+// function pointers
+typedef real (*EoS_DE2P_t)( const real Dens, const real Eint, const real Passive[],
+                            const double AuxArray_Flt[], const int AuxArray_Int[],
+                            const real *const Table[EOS_NTABLE_MAX], real ExtraInOut[] );
+typedef real (*EoS_DP2E_t)( const real Dens, const real Pres, const real Passive[],
+                            const double AuxArray_Flt[], const int AuxArray_Int[],
+                            const real *const Table[EOS_NTABLE_MAX], real ExtraInOut[] );
+typedef real (*EoS_DP2C_t)( const real Dens, const real Pres, const real Passive[],
+                            const double AuxArray_Flt[], const int AuxArray_Int[],
+                            const real *const Table[EOS_NTABLE_MAX], real ExtraInOut[] );
+typedef void (*EoS_GENE_t)( const int Mode, real Out[], const real In[],
+                            const double AuxArray_Flt[], const int AuxArray_Int[],
+                            const real *const Table[EOS_NTABLE_MAX] );
+typedef real (*EoS_DE2T_t)( const real Dens, const real Eint, const real Passive[],
+                            const double AuxArray_Flt[], const int AuxArray_Int[],
+                            const real *const Table[EOS_NTABLE_MAX], real ExtraInOut[] );
+typedef real (*EoS_DT2P_t)( const real Dens, const real Temp, const real Passive[],
+                            const double AuxArray_Flt[], const int AuxArray_Int[],
+                            const real *const Table[EOS_NTABLE_MAX], real ExtraInOut[] );
+typedef void (*ExtAcc_t)( real Acc[], const double x, const double y, const double z, const double Time,
+                          const double UserArray[] );
+typedef real (*ExtPot_t)( const double x, const double y, const double z, const double Time,
+                          const double UserArray_Flt[], const int UserArray_Int[],
+                          const ExtPotUsage_t Usage, const real PotTable[], void **GenePtr );
 
 
 

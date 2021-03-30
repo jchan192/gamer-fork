@@ -46,6 +46,9 @@ void Patch2Slab( real *RhoK, real *SendBuf_Rho, real *RecvBuf_Rho, long *SendBuf
 {
 
 // check
+   if ( OPT__GRAVITY_EXTRA_MASS  &&  Poi_AddExtraMassForGravity_Ptr == NULL )
+      Aux_Error( ERROR_INFO, "Poi_AddExtraMassForGravity_Ptr == NULL for OPT__GRAVITY_EXTRA_MASS !!\n" );
+
 #  ifdef GAMER_DEBUG
    if ( List_z_start[MPI_Rank+1] - List_z_start[MPI_Rank] != local_nz )
       Aux_Error( ERROR_INFO, "local_nz (%d) != expectation (%d) !!\n",
@@ -93,6 +96,7 @@ void Patch2Slab( real *RhoK, real *SendBuf_Rho, real *RecvBuf_Rho, long *SendBuf
    const bool        DE_Consistency_No = false;
    const real        MinDens_No        = -1.0;
    const real        MinPres_No        = -1.0;
+   const real        MinTemp_No        = -1.0;
    const int         GhostSize         = 0;
    const int         NPG               = 1;
 
@@ -105,7 +109,7 @@ void Patch2Slab( real *RhoK, real *SendBuf_Rho, real *RecvBuf_Rho, long *SendBuf
 //    also note that we do not check minimum density here since no ghost zones are required
       Prepare_PatchData( 0, PrepTime, Dens[0][0][0], NULL, GhostSize, NPG, &PID0, _TOTAL_DENS, _NONE,
                          IntScheme, INT_NONE, UNIT_PATCH, NSide_None, IntPhase_No, OPT__BC_FLU, PotBC_None,
-                         MinDens_No, MinPres_No, DE_Consistency_No );
+                         MinDens_No, MinPres_No, MinTemp_No, DE_Consistency_No );
 
 
 //    add extra mass source for gravity if required
