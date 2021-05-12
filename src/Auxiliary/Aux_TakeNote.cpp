@@ -1011,6 +1011,7 @@ void Aux_TakeNote()
       fprintf( Note, "MIN_PRES                        %13.7e\n",  MIN_PRES                 );
       fprintf( Note, "MIN_EINT                        %13.7e\n",  MIN_EINT                 );
       fprintf( Note, "MIN_TEMP                        %13.7e\n",  MIN_TEMP                 );
+      fprintf( Note, "OPT__CHECK_PRES_AFTER_FLU       %d\n",      OPT__CHECK_PRES_AFTER_FLU);
       fprintf( Note, "OPT__LAST_RESORT_FLOOR          %d\n",      OPT__LAST_RESORT_FLOOR   );
       fprintf( Note, "JEANS_MIN_PRES                  %d\n",      JEANS_MIN_PRES           );
       if ( JEANS_MIN_PRES ) {
@@ -1093,6 +1094,7 @@ void Aux_TakeNote()
       fprintf( Note, "RESTART_LOAD_NRANK              %d\n",      RESTART_LOAD_NRANK      );
       fprintf( Note, "OPT__RESTART_RESET              %d\n",      OPT__RESTART_RESET      );
       fprintf( Note, "OPT__UM_IC_LEVEL                %d\n",      OPT__UM_IC_LEVEL        );
+      fprintf( Note, "OPT__UM_IC_NLEVEL               %d\n",      OPT__UM_IC_NLEVEL       );
       fprintf( Note, "OPT__UM_IC_NVAR                 %d\n",      OPT__UM_IC_NVAR         );
       fprintf( Note, "OPT__UM_IC_FORMAT               %d\n",      OPT__UM_IC_FORMAT       );
       fprintf( Note, "OPT__UM_IC_DOWNGRADE            %d\n",      OPT__UM_IC_DOWNGRADE    );
@@ -1105,6 +1107,25 @@ void Aux_TakeNote()
 #     ifdef MHD
       fprintf( Note, "OPT__INIT_BFIELD_BYFILE         %d\n",      OPT__INIT_BFIELD_BYFILE );
 #     endif
+
+//    refinement region for OPT__UM_IC_NLEVEL>1
+      if ( OPT__INIT == INIT_BY_FILE  &&  OPT__UM_IC_NLEVEL > 1 ) {
+
+      const int (*RefineRegion)[6] = ( int(*)[6] )UM_IC_RefineRegion;
+
+      fprintf( Note, "\n" );
+      fprintf( Note, "Input__UM_IC_RefineRegion\n" );
+      fprintf( Note, "------------------------------------------------------------------------------\n" );
+      fprintf( Note, "   %3s  %10s  %10s  %10s  %10s  %10s  %10s\n",
+               "dLv", "NP_Skip_xL", "NP_Skip_xR", "NP_Skip_yL", "NP_Skip_yR", "NP_Skip_zL", "NP_Skip_zR" );
+
+      for (int t=0; t<OPT__UM_IC_NLEVEL-1; t++)
+      fprintf( Note, "   %3d  %10d  %10d  %10d  %10d  %10d  %10d\n",
+               t+1, RefineRegion[t][0], RefineRegion[t][1], RefineRegion[t][2],
+                    RefineRegion[t][3], RefineRegion[t][4], RefineRegion[t][5] );
+      fprintf( Note, "------------------------------------------------------------------------------\n" );
+      fprintf( Note, "\n" ); }
+
       fprintf( Note, "***********************************************************************************\n" );
       fprintf( Note, "\n\n");
 
