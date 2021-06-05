@@ -1490,6 +1490,15 @@ void Aux_TakeNote()
       fprintf( Note, "\n\n");
 
 
+//    record the git information
+      fprintf( Note, "Git information\n" );
+      fprintf( Note, "***********************************************************************************\n" );
+      fprintf( Note, "Branch : %s\n", EXPAND_AND_QUOTE(GIT_BRANCH) );
+      fprintf( Note, "Commit : %s\n", EXPAND_AND_QUOTE(GIT_COMMIT) );
+      fprintf( Note, "***********************************************************************************\n" );
+      fprintf( Note, "\n\n" );
+
+
       fclose( Note );
    } // if ( MPI_Rank == 0 )
 
