@@ -69,7 +69,7 @@ Procedure for outputting new variables:
 
 
 //-------------------------------------------------------------------------------------------------------
-// Function    :  Output_DumpData_Total_HDF5 (FormatVersion = 2443)
+// Function    :  Output_DumpData_Total_HDF5 (FormatVersion = 2444)
 // Description :  Output all simulation data in the HDF5 format, which can be used as a restart file
 //                or loaded by YT
 //
@@ -214,6 +214,7 @@ Procedure for outputting new variables:
 //                2441 : 2021/04/06 --> output UM_IC_RefineRegion
 //                2442 : 2021/05/12 --> output OPT__CHECK_PRES_AFTER_FLU
 //                2443 : 2021/06/05 --> output git information
+//                2444 : 2021/06/05 --> output UniqueDataID
 //-------------------------------------------------------------------------------------------------------
 void Output_DumpData_Total_HDF5( const char *FileName )
 {
@@ -1735,7 +1736,7 @@ void FillIn_KeyInfo( KeyInfo_t &KeyInfo )
 
    const time_t CalTime = time( NULL );   // calendar time
 
-   KeyInfo.FormatVersion        = 2443;
+   KeyInfo.FormatVersion        = 2444;
    KeyInfo.Model                = MODEL;
    KeyInfo.NLevel               = NLEVEL;
    KeyInfo.NCompFluid           = NCOMP_FLUID;
@@ -1798,6 +1799,9 @@ void FillIn_KeyInfo( KeyInfo_t &KeyInfo )
    KeyInfo.DumpWallTime[ strlen(KeyInfo.DumpWallTime)-1 ] = '\0';  // remove the last character '\n'
    KeyInfo.GitBranch    = EXPAND_AND_QUOTE( GIT_BRANCH );
    KeyInfo.GitCommit    = EXPAND_AND_QUOTE( GIT_COMMIT );
+
+   srand( time(NULL) );
+   KeyInfo.UniqueDataID = rand();
 
 } // FUNCTION : FillIn_KeyInfo
 
@@ -2816,6 +2820,7 @@ void GetCompound_KeyInfo( hid_t &H5_TypeID )
    H5Tinsert( H5_TypeID, "DumpWallTime",         HOFFSET(KeyInfo_t,DumpWallTime        ), H5_TypeID_VarStr        );
    H5Tinsert( H5_TypeID, "GitBranch",            HOFFSET(KeyInfo_t,GitBranch           ), H5_TypeID_VarStr        );
    H5Tinsert( H5_TypeID, "GitCommit",            HOFFSET(KeyInfo_t,GitCommit           ), H5_TypeID_VarStr        );
+   H5Tinsert( H5_TypeID, "UniqueDataID",         HOFFSET(KeyInfo_t,UniqueDataID        ), H5T_NATIVE_LONG         );
 
 
 // free memory
