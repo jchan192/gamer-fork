@@ -53,6 +53,7 @@ const TestProbID_t
    TESTPROB_HYDRO_BARRED_POT                   =   51,
 
    TESTPROB_HYDRO_GREP_MIGRATIONTEST           =   20,
+   TESTPROB_HYDRO_CCSN_POSTBOUNCE              =   21,
 
    TESTPROB_ELBDM_EXTPOT                       = 1000;
 

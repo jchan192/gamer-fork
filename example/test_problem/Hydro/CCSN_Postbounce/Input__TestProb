@@ -1,0 +1,8 @@
+# problem-specific runtime parameters
+NeutronStar_ICFile   data_s20GREP_LS220_15ms_none.data       # input file of initial condition
+
+NUC_Mode             0                                       # Mode for internal energy in SetGridIC [0]
+                                                             # (0=Pres Mode, 1=Temp Mode)
+
+Bfield_Ab            1.0e15                                  # magnetic field strength (in gauss) [1e15]
+Bfield_np            0.0                                     # dependence on the density          [0.0]
