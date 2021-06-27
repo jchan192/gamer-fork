@@ -17,10 +17,6 @@ static char    NeutronStar_ICFile[MAX_STRING];  // Filename of initial condition
 // ===============================================================================================
 
 
-static void LoadICTable();
-static void Record_CentralDens();
-
-
 
 
 //-------------------------------------------------------------------------------------------------------
@@ -299,10 +295,10 @@ void SetBFieldIC( real magnetic[], const double x, const double y, const double 
 
 
 //-------------------------------------------------------------------------------------------------------
-// Function    :  LoadICTable
+// Function    :  LoadICTable_GREP_MigrationTest
 // Description :  Load data from the file assigned to 'NeutronStar_ICFile' in Input__TestProb
 //-------------------------------------------------------------------------------------------------------
-void LoadICTable()
+void LoadICTable_GREP_MigrationTest()
 {
 
    const bool RowMajor_No  = false;              // load data into the column-major order
@@ -328,7 +324,7 @@ void LoadICTable()
       Table_Pres[b] /= UNIT_P;
    }
 
-} // FUNCTION : LoadICTable()
+} // FUNCTION : LoadICTable_GREP_MigrationTest()
 
 
 
@@ -351,24 +347,10 @@ void End_GREP_MigrationTest()
 
 
 //-------------------------------------------------------------------------------------------------------
-// Function    :  Record_MigrationTest
-// Description :  Interface for calling multiple record functions
-//-------------------------------------------------------------------------------------------------------
-void Record_MigrationTest()
-{
-
-// the maximum density around the box center
-   Record_CentralDens();
-
-} // FUNCTION : Record_MigrationTest()
-
-
-
-//-------------------------------------------------------------------------------------------------------
-// Function    :  Record_CentralDens
+// Function    :  Record_CentralDens_GREP_MigrationTest
 // Description :  Record the maximum density around the box center
 //-------------------------------------------------------------------------------------------------------
-void Record_CentralDens()
+void Record_CentralDens_GREP_MigrationTest()
 {
 
    const char   filename_central_dens[] = "Record__CentralDens";
@@ -490,7 +472,21 @@ void Record_CentralDens()
 
    } // if ( MPI_Rank == 0 )
 
-} // FUNCTION : Record_CentralDens()
+} // FUNCTION : Record_CentralDens_GREP_MigrationTest()
+
+
+
+//-------------------------------------------------------------------------------------------------------
+// Function    :  Record_GREP_MigrationTest
+// Description :  Interface for calling multiple record functions
+//-------------------------------------------------------------------------------------------------------
+void Record_GREP_MigrationTest()
+{
+
+// the maximum density around the box center
+   Record_CentralDens_GREP_MigrationTest();
+
+} // FUNCTION : Record_GREP_MigrationTest()
 
 
 
@@ -519,7 +515,7 @@ void Init_TestProb_Hydro_GREP_MigrationTest()
    SetParameter();
 
 // Load IC Table
-   if ( OPT__INIT != INIT_BY_RESTART )   LoadICTable();
+   if ( OPT__INIT != INIT_BY_RESTART )   LoadICTable_GREP_MigrationTest();
 
 // procedure to enable a problem-specific function:
 // 1. define a user-specified function (example functions are given below)
@@ -532,7 +528,7 @@ void Init_TestProb_Hydro_GREP_MigrationTest()
    Init_Function_BField_User_Ptr  = SetBFieldIC;
 #  endif
    Flag_User_Ptr                  = NULL;
-   Aux_Record_User_Ptr            = Record_MigrationTest;
+   Aux_Record_User_Ptr            = Record_GREP_MigrationTest;
    End_User_Ptr                   = End_GREP_MigrationTest;
 #  endif // #if ( MODEL == HYDRO )
 

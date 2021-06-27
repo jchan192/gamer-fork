@@ -6,8 +6,6 @@
 #    Plot the slice of density profile at the center (w/o grid)
 #    and generate the movies
 #
-#  Last Updated: 2019/11/01
-#  He-Feng Hsieh
 
 
 import matplotlib

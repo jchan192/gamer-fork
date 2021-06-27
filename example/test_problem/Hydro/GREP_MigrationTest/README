@@ -1,7 +1,7 @@
 Compilation flags:
 ========================================
 Enable : MODEL=HYDRO, GRAVITY, GREP, EOS=GAMMA, NLEVEL=4
-Disable:
+Disable:UNSPLIT_GRAVITY
 
 Default setup:
 ========================================
