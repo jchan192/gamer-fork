@@ -24,6 +24,7 @@ void Init_TestProb_Hydro_BarredPot();
 
 void Init_TestProb_Hydro_GREP_MigrationTest();
 void Init_TestProb_Hydro_CCSN_PostBounce();
+void Init_TestProb_Hydro_CCSN();
 
 void Init_TestProb_ELBDM_ExtPot();
 
@@ -71,6 +72,7 @@ void Init_TestProb()
 
       case TESTPROB_HYDRO_GREP_MIGRATIONTEST :           Init_TestProb_Hydro_GREP_MigrationTest();          break;
       case TESTPROB_HYDRO_CCSN_POSTBOUNCE :              Init_TestProb_Hydro_CCSN_PostBounce();             break;
+      case TESTPROB_HYDRO_CCSN :                         Init_TestProb_Hydro_CCSN();                        break;
 
       case TESTPROB_ELBDM_EXTPOT :                       Init_TestProb_ELBDM_ExtPot();                      break;
 
