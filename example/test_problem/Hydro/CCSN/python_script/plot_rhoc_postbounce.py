@@ -17,7 +17,7 @@ import matplotlib.pyplot as plt
 
 ### load data
 # FLASH
-fn = "../ReferenceSolution/PostBounce/flash_1d_s20GREP_LS220_none.dat"  # for data_s20GREP_LS220_15ms_none.data
+fn = "../ReferenceSolution/PostBounce/flash_1d_s20GREP_LS220_none.dat"  # for s20GREP_LS220_15ms_none
 
 # retrieve bounce time
 with open(fn) as f:

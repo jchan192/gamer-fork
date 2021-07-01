@@ -36,11 +36,11 @@ Note:
    --> generated using FLASH with various setups
    --> begin at 15 ms after core bounce
 
-         data_s20GREP_SFHo_15ms           : SFHo  EoS
-         data_s20GREP_LS220_nonupres_15ms : LS220 EoS, w/o neutrino
-         data_s20GREP_LS220_15ms_none     : LS220 EoS, w/o neutrino and lightbulb
-         data_s20GREP_LS220_15ms_LB3      : LS220 EoS, w/o neutrino, with lightbulb (lnu = 1.2e52, tnu = 4 MeV)
-         data_s20GREP_LS220_15ms_idsa     : LS220 EoS, with IDSA
+         s20GREP_SFHo_15ms           : SFHo  EoS
+         s20GREP_LS220_nonupres_15ms : LS220 EoS, w/o neutrino
+         s20GREP_LS220_15ms_none     : LS220 EoS, w/o neutrino and lightbulb
+         s20GREP_LS220_15ms_LB3      : LS220 EoS, w/o neutrino, with lightbulb (lnu = 1.2e52, tnu = 4 MeV)
+         s20GREP_LS220_15ms_idsa     : LS220 EoS, with IDSA
 
 3. Reference solutions are put at "ReferenceSolution"
 

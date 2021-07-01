@@ -6,7 +6,7 @@
 #    Compute and plot the averaged profile from GAMER HDF5 data
 #    for comparison with FLASH (if FLASH data are given)
 #
-#    This script will plot 8 quantities in both linear and log scale:
+#    This script will plot 7 quantities in both linear and log scale:
 #      Density, |Vr|, Ye, Temperature, Pressure, Entropy, Potential
 #
 
@@ -58,61 +58,49 @@ UNIT_Pot  = UNIT_L**2 / UNIT_T**2
 UNIT_Pres = (UNIT_M / UNIT_L**3) * (UNIT_L / UNIT_T)**2
 
 
-### load data
-# GAMER
+### derived field for GAMER data
 def _ye(field, data):
     return data["Ye"] / data["Dens"]
 
 
-quantity_gamer = ["density", "radial_velocity", "ye", "Temp", "Pres", "Entr", "Pote"]
-profile_gamer  = list()
-cond_gamer     = list()  # condition for removing empty bins in GAMER profile
-tpbs           = list()  # physical time relative to core bounce (in ms)
+### main routine
+for idx, idx_out in enumerate(idx_gamer):
+    ## load data
+    # GAMER
+    quantity_gamer = ["density", "radial_velocity", "ye", "Temp", "Pres", "Entr", "Pote"]
 
-
-for idx in idx_gamer:
-    fn = "Data_{:06d}".format(idx)
+    fn = "Data_{:06d}".format(idx_out)
     fn = os.path.join(path_gamer, fn)
 
-    ds = yt.load(fn)
-    ds.add_field(("gas", "ye"), function = _ye, units = "code_length**3/code_mass")
+    ds_gamer = yt.load(fn)
+    ds_gamer.add_field(("gas", "ye"), function = _ye, units = "code_length**3/code_mass")
 
-    time = ds.parameters["Time"][0] + dt_pb
-    print("Load GAMER data at t_pb = {:.2f} from file {}".format(time, fn))
+    time = ds_gamer.parameters["Time"][0] + dt_pb
+    print("Load GAMER data at t_pb = {:.4f} from file {}".format(time, fn))
 
     # compute averaged profile
-    sp = ds.sphere("c", profile_rad_gamer)
-    profile = yt.create_profile(sp, "radius", quantity_gamer,
-                                units = {'radius': 'km'},
-                                weight_field=("gas", "cell_mass") )
+    sp = ds_gamer.sphere("c", profile_rad_gamer)
+    profile_gamer = yt.create_profile(sp, "radius", quantity_gamer,
+                                      units = {"radius": "km"},
+                                      weight_field = ("gas", "cell_mass") )
 
-    cond = profile["density"] != 0.0
+    cond_gamer = profile_gamer["density"] != 0.0  # for removing empty bins
 
-    profile_gamer.append(profile)
-    cond_gamer.append(cond)
-    tpbs.append(time)
+    # FLASH
+    if include_flash:
+        quantity_flash = "density", "radial_velocity", "ye  ", "temp", "pres", "entr", "gpot"
 
-
-# load FLASH data
-if include_flash:
-    quantity_flash = "density", "radial_velocity", "ye  ", "temp", "pres", "entr", "gpot"
-    ds_flash = list()
-
-    for idx in idx_flash:
-        fn = "ccsn1d_hdf5_chk_{:04d}".format(idx)
+        fn = "ccsn1d_hdf5_chk_{:04d}".format(idx_flash[idx])
         fn = os.path.join(path_flash, fn)
 
-        ds = yt.load(fn)
+        ds_flash = yt.load(fn)
 
         # relative to core bounce
-        print("load FLASH output at t_pb = {:.2f} from file {}".format(ds.parameters["time"] - tpb_flash, fn))
-
-        ds_flash.append(ds)
+        print("load FLASH output at t_pb = {:.4f} from file {}".format(ds_flash.parameters["time"] - tpb_flash, fn))
 
 
-### plot here
-for idx, idx_out in enumerate(idx_gamer):
-    fig, axes = plt.subplots(figsize = (20, 16), ncols = 3, nrows = 3)
+    ## plot
+    fig, axes  = plt.subplots(figsize = (20, 16), ncols = 3, nrows = 3)
     axes_ravel = axes.ravel()
 
     # GAMER
@@ -121,28 +109,24 @@ for idx, idx_out in enumerate(idx_gamer):
     lw = 4
     ls = "solid"
 
-    profile = profile_gamer[idx]
-    cond    = cond_gamer[idx]
-    rad_km  = profile.x.value[cond]
+    rad_km  = profile_gamer.x.value[cond_gamer]
 
     for q, ax in zip(quantity_gamer, axes_ravel):
         # prepare the required profile
-        prof = profile[q]
+        prof = profile_gamer[q]
 
         if q == "radial_velocity": prof  = np.abs(prof)
         if q == "Pres"           : prof *= UNIT_Pres
         if q == "Pote"           : prof *= UNIT_Pot
 
         # remove empty bins
-        prof = prof[cond]
+        prof = prof[cond_gamer]
 
         # combine the radius and profile for sorting
         foo = np.vstack( [rad_km, prof] ).T
         foo = foo[ foo[:, 0].argsort() ]
 
-        ax.semilogx(foo.T[0], foo.T[1],
-                    label = "GAMER", alpha = alpha, lw = lw, ls = ls, c = color)
-
+        ax.semilogx(foo.T[0], foo.T[1], label = "GAMER", alpha = alpha, lw = lw, ls = ls, c = color)
 
     # FLASH
     if include_flash:
@@ -151,17 +135,15 @@ for idx, idx_out in enumerate(idx_gamer):
         lw = 4
         ls = "solid"
 
-        ds     = ds_flash[idx]
-        rad_km = ds.r["r"] / 1e5
+        rad_km = ds_flash.r["r"] / 1e5
 
         for q, ax in zip(quantity_flash, axes_ravel):
             if q == "radial_velocity":
-                prof = np.sqrt(ds.r["velx"]**2 + ds.r["vely"]**2 + ds.r["velz"]**2)
+                prof = np.sqrt(ds_flash.r["velx"]**2 + ds_flash.r["vely"]**2 + ds_flash.r["velz"]**2)
             else:
-                prof = ds.r[q]
+                prof = ds_flash.r[q]
 
-            ax.semilogx(rad_km, prof,
-                        label = "FLASH", alpha = alpha, lw = lw, ls = ls, c = color)
+            ax.semilogx(rad_km, prof, label = "FLASH", alpha = alpha, lw = lw, ls = ls, c = color)
 
 
     ## decoration
@@ -182,13 +164,11 @@ for idx, idx_out in enumerate(idx_gamer):
     axes_ravel[-3].legend(loc = "lower right")
 
     ## savefig
-    tpb = tpbs[idx]
-
     # linear scale
     fig.tight_layout()
 
     fig.subplots_adjust(top = 0.94)
-    fig.suptitle(r"$t_\mathrm{pb} = " + "{:.1f}$ [ms]".format(tpb))
+    fig.suptitle(r"$t_\mathrm{pb} = " + "{:.1f}$ [ms]".format(time))
 
     fnout = "Data_{:06d}_Profile_linear.png".format(idx_out)
     fnout = os.path.join(path_gamer, fnout)

@@ -24,8 +24,8 @@ END_STEP                     -1           # end step (<0=auto -> must be set by 
 
 
 # test problems
-TESTPROB_ID                  22           # test problem ID [0]
-                                          #   22: HYDRO CCSN (+GRAVITY & GREP & EOS==EOS_NUCLEAR) [+MHD]
+TESTPROB_ID                  20           # test problem ID [0]
+                                          #   20: HYDRO CCSN (+GRAVITY & GREP & EOS_GAMMA) [+MHD]
 
 
 # code units (in cgs)
