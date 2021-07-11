@@ -8,5 +8,6 @@ CCSN_Prof_File   IC/s20GREP_LS220_15ms_none        # filename of input profile
 CCSN_Mag_Ab      1.0e15                            # strength of B field (in gauss)        [1e15]
 CCSN_Mag_np      0.0                               # dependence of B field on the density  [0.0]
 
-CCSN_NUC_Mode    1                                 # Mode of obtaining internal energy in SetGridIC()  [1]
-                                                   # (0=Temp Mode, 1=Pres Mode)
+CCSN_Eint_Mode   1                                 # Mode of obtaining internal energy in SetGridIC()  [1]
+                                                   # ( 0=Temp Mode: Eint(dens, temp, [Ye])
+                                                   #   1=Pres Mode: Eint(dens, pres, [Ye]) )

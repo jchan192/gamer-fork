@@ -27,8 +27,9 @@ static double  CCSN_Mag_Ab;                     // strength of B field
 static double  CCSN_Mag_np;                     // dependence of B field on the density
 #endif
 
-static int     CCSN_NUC_Mode;                   // Mode of obtaining internal energy in SetGridIC()
-                                                // (0=Temp Mode, 1=Pres Mode)
+static int     CCSN_Eint_Mode;                  // Mode of obtaining internal energy in SetGridIC()
+                                                // ( 0=Temp Mode: Eint(dens, temp, [Ye])
+                                                //   1=Pres Mode: Eint(dens, pres, [Ye]) )
 // =======================================================================================
 
 
@@ -106,7 +107,7 @@ void SetParameter()
    ReadPara->Add( "CCSN_Mag_Ab",       &CCSN_Mag_Ab,           1.0e15,        0.0,              NoMax_double      );
    ReadPara->Add( "CCSN_Mag_np",       &CCSN_Mag_np,           0.0,           NoMin_double,     NoMax_double      );
 #  endif
-   ReadPara->Add( "CCSN_NUC_Mode",     &CCSN_NUC_Mode,         1,             0,                1                 );
+   ReadPara->Add( "CCSN_Eint_Mode",    &CCSN_Eint_Mode,        1,             0,                1                 );
 
    ReadPara->Read( FileName );
 
@@ -135,7 +136,7 @@ void SetParameter()
 // (1-3) check the runtime parameters
    if ( CCSN_Prob == Migration_Test )
    {
-      if ( CCSN_NUC_Mode != 1 )
+      if ( CCSN_Eint_Mode != 1 )
          Aux_Error( ERROR_INFO, "Temperature mode for internal energy is not supported in Migration Test yet!!\n" );
    }
 
@@ -170,7 +171,7 @@ void SetParameter()
       Aux_Message( stdout, "  CCSN_Mag_Ab               = %13.7e\n",  CCSN_Mag_Ab    );
       Aux_Message( stdout, "  CCSN_Mag_np               = %13.7e\n",  CCSN_Mag_np    );
 #     endif
-      Aux_Message( stdout, "  CCSN_NUC_Mode             = %d\n",      CCSN_NUC_Mode  );
+      Aux_Message( stdout, "  CCSN_Eint_Mode            = %d\n",      CCSN_Eint_Mode );
       Aux_Message( stdout, "=============================================================================\n" );
    }
 
@@ -256,7 +257,7 @@ void SetGridIC( real fluid[], const double x, const double y, const double z, co
    real *Passive = NULL;
 #  endif
 
-   if ( CCSN_NUC_Mode == 0 )   // Temperature Mode
+   if ( CCSN_Eint_Mode == 0 )   // Temperature Mode
    {
       real Out[3], In[3] = { Dens, Temp, Ye };
 
@@ -278,11 +279,11 @@ void SetGridIC( real fluid[], const double x, const double y, const double z, co
    fluid[MOMZ] = Momz;
    fluid[ENGY] = Etot;
 #  if ( EOS == EOS_NUCLEAR )
-   fluid[YE  ] = Ye*Dens;   // electron fraction [dens]
+   for (int v=0; v<NCOMP_PASSIVE; v++) fluid[ NCOMP_FLUID + v ] = Passive[v];
 #  endif
 
 
-   if ( Passive != NULL )   delete [] Passive;   Passive = NULL;
+   if ( Passive != NULL )   delete [] Passive;
 
 } // FUNCTION : SetGridIC
 
