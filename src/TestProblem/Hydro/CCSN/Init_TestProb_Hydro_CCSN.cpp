@@ -265,7 +265,7 @@ void SetGridIC( real fluid[], const double x, const double y, const double z, co
       Eint = Out[0];
    }
 
-   else                        // Pressure Mode
+   else                         // Pressure Mode
    {
       Eint = EoS_DensPres2Eint_CPUPtr( Dens, Pres, Passive, EoS_AuxArray_Flt, EoS_AuxArray_Int, h_EoS_Table, NULL );
    }
