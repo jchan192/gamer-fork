@@ -52,7 +52,7 @@ const TestProbID_t
    TESTPROB_HYDRO_JEANS_INSTABILITY            =   16,
    TESTPROB_HYDRO_BARRED_POT                   =   51,
 
-   TESTPROB_HYDRO_GREP_MIGRATIONTEST           =   20,
+   TESTPROB_HYDRO_CCSN                         =   20,
 
    TESTPROB_ELBDM_EXTPOT                       = 1000;
 
