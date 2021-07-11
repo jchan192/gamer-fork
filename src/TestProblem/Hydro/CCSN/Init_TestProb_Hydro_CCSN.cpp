@@ -58,11 +58,6 @@ void Validate()
    Aux_Error( ERROR_INFO, "GRAVITY must be enabled !!\n" );
 #  endif
 
-#  ifdef GRAVITY
-   if ( OPT__EXT_POT != EXT_POT_GREP )
-      Aux_Error( ERROR_INFO, "must set OPT__EXT_POT = EXT_POT_GREP !!\n" );
-#  endif
-
    if ( !OPT__UNIT )
       Aux_Error( ERROR_INFO, "OPT__UNIT must be enabled !!\n" );
 
@@ -111,9 +106,7 @@ void SetParameter()
    ReadPara->Add( "CCSN_Mag_Ab",       &CCSN_Mag_Ab,           1.0e15,        0.0,              NoMax_double      );
    ReadPara->Add( "CCSN_Mag_np",       &CCSN_Mag_np,           0.0,           NoMin_double,     NoMax_double      );
 #  endif
-#  if ( EOS == EOS_NUCLEAR )
    ReadPara->Add( "CCSN_NUC_Mode",     &CCSN_NUC_Mode,         1,             0,                1                 );
-#  endif
 
    ReadPara->Read( FileName );
 
@@ -140,15 +133,11 @@ void SetParameter()
    } // switch ( CCSN_Prob )
 
 // (1-3) check the runtime parameters
-#  if ( EOS != EOS_GAMMA )
    if ( CCSN_Prob == Migration_Test )
-      Aux_Error( ERROR_INFO, "EOS must be EOS_GAMMA for migration test!!\n" );
-#  endif
-
-#  if ( EOS != EOS_NUCLEAR )
-   if ( CCSN_Prob == Post_Bounce )
-      Aux_Error( ERROR_INFO, "EOS must be EOS_NUCLEAR for post bounce test!!\n" );
-#  endif
+   {
+      if ( CCSN_NUC_Mode != 1 )
+         Aux_Error( ERROR_INFO, "Temperature mode for internal energy is not supported in Migration Test yet!!\n" );
+   }
 
 
 // (2) set the problem-specific derived parameters
@@ -181,9 +170,7 @@ void SetParameter()
       Aux_Message( stdout, "  CCSN_Mag_Ab               = %13.7e\n",  CCSN_Mag_Ab    );
       Aux_Message( stdout, "  CCSN_Mag_np               = %13.7e\n",  CCSN_Mag_np    );
 #     endif
-#     if ( EOS == EOS_NUCLEAR )
       Aux_Message( stdout, "  CCSN_NUC_Mode             = %d\n",      CCSN_NUC_Mode  );
-#     endif
       Aux_Message( stdout, "=============================================================================\n" );
    }
 
@@ -217,7 +204,7 @@ void SetGridIC( real fluid[], const double x, const double y, const double z, co
                 const int lv, double AuxArray[] )
 {
 
-   const double  BoxCenter[3] = { 0.5*amr->BoxSize[0], 0.5*amr->BoxSize[1], 0.5*amr->BoxSize[2] };
+   const double  BoxCenter[3] = { amr->BoxCenter[0], amr->BoxCenter[1], amr->BoxCenter[2] };
    const double *Table_R      = CCSN_Prof +                0*CCSN_Prof_NBin;
    const double *Table_Velr   = CCSN_Prof + CCSN_ColIdx_Velr*CCSN_Prof_NBin;
    const double *Table_Dens   = CCSN_Prof + CCSN_ColIdx_Dens*CCSN_Prof_NBin;
@@ -233,11 +220,26 @@ void SetGridIC( real fluid[], const double x, const double y, const double z, co
    Dens = Mis_InterpolateFromTable( CCSN_Prof_NBin, Table_R, Table_Dens, r );
    Velr = Mis_InterpolateFromTable( CCSN_Prof_NBin, Table_R, Table_Velr, r );
    Pres = Mis_InterpolateFromTable( CCSN_Prof_NBin, Table_R, Table_Pres, r );
+
+   if ( Dens == NULL_REAL )
+      Aux_Error( ERROR_INFO, "interpolation failed for density at radius %13.7e !!\n", r );
+   if ( Velr == NULL_REAL )
+      Aux_Error( ERROR_INFO, "interpolation failed for radial velocity at radius %13.7e !!\n", r );
+   if ( Pres == NULL_REAL )
+      Aux_Error( ERROR_INFO, "interpolation failed for pressure at radius %13.7e !!\n", r );
+
    if ( CCSN_Prob == Post_Bounce )
    {
       Ye   = Mis_InterpolateFromTable( CCSN_Prof_NBin, Table_R, CCSN_Prof+2*CCSN_Prof_NBin, r );
       Temp = Mis_InterpolateFromTable( CCSN_Prof_NBin, Table_R, CCSN_Prof+4*CCSN_Prof_NBin, r );  // in Kelvin
       Entr = Mis_InterpolateFromTable( CCSN_Prof_NBin, Table_R, CCSN_Prof+6*CCSN_Prof_NBin, r );
+
+      if ( Ye   == NULL_REAL )
+         Aux_Error( ERROR_INFO, "interpolation failed for Ye at radius %13.7e !!\n", r );
+      if ( Temp == NULL_REAL )
+         Aux_Error( ERROR_INFO, "interpolation failed for temperature at radius %13.7e !!\n", r );
+      if ( Entr == NULL_REAL )
+         Aux_Error( ERROR_INFO, "interpolation failed for entropy at radius %13.7e !!\n", r );
    }
 
 
@@ -246,35 +248,27 @@ void SetGridIC( real fluid[], const double x, const double y, const double z, co
    Momz = Dens*Velr*z0/r;
 
 // calculate the internal energy
-   if      ( CCSN_Prob == Migration_Test )
+#  if ( EOS == EOS_NUCLEAR )
+   real *Passive = new real [NCOMP_PASSIVE];
+
+   Passive[ YE - NCOMP_FLUID ] = Ye*Dens;
+#  else
+   real *Passive = NULL;
+#  endif
+
+   if ( CCSN_NUC_Mode == 0 )   // Temperature Mode
    {
-      Eint = EoS_DensPres2Eint_CPUPtr( Dens, Pres, NULL, EoS_AuxArray_Flt, EoS_AuxArray_Int, h_EoS_Table, NULL );
+      real Out[3], In[3] = { Dens, Temp, Ye };
+
+      EoS_General_CPUPtr( 1, Out, In, EoS_AuxArray_Flt, EoS_AuxArray_Int, h_EoS_Table );
+      Eint = Out[0];
    }
 
-// obtain the internal energy from Nuclear Table using density, Ye, and Temp/Pres
-   else if ( CCSN_Prob == Post_Bounce    )
+   else                        // Pressure Mode
    {
-      if ( CCSN_NUC_Mode == 0 )   // Temperature Mode
-      {
-         real Out[3], In[3] = { Dens, Temp, Ye };
-
-         EoS_General_CPUPtr( 1, Out, In, EoS_AuxArray_Flt, EoS_AuxArray_Int, h_EoS_Table );
-         Eint = Out[0];
-      }
-
-      else                        // Pressure Mode
-      {
-         real *Passive = new real [NCOMP_PASSIVE];
-
-#        if ( EOS == EOS_NUCLEAR )
-         Passive[ YE - NCOMP_FLUID ] = Ye*Dens;
-#        endif
-
-         Eint = EoS_DensPres2Eint_CPUPtr( Dens, Pres, Passive, EoS_AuxArray_Flt, EoS_AuxArray_Int, h_EoS_Table, NULL );
-
-         delete [] Passive;
-      }
+      Eint = EoS_DensPres2Eint_CPUPtr( Dens, Pres, Passive, EoS_AuxArray_Flt, EoS_AuxArray_Int, h_EoS_Table, NULL );
    }
+
 
    Etot = Hydro_ConEint2Etot( Dens, Momx, Momy, Momz, Eint, 0.0 );   // do NOT include magnetic energy here
 
@@ -284,8 +278,11 @@ void SetGridIC( real fluid[], const double x, const double y, const double z, co
    fluid[MOMZ] = Momz;
    fluid[ENGY] = Etot;
 #  if ( EOS == EOS_NUCLEAR )
-   if ( CCSN_Prob == Post_Bounce )   fluid[YE] = Ye*Dens;   // electron fraction [dens]
+   fluid[YE  ] = Ye*Dens;   // electron fraction [dens]
 #  endif
+
+
+   if ( Passive != NULL )   delete [] Passive;   Passive = NULL;
 
 } // FUNCTION : SetGridIC
 
@@ -321,7 +318,7 @@ void SetBFieldIC( real magnetic[], const double x, const double y, const double 
                   const int lv, double AuxArray[] )
 {
 
-   const double  BoxCenter[3] = { 0.5*amr->BoxSize[0], 0.5*amr->BoxSize[1], 0.5*amr->BoxSize[2] };
+   const double  BoxCenter[3] = { amr->BoxCenter[0], amr->BoxCenter[1], amr->BoxCenter[2] };
    const double *Table_R      = CCSN_Prof +                0*CCSN_Prof_NBin;
    const double *Table_Dens   = CCSN_Prof + CCSN_ColIdx_Dens*CCSN_Prof_NBin;
    const double *Table_Pres   = CCSN_Prof + CCSN_ColIdx_Pres*CCSN_Prof_NBin;
@@ -352,10 +349,28 @@ void SetBFieldIC( real magnetic[], const double x, const double y, const double 
    dens_yp = Mis_InterpolateFromTable( CCSN_Prof_NBin, Table_R, Table_Dens, r_yp );
    dens_zp = Mis_InterpolateFromTable( CCSN_Prof_NBin, Table_R, Table_Dens, r_zp );
 
+   if ( dens    == NULL_REAL )
+      Aux_Error( ERROR_INFO, "interpolation failed for dens    at radius %13.7e !!\n", r    );
+   if ( dens_xp == NULL_REAL )
+      Aux_Error( ERROR_INFO, "interpolation failed for dens_xp at radius %13.7e !!\n", r_xp );
+   if ( dens_yp == NULL_REAL )
+      Aux_Error( ERROR_INFO, "interpolation failed for dens_yp at radius %13.7e !!\n", r_yp );
+   if ( dens_zp == NULL_REAL )
+      Aux_Error( ERROR_INFO, "interpolation failed for dens_zp at radius %13.7e !!\n", r_zp );
+
    pres    = Mis_InterpolateFromTable( CCSN_Prof_NBin, Table_R, Table_Pres, r    );
    pres_xp = Mis_InterpolateFromTable( CCSN_Prof_NBin, Table_R, Table_Pres, r_xp );
    pres_yp = Mis_InterpolateFromTable( CCSN_Prof_NBin, Table_R, Table_Pres, r_yp );
    pres_zp = Mis_InterpolateFromTable( CCSN_Prof_NBin, Table_R, Table_Pres, r_zp );
+
+   if ( pres    == NULL_REAL )
+      Aux_Error( ERROR_INFO, "interpolation failed for pres    at radius %13.7e !!\n", r    );
+   if ( pres_xp == NULL_REAL )
+      Aux_Error( ERROR_INFO, "interpolation failed for pres_xp at radius %13.7e !!\n", r_xp );
+   if ( pres_yp == NULL_REAL )
+      Aux_Error( ERROR_INFO, "interpolation failed for pres_yp at radius %13.7e !!\n", r_yp );
+   if ( pres_zp == NULL_REAL )
+      Aux_Error( ERROR_INFO, "interpolation failed for pres_zp at radius %13.7e !!\n", r_zp );
 
 
    double dAy_dx = (  ( x0 + delta )*POW( 1.0 - dens_xp/dens_c, CCSN_Mag_np )*( pres_xp / pres_c )   \
@@ -418,7 +433,7 @@ void Record_CCSN_CentralDens()
 {
 
    const char   filename_central_dens[] = "Record__CentralDens";
-   const double BoxCenter[3]            = { 0.5*amr->BoxSize[0], 0.5*amr->BoxSize[1], 0.5*amr->BoxSize[2] };
+   const double BoxCenter[3]            = { amr->BoxCenter[0], amr->BoxCenter[1], amr->BoxCenter[2] };
 
 // allocate memory for per-thread arrays
 #  ifdef OPENMP
@@ -578,13 +593,13 @@ bool Flag_User_CCSN( const int i, const int j, const int k, const int lv, const 
    bool Flag = false;
 
    const double dh        = amr->dh[lv];
-   const double Center[3] = { 0.5*amr->BoxSize[0], 0.5*amr->BoxSize[1], 0.5*amr->BoxSize[2] };
+   const double Center[3] = { amr->BoxCenter[0], amr->BoxCenter[1], amr->BoxCenter[2] };
    const double Pos   [3] = { amr->patch[0][lv][PID]->EdgeL[0] + (i+0.5)*dh,
                               amr->patch[0][lv][PID]->EdgeL[1] + (j+0.5)*dh,
                               amr->patch[0][lv][PID]->EdgeL[2] + (k+0.5)*dh  };
 
    const double dx = Center[0] - Pos[0];
-   const double dy = Center[1] - Pos[2];
+   const double dy = Center[1] - Pos[1];
    const double dz = Center[2] - Pos[2];
    const double r  = SQRT(  SQR( dx ) + SQR( dy ) + SQR( dz )  );
 
@@ -611,7 +626,8 @@ bool Flag_User_CCSN( const int i, const int j, const int k, const int lv, const 
 void End_CCSN()
 {
 
-   delete [] CCSN_Prof;   CCSN_Prof = NULL;
+   delete [] CCSN_Prof;         CCSN_Prof       = NULL;
+   delete [] CCSN_TargetCols;   CCSN_TargetCols = NULL;
 
 } // FUNCTION : End_CCSN
 
