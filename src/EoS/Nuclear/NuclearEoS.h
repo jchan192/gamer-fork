@@ -41,11 +41,6 @@
 #define NUC_TAB_YE_MODE       9     // yes_mode
 
 
-// EoS table default mode
-#define NUC_TABLE_MODE_TEMP   0     // temperature mode
-#define NUC_TABLE_MODE_ENGY   1     // energy mode
-
-
 // EoS modes
 #define NUC_MODE_ENGY         0     // energy mode
 #define NUC_MODE_TEMP         1     // temperature mode
