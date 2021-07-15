@@ -23,7 +23,7 @@ void nuc_eos_C_linterp_some( const real x, const real y, const real z,
 // Note        :  1. Invoked by nuc_eos_C_short() and nuc_eos_C_cubinterp_some()
 //
 // Parameter   :  x           : Input vector of first  variable (rho)
-//                y           : Input vector of second variable (eps)
+//                y           : Input vector of second variable (temp/eps)
 //                z           : Input vector of third  variable (Y_e)
 //                output_vars : Output variables of interpolated function values
 //                alltables   : 3D array of tabulated variables
@@ -78,9 +78,9 @@ void nuc_eos_C_linterp_some( const real x, const real y, const real z,
 
 
 // determine location in table
-   ix = 1 + (int)( (x - xt[0] - (real)1.0e-10)*dxi );
-   iy = 1 + (int)( (y - yt[0] - (real)1.0e-10)*dyi );
-   iz = 1 + (int)( (z - zt[0] - (real)1.0e-10)*dzi );
+   ix = 1 + (int)floor( ( x - xt[0] )*dxi );
+   iy = 1 + (int)floor( ( y - yt[0] )*dyi );
+   iz = 1 + (int)floor( ( z - zt[0] )*dzi );
 
    ix = MAX( 1, MIN( ix, nx-1 ) );
    iy = MAX( 1, MIN( iy, ny-1 ) );
