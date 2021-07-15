@@ -26,7 +26,7 @@ void nuc_eos_C_linterp_some( const real x, const real y, const real z,
                              const real *xt, const real *yt, const real *zt );
 
 GPU_DEVICE static
-void find_temp2( const real lr, const real lt0, const real ye, const real varin, real *ltout,
+void findtemp2( const real lr, const real lt0, const real ye, const real varin, real *ltout,
                  const int nrho, const int ntemp, const int nye, const real *alltables, 
                  const real *logrho, const real *logtemp, const real *yes,
                  const int keymode, int *keyerrt, const real prec );
@@ -44,7 +44,7 @@ void nuc_eos_C_linterp_some( const real x, const real y, const real z,
 
 
 //-------------------------------------------------------------------------------------
-// Function    :  find_temp2
+// Function    :  findtemp2
 // Description :  find temperature from specific internal energy
 //                                      specific entropy
 //                                      pressure
@@ -68,7 +68,7 @@ void nuc_eos_C_linterp_some( const real x, const real y, const real z,
 // Return      :  ltout
 //-------------------------------------------------------------------------------------
 GPU_DEVICE
-void find_temp2( const real lr, const real lt0, const real ye, const real varin, real *ltout,
+void findtemp2( const real lr, const real lt0, const real ye, const real varin, real *ltout,
                  const int nrho, const int ntemp, const int nye, const real *alltables, 
                  const real *logrho, const real *logtemp, const real *yes,
                  const int keymode, int *keyerrt, const real prec ) {
@@ -228,7 +228,7 @@ void find_temp2( const real lr, const real lt0, const real ye, const real varin,
 
    return;
 
-} // FUNCTION : find_temp2
+} // FUNCTION : findtemp2
 
 
 
