@@ -21,28 +21,41 @@ __device__ static void EoS_General_Nuclear( const int Mode, real Out[], const re
 
 // global variables
 int    g_nrho;
-int    g_neps;
 int    g_nye;
+int    g_nrho_mode;
 int    g_nmode;
+int    g_nye_mode;
 double g_energy_shift;
 
-real *g_alltables      = NULL;
-real *g_alltables_mode = NULL;
-real *g_logrho         = NULL;
-real *g_logeps         = NULL;
-real *g_yes            = NULL;
-real *g_logtemp_mode   = NULL;
-real *g_entr_mode      = NULL;
-real *g_logprss_mode   = NULL;
+real *g_alltables;
+real *g_alltables_mode;
+real *g_logrho;
+real *g_yes;
+real *g_logrho_mode;
+real *g_entr_mode;
+real *g_logprss_mode;
+real *g_yes_mode;
+
+#if   ( NUC_TABLE_MODE == NUC_TABLE_MODE_TEMP )
+int    g_ntemp;
+real   *g_logtemp;
+real   *g_logeps_mode;
+#elif ( NUC_TABLE_MODE == NUC_TABLE_MODE_ENGY )
+int    g_neps;
+real   *g_logeps;
+real   *g_logtemp_mode;
+#endif
+
 
 // prototypes
-void nuc_eos_C_short( const real xrho, real *xenr, const real xye,
-                      real *xtemp, real *xent, real *xprs,
+void nuc_eos_C_short( const real xrho, real *xtemp, const real xye,
+                      real *xenr, real *xent, real *xprs,
                       real *xcs2, real *xmunu, const real energy_shift,
-                      const int nrho, const int neps, const int nye, const int nmode,
+                      const int nrho, const int ntoreps, const int nye,
+                      const int nrho_mode, const int nmode, const int nye_mode,
                       const real *alltables, const real *alltables_mode,
-                      const real *logrho, const real *logeps, const real *yes,
-                      const real *logtemp_mode, const real *entr_mode, const real *logprss_mode,
+                      const real *logrho, const real *logtoreps, const real *yes, const real *logrho_mode,
+                      const real *logepsort_mode, const real *entr_mode, const real *logprss_mode, const real *yes_mode,
                       const int keymode, int *keyerr, const real rfeps );
 void nuc_eos_C_ReadTable( char *nuceos_table_name );
 void CUAPI_PassNuclearEoSTable2GPU();
@@ -110,9 +123,15 @@ void EoS_SetAuxArray_Nuclear( double AuxArray_Flt[], int AuxArray_Int[] )
    AuxArray_Flt[NUC_AUX_MEV2KELVIN] = 1.0 / AuxArray_Flt[NUC_AUX_KELVIN2MEV];
 
    AuxArray_Int[NUC_AUX_NRHO      ] = g_nrho;
-   AuxArray_Int[NUC_AUX_NEPS      ] = g_neps;
+#if   ( NUC_TABLE_MODE == NUC_TABLE_MODE_TEMP )
+   AuxArray_Int[NUC_AUX_NTORE     ] = g_ntemp;
+#elif ( NUC_TABLE_MODE == NUC_TABLE_MODE_ENGY )
+   AuxArray_Int[NUC_AUX_NTORE     ] = g_neps;
+#endif
    AuxArray_Int[NUC_AUX_NYE       ] = g_nye;
+   AuxArray_Int[NUC_AUX_NRHO_MODE ] = g_nrho_mode;
    AuxArray_Int[NUC_AUX_NMODE     ] = g_nmode;
+   AuxArray_Int[NUC_AUX_NYE_MODE  ] = g_nye_mode;
 
 } // FUNCTION : EoS_SetAuxArray_Nuclear
 #endif // #ifndef __CUDACC__
@@ -205,10 +224,12 @@ static real EoS_DensEint2Pres_Nuclear( const real Dens_Code, const real Eint_Cod
    const real Pres2Code   = AuxArray_Flt[NUC_AUX_PRES2CODE ];
    const real MeV2Kelvin  = AuxArray_Flt[NUC_AUX_MEV2KELVIN];
 
-   const int  NRho        = AuxArray_Int[NUC_AUX_NRHO ];
-   const int  NEps        = AuxArray_Int[NUC_AUX_NEPS ];
-   const int  NYe         = AuxArray_Int[NUC_AUX_NYE  ];
-   const int  NMode       = AuxArray_Int[NUC_AUX_NMODE];
+   const int  NRho        = AuxArray_Int[NUC_AUX_NRHO     ];
+   const int  NTorE       = AuxArray_Int[NUC_AUX_NTORE    ];
+   const int  NYe         = AuxArray_Int[NUC_AUX_NYE      ];
+   const int  NRho_Mode   = AuxArray_Int[NUC_AUX_NRHO_MODE];
+   const int  NMode       = AuxArray_Int[NUC_AUX_NMODE    ];
+   const int  NYe_Mode    = AuxArray_Int[NUC_AUX_NYE_MODE ];
 
    int  Mode      = NUC_MODE_ENGY;
    real Dens_CGS  = Dens_Code * Dens2CGS;
@@ -217,8 +238,15 @@ static real EoS_DensEint2Pres_Nuclear( const real Dens_Code, const real Eint_Cod
    real Temp_MeV  = NULL_REAL;
    real Entr      = NULL_REAL;
    real Pres_CGS  = NULL_REAL;
+   real mu_nu     = NULL_REAL;
    real Useless   = NULL_REAL;
+
    int  Err       = NULL_INT;
+#ifdef FLOAT8
+   const real Tolerance = 1e-10;
+#else
+   const real Tolerance = 1e-6;
+#endif
 
 
 // check floating-point overflow and Ye
@@ -227,9 +255,9 @@ static real EoS_DensEint2Pres_Nuclear( const real Dens_Code, const real Eint_Cod
       printf( "ERROR : EoS overflow (Dens_CGS %13.7e, Dens_Code %13.7e, Dens2CGS %13.7e) in %s() !!\n",
               Dens_CGS, Dens_Code, Dens2CGS, __FUNCTION__ );
 
-   if ( Nuc_Overflow(sEint_CGS) )
-      printf( "ERROR : EoS overflow (sEint_CGS %13.7e, Eint_Code %13.7e, Dens_Code %13.7e, sEint2CGS %13.7e) in %s() !!\n",
-              sEint_CGS, Eint_Code, Dens_Code, sEint2CGS, __FUNCTION__ );
+   //if ( Nuc_Overflow(sEint_CGS) )
+   //   printf( "ERROR : EoS overflow (sEint_CGS %13.7e, Eint_Code %13.7e, Dens_Code %13.7e, sEint2CGS %13.7e) in %s() !!\n",
+   //           sEint_CGS, Eint_Code, Dens_Code, sEint2CGS, __FUNCTION__ );
 
    if ( Ye < (real)Table[NUC_TAB_YE][0]  ||  Ye > (real)Table[NUC_TAB_YE][NYe-1] )
       printf( "ERROR : invalid Ye = %13.7e (min = %13.7e, max = %13.7e) in %s() !!\n",
@@ -238,11 +266,11 @@ static real EoS_DensEint2Pres_Nuclear( const real Dens_Code, const real Eint_Cod
 
 
 // invoke the nuclear EoS driver
-   nuc_eos_C_short( Dens_CGS, &sEint_CGS, Ye, &Temp_MeV, &Entr, &Pres_CGS, &Useless, &Useless,
-                    EnergyShift, NRho, NEps, NYe, NMode,
-                    Table[NUC_TAB_ALL], Table[NUC_TAB_ALL_MODE], Table[NUC_TAB_RHO], Table[NUC_TAB_EPS],
-                    Table[NUC_TAB_YE], Table[NUC_TAB_TEMP_MODE], Table[NUC_TAB_ENTR_MODE], Table[NUC_TAB_PRES_MODE],
-                    Mode, &Err, NULL_REAL );
+   nuc_eos_C_short( Dens_CGS, &Temp_MeV, Ye, &sEint_CGS, &Entr, &Pres_CGS, &Useless, &Useless,
+                    EnergyShift, NRho, NTorE, NYe, NRho_Mode, NMode, NYe_Mode,
+                    Table[NUC_TAB_ALL], Table[NUC_TAB_ALL_MODE], Table[NUC_TAB_RHO], Table[NUC_TAB_TORE], Table[NUC_TAB_YE], 
+                    Table[NUC_TAB_RHO_MODE], Table[NUC_TAB_ENTE_MODE], Table[NUC_TAB_ENTR_MODE],  Table[NUC_TAB_PRES_MODE],
+                    Table[NUC_TAB_YE_MODE], Mode, &Err, Tolerance );
 
 // trigger a *hard failure* if the EoS driver fails
    if ( Err )
@@ -250,6 +278,7 @@ static real EoS_DensEint2Pres_Nuclear( const real Dens_Code, const real Eint_Cod
       Temp_MeV = NAN;
       Entr     = NAN;
       Pres_CGS = NAN;
+      mu_nu    = NAN;
    }
 
    const real Temp_Kelv = Temp_MeV * MeV2Kelvin;
@@ -286,6 +315,7 @@ static real EoS_DensEint2Pres_Nuclear( const real Dens_Code, const real Eint_Cod
    {
       ExtraInOut[0] = Temp_Kelv;
       ExtraInOut[1] = Entr;
+      ExtraInOut[2] = mu_nu;
    }
 
 
@@ -341,10 +371,12 @@ static real EoS_DensPres2Eint_Nuclear( const real Dens_Code, const real Pres_Cod
    const real Pres2CGS    = AuxArray_Flt[NUC_AUX_PRES2CGS ];
    const real sEint2Code  = AuxArray_Flt[NUC_AUX_VSQR2CODE];
 
-   const int  NRho        = AuxArray_Int[NUC_AUX_NRHO ];
-   const int  NEps        = AuxArray_Int[NUC_AUX_NEPS ];
-   const int  NYe         = AuxArray_Int[NUC_AUX_NYE  ];
-   const int  NMode       = AuxArray_Int[NUC_AUX_NMODE];
+   const int  NRho        = AuxArray_Int[NUC_AUX_NRHO     ];
+   const int  NTorE       = AuxArray_Int[NUC_AUX_NTORE    ];
+   const int  NYe         = AuxArray_Int[NUC_AUX_NYE      ];
+   const int  NRho_Mode   = AuxArray_Int[NUC_AUX_NRHO_MODE];
+   const int  NMode       = AuxArray_Int[NUC_AUX_NMODE    ];
+   const int  NYe_Mode    = AuxArray_Int[NUC_AUX_NYE_MODE ];
 
    int  Mode      = NUC_MODE_PRES;
    real Dens_CGS  = Dens_Code * Dens2CGS;
@@ -353,6 +385,11 @@ static real EoS_DensPres2Eint_Nuclear( const real Dens_Code, const real Pres_Cod
    real sEint_CGS = NULL_REAL;
    real Useless   = NULL_REAL;
    int  Err       = NULL_INT;
+#ifdef FLOAT8
+   const real Tolerance = 1e-10;
+#else
+   const real Tolerance = 1e-6;
+#endif
 
 
 // check floating-point overflow and Ye
@@ -372,11 +409,11 @@ static real EoS_DensPres2Eint_Nuclear( const real Dens_Code, const real Pres_Cod
 
 
 // invoke the nuclear EoS driver
-   nuc_eos_C_short( Dens_CGS, &sEint_CGS, Ye, &Useless, &Useless, &Pres_CGS, &Useless, &Useless,
-                    EnergyShift, NRho, NEps, NYe, NMode,
-                    Table[NUC_TAB_ALL], Table[NUC_TAB_ALL_MODE], Table[NUC_TAB_RHO], Table[NUC_TAB_EPS],
-                    Table[NUC_TAB_YE], Table[NUC_TAB_TEMP_MODE], Table[NUC_TAB_ENTR_MODE], Table[NUC_TAB_PRES_MODE],
-                    Mode, &Err, NULL_REAL );
+   nuc_eos_C_short( Dens_CGS, &Useless, Ye, &sEint_CGS, &Useless, &Pres_CGS, &Useless, &Useless,
+                    EnergyShift, NRho, NTorE, NYe, NRho_Mode, NMode, NYe_Mode,
+                    Table[NUC_TAB_ALL], Table[NUC_TAB_ALL_MODE], Table[NUC_TAB_RHO], Table[NUC_TAB_TORE], Table[NUC_TAB_YE], 
+                    Table[NUC_TAB_RHO_MODE], Table[NUC_TAB_ENTE_MODE], Table[NUC_TAB_ENTR_MODE],  Table[NUC_TAB_PRES_MODE],
+                    Table[NUC_TAB_YE_MODE], Mode, &Err, Tolerance );
 
 // trigger a *hard failure* if the EoS driver fails
    if ( Err )  sEint_CGS = NAN;
@@ -456,10 +493,12 @@ static real EoS_DensPres2CSqr_Nuclear( const real Dens_Code, const real Pres_Cod
    const real Pres2CGS    = AuxArray_Flt[NUC_AUX_PRES2CGS ];
    const real CsSqr2Code  = AuxArray_Flt[NUC_AUX_VSQR2CODE];
 
-   const int  NRho        = AuxArray_Int[NUC_AUX_NRHO ];
-   const int  NEps        = AuxArray_Int[NUC_AUX_NEPS ];
-   const int  NYe         = AuxArray_Int[NUC_AUX_NYE  ];
-   const int  NMode       = AuxArray_Int[NUC_AUX_NMODE];
+   const int  NRho        = AuxArray_Int[NUC_AUX_NRHO     ];
+   const int  NTorE       = AuxArray_Int[NUC_AUX_NTORE    ];
+   const int  NYe         = AuxArray_Int[NUC_AUX_NYE      ];
+   const int  NRho_Mode   = AuxArray_Int[NUC_AUX_NRHO_MODE];
+   const int  NMode       = AuxArray_Int[NUC_AUX_NMODE    ];
+   const int  NYe_Mode    = AuxArray_Int[NUC_AUX_NYE_MODE ];
 
    int  Mode     = NUC_MODE_PRES;
    real Dens_CGS = Dens_Code * Dens2CGS;
@@ -468,6 +507,11 @@ static real EoS_DensPres2CSqr_Nuclear( const real Dens_Code, const real Pres_Cod
    real Cs2_CGS  = NULL_REAL;
    real Useless  = NULL_REAL;
    int  Err      = NULL_INT;
+#ifdef FLOAT8
+   const real Tolerance = 1e-10;
+#else
+   const real Tolerance = 1e-6;
+#endif
 
 
 // check floating-point overflow and Ye
@@ -488,10 +532,10 @@ static real EoS_DensPres2CSqr_Nuclear( const real Dens_Code, const real Pres_Cod
 
 // invoke the nuclear EoS driver
    nuc_eos_C_short( Dens_CGS, &Useless, Ye, &Useless, &Useless, &Pres_CGS, &Cs2_CGS, &Useless,
-                    EnergyShift, NRho, NEps, NYe, NMode,
-                    Table[NUC_TAB_ALL], Table[NUC_TAB_ALL_MODE], Table[NUC_TAB_RHO], Table[NUC_TAB_EPS],
-                    Table[NUC_TAB_YE], Table[NUC_TAB_TEMP_MODE], Table[NUC_TAB_ENTR_MODE], Table[NUC_TAB_PRES_MODE],
-                    Mode, &Err, NULL_REAL );
+                    EnergyShift, NRho, NTorE, NYe, NRho_Mode, NMode, NYe_Mode,
+                    Table[NUC_TAB_ALL], Table[NUC_TAB_ALL_MODE], Table[NUC_TAB_RHO], Table[NUC_TAB_TORE], Table[NUC_TAB_YE], 
+                    Table[NUC_TAB_RHO_MODE], Table[NUC_TAB_ENTE_MODE], Table[NUC_TAB_ENTR_MODE],  Table[NUC_TAB_PRES_MODE],
+                    Table[NUC_TAB_YE_MODE], Mode, &Err, Tolerance );
 
 // trigger a *hard failure* if the EoS driver fails
    if ( Err )  Cs2_CGS = NAN;
@@ -650,10 +694,12 @@ static void EoS_General_Nuclear( const int Mode, real Out[], const real In[], co
    const real sEint2Code  = AuxArray_Flt[NUC_AUX_VSQR2CODE ];
    const real Pres2Code   = AuxArray_Flt[NUC_AUX_PRES2CODE];
 
-   const int  NRho        = AuxArray_Int[NUC_AUX_NRHO ];
-   const int  NEps        = AuxArray_Int[NUC_AUX_NEPS ];
-   const int  NYe         = AuxArray_Int[NUC_AUX_NYE  ];
-   const int  NMode       = AuxArray_Int[NUC_AUX_NMODE];
+   const int  NRho        = AuxArray_Int[NUC_AUX_NRHO     ];
+   const int  NTorE       = AuxArray_Int[NUC_AUX_NTORE    ];
+   const int  NYe         = AuxArray_Int[NUC_AUX_NYE      ];
+   const int  NRho_Mode   = AuxArray_Int[NUC_AUX_NRHO_MODE];
+   const int  NMode       = AuxArray_Int[NUC_AUX_NMODE    ];
+   const int  NYe_Mode    = AuxArray_Int[NUC_AUX_NYE_MODE ];
 
 
    switch ( Mode )
@@ -688,6 +734,11 @@ static void EoS_General_Nuclear( const int Mode, real Out[], const real In[], co
          real Pres_CGS  = NULL_REAL;
          real Useless   = NULL_REAL;
          int  Err       = NULL_INT;
+#ifdef FLOAT8
+   const real Tolerance = 1e-10;
+#else
+   const real Tolerance = 1e-6;
+#endif
 
 //       check floating-point overflow and Ye
 #        ifdef GAMER_DEBUG
@@ -706,11 +757,11 @@ static void EoS_General_Nuclear( const int Mode, real Out[], const real In[], co
 
 
 //       invoke the nuclear EoS driver
-         nuc_eos_C_short( Dens_CGS, &sEint_CGS, Ye, &Temp_MeV, &Entr, &Pres_CGS, &Useless, &Useless,
-                          EnergyShift, NRho, NEps, NYe, NMode,
-                          Table[NUC_TAB_ALL], Table[NUC_TAB_ALL_MODE], Table[NUC_TAB_RHO], Table[NUC_TAB_EPS],
-                          Table[NUC_TAB_YE], Table[NUC_TAB_TEMP_MODE], Table[NUC_TAB_ENTR_MODE], Table[NUC_TAB_PRES_MODE],
-                          Mode, &Err, NULL_REAL );
+         nuc_eos_C_short( Dens_CGS, &Temp_MeV, Ye, &sEint_CGS, &Entr, &Pres_CGS, &Useless, &Useless,
+                          EnergyShift, NRho, NTorE, NYe, NRho_Mode, NMode, NYe_Mode,
+                          Table[NUC_TAB_ALL], Table[NUC_TAB_ALL_MODE], Table[NUC_TAB_RHO], Table[NUC_TAB_TORE], Table[NUC_TAB_YE], 
+                          Table[NUC_TAB_RHO_MODE], Table[NUC_TAB_ENTE_MODE], Table[NUC_TAB_ENTR_MODE],  Table[NUC_TAB_PRES_MODE],
+                          Table[NUC_TAB_YE_MODE], Mode, &Err, Tolerance );
 
 //       trigger a *hard failure* if the EoS driver fails
          if ( Err )
@@ -784,6 +835,11 @@ static void EoS_General_Nuclear( const int Mode, real Out[], const real In[], co
          real sEint_CGS = NULL_REAL;
          real Useless   = NULL_REAL;
          int  Err       = NULL_INT;
+#ifdef FLOAT8
+   const real Tolerance = 1e-10;
+#else
+   const real Tolerance = 1e-6;
+#endif
 
 //       check floating-point overflow and Ye
 #        ifdef GAMER_DEBUG
@@ -798,11 +854,11 @@ static void EoS_General_Nuclear( const int Mode, real Out[], const real In[], co
 
 
 //       invoke the nuclear EoS driver
-         nuc_eos_C_short( Dens_CGS, &sEint_CGS, Ye, &Useless, &Entr, &Useless, &Useless, &Useless,
-                          EnergyShift, NRho, NEps, NYe, NMode,
-                          Table[NUC_TAB_ALL], Table[NUC_TAB_ALL_MODE], Table[NUC_TAB_RHO], Table[NUC_TAB_EPS],
-                          Table[NUC_TAB_YE], Table[NUC_TAB_TEMP_MODE], Table[NUC_TAB_ENTR_MODE], Table[NUC_TAB_PRES_MODE],
-                          Mode, &Err, NULL_REAL );
+         nuc_eos_C_short( Dens_CGS, &Useless, Ye, &sEint_CGS, &Entr, &Useless, &Useless, &Useless,
+                          EnergyShift, NRho, NTorE, NYe, NRho_Mode, NMode, NYe_Mode,
+                          Table[NUC_TAB_ALL], Table[NUC_TAB_ALL_MODE], Table[NUC_TAB_RHO], Table[NUC_TAB_TORE], Table[NUC_TAB_YE], 
+                          Table[NUC_TAB_RHO_MODE], Table[NUC_TAB_ENTE_MODE], Table[NUC_TAB_ENTR_MODE],  Table[NUC_TAB_PRES_MODE],
+                          Table[NUC_TAB_YE_MODE], Mode, &Err, Tolerance );
 
 //       trigger a *hard failure* if the EoS driver fails
          if ( Err )  sEint_CGS = NAN;
