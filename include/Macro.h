@@ -29,6 +29,7 @@
 #define PASCAL       4
 #define VOLTA        5
 #define TURING       6
+#define AMPERE       7
 
 
 // models
@@ -76,6 +77,12 @@
 #define EOS_NUCLEAR     3
 #define EOS_TABULAR     4
 #define EOS_USER        5
+
+
+// neutrino updating schemes
+#define LIGHTBULB    1
+#define IDSA         2
+#define M1           3
 
 
 // Poisson solvers
@@ -147,8 +154,15 @@
 #  define NCOMP_PASSIVE_BUILTIN1    0
 # endif
 
+// electron fraction (Ye)
+# if ( EOS == EOS_NUCLEAR )
+#  define NCOMP_PASSIVE_BUILTIN2    1
+# else
+#  define NCOMP_PASSIVE_BUILTIN2    0
+# endif
+
 // total number of built-in scalars
-#  define NCOMP_PASSIVE_BUILTIN     ( NCOMP_PASSIVE_BUILTIN0 + NCOMP_PASSIVE_BUILTIN1 )
+#  define NCOMP_PASSIVE_BUILTIN     ( NCOMP_PASSIVE_BUILTIN0 + NCOMP_PASSIVE_BUILTIN1 + NCOMP_PASSIVE_BUILTIN2 )
 
 #endif // #if ( MODEL == HYDRO )
 
@@ -207,6 +221,10 @@
 #  define DER_NOUT_MAX        10
 
 
+// maximum number of fields to be stored in HDF5 snapshots
+#  define NFIELD_STORED_MAX   50
+
+
 // built-in fields in different models
 #if   ( MODEL == HYDRO )
 // field indices of fluid[] --> element of [0 ... NCOMP_FLUID-1]
@@ -241,6 +259,13 @@
 #  define PASSIVE_NEXT_IDX2   ( CRAY - 1          )
 # else
 #  define PASSIVE_NEXT_IDX2   ( PASSIVE_NEXT_IDX1 )
+# endif
+
+# if ( EOS == EOS_NUCLEAR )
+#  define YE                  ( PASSIVE_NEXT_IDX2 )
+#  define PASSIVE_NEXT_IDX3   ( YE - 1            )
+# else
+#  define PASSIVE_NEXT_IDX3   ( PASSIVE_NEXT_IDX2 )
 # endif
 
 #endif // #if ( NCOMP_PASSIVE > 0 )
@@ -282,6 +307,13 @@
 #  define FLUX_NEXT_IDX2   ( FLUX_NEXT_IDX1  )
 # endif
 
+# if ( EOS == EOS_NUCLEAR )
+#  define FLUX_YE          ( FLUX_NEXT_IDX2  )
+#  define FLUX_NEXT_IDX3   ( FLUX_YE - 1     )
+# else
+#  define FLUX_NEXT_IDX3   ( FLUX_NEXT_IDX2  )
+# endif
+
 #endif // #if ( NCOMP_PASSIVE > 0 )
 
 // bitwise field indices
@@ -304,6 +336,10 @@
 
 # ifdef COSMIC_RAY
 #  define _CRAY               ( 1L << CRAY )
+# endif
+
+# if ( EOS == EOS_NUCLEAR )
+#  define _YE                 ( 1L << YE   )
 # endif
 
 #endif // #if ( NCOMP_PASSIVE > 0 )
@@ -335,6 +371,10 @@
 
 # ifdef COSMIC_RAY
 #  define _FLUX_CRAY          ( 1L << FLUX_CRAY )
+# endif
+
+# if ( EOS == EOS_NUCLEAR )
+#  define _FLUX_YE            ( 1L << FLUX_YE   )
 # endif
 
 #endif // #if ( NFLUX_PASSIVE > 0 )
@@ -691,6 +731,15 @@
 #  define SRC_NAUX_USER          10    // SrcTerms.User_AuxArray_Flt/Int[]
 
 
+// size of GREP profile
+#ifdef GREP
+#  define EXT_POT_GREP_NAUX_MAX  4000
+#else
+// zero-sized variables are not allowed in device code
+#  define EXT_POT_GREP_NAUX_MAX  1
+#endif
+
+
 // bitwise reproducibility in flux and electric field fix-up operations
 #if ( MODEL == HYDRO )
 # ifdef BITWISE_REPRODUCIBILITY
@@ -859,6 +908,7 @@
 #  define   SIN( a )         sin( a )
 #  define   COS( a )         cos( a )
 #  define   LOG( a )         log( a )
+#  define LOG10( a )       log10( a )
 #  define   EXP( a )         exp( a )
 #  define  ATAN( a )        atan( a )
 #  define FLOOR( a )       floor( a )
@@ -873,6 +923,7 @@
 #  define   SIN( a )         sinf( a )
 #  define   COS( a )         cosf( a )
 #  define   LOG( a )         logf( a )
+#  define LOG10( a )       log10f( a )
 #  define   EXP( a )         expf( a )
 #  define  ATAN( a )        atanf( a )
 #  define FLOOR( a )       floorf( a )

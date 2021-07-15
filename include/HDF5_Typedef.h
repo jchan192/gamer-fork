@@ -61,6 +61,8 @@ struct KeyInfo_t
 
    long   Step;
    long   AdvanceCounter[NLEVEL];
+   int    NFieldStored;             // number of grid fields to be stored (excluding B field)
+   int    NMagStored;               // NCOMP_MAG (declare it even when MHD is off)
 #  ifdef PARTICLE
    long   Par_NPar;                 // amr->Par->NPar_Active_AllRank
    int    Par_NAttStored;           // PAR_NATT_STORED
@@ -76,6 +78,9 @@ struct KeyInfo_t
 
    char  *CodeVersion;
    char  *DumpWallTime;
+   char  *GitBranch;
+   char  *GitCommit;
+   long   UniqueDataID;
 
 }; // struct KeyInfo_t
 
@@ -118,6 +123,7 @@ struct Makefile_t
    int PotScheme;
    int StorePotGhost;
    int UnsplitGravity;
+   int Grep;
 #  endif
 
 #  if   ( MODEL == HYDRO )
@@ -133,6 +139,7 @@ struct Makefile_t
    int CosmicRay;
    int EoS;
    int BarotropicEoS;
+   int NeutrinoScheme;
 
 #  elif ( MODEL == ELBDM )
    int ConserveMass;
@@ -206,6 +213,7 @@ struct SymConst_t
    int    Gra_BlockSize;
    int    ExtPotNAuxMax;
    int    ExtAccNAuxMax;
+   int    ExtPotGREPNAuxMax;
    int    ExtPotNGeneMax;
 
 #  if   ( POT_SCHEME == SOR )
@@ -293,6 +301,8 @@ struct SymConst_t
    int    Der_GhostSize;
    int    Der_Nxt;
    int    Der_NOut_Max;
+
+   int    NFieldStoredMax;
 
 }; // struct SymConst_t
 
@@ -445,6 +455,9 @@ struct InputPara_t
    double Gamma;
    double MolecularWeight;
    double IsoTemp;
+#  if ( EOS == EOS_NUCLEAR )
+   char  *NucTable;
+#  endif
    double MinMod_Coeff;
    int    Opt__LR_Limiter;
    int    Opt__1stFluxCorr;
@@ -477,7 +490,7 @@ struct InputPara_t
    int    Opt__IntFracPassive_LR;
    int    IntFracPassive_NVar;
    int    IntFracPassive_VarIdx[NCOMP_PASSIVE];
-   char  *FieldLabel[NCOMP_TOTAL];
+   char  *FieldLabel[NFIELD_STORED_MAX];
 #  ifdef MHD
    char  *MagLabel[NCOMP_MAG];
 #  endif
@@ -490,6 +503,7 @@ struct InputPara_t
    double MinPres;
    double MinEint;
    double MinTemp;
+   int    Opt__CheckPresAfterFlu;
    int    Opt__LastResortFloor;
    int    JeansMinPres;
    int    JeansMinPres_Level;
@@ -514,15 +528,21 @@ struct InputPara_t
 #  endif
    int    Pot_GPU_NPGroup;
    int    Opt__GraP5Gradient;
+   int    Opt__GravityExtraMass;
    int    Opt__SelfGravity;
    int    Opt__ExtAcc;
    int    Opt__ExtPot;
    char  *ExtPotTable_Name;
    int    ExtPotTable_NPoint[3];
-   double ExtPotTable_dh;
+   double ExtPotTable_dh[3];
    double ExtPotTable_EdgeL[3];
    int    ExtPotTable_Float8;
-   int    Opt__GravityExtraMass;
+   int    GREP_Center_Method;
+   int    GREP_MaxIter;
+   int    GREP_LogBin;
+   double GREP_LogBinRatio;
+   double GREP_MaxRadius;
+   double GREP_MinBinSize;
 #  endif // #ifdef GRAVITY
 
 // source terms
@@ -565,11 +585,13 @@ struct InputPara_t
    int    RestartLoadNRank;
    int    Opt__RestartReset;
    int    Opt__UM_IC_Level;
+   int    Opt__UM_IC_NLevel;
    int    Opt__UM_IC_NVar;
    int    Opt__UM_IC_Format;
    int    Opt__UM_IC_Downgrade;
    int    Opt__UM_IC_Refine;
    int    Opt__UM_IC_LoadNRank;
+   int    UM_IC_RefineRegion[NLEVEL-1][6];
    int    Opt__InitRestrict;
    int    Opt__InitGridWithOMP;
    int    Opt__GPUID_Select;
@@ -619,6 +641,7 @@ struct InputPara_t
 #  if ( MODEL == HYDRO )
    int    Opt__Output_Pres;
    int    Opt__Output_Temp;
+   int    Opt__Output_Entr;
    int    Opt__Output_Cs;
    int    Opt__Output_DivVel;
    int    Opt__Output_Mach;

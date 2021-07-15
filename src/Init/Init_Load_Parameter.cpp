@@ -228,13 +228,16 @@ void Init_Load_Parameter()
 #  else
    ReadPara->Add( "ISO_TEMP",                   &ISO_TEMP,                       __DBL_MAX__,      NoMin_double,  NoMax_double   );
 #  endif
+#  if ( EOS == EOS_NUCLEAR )
+   ReadPara->Add( "NUC_TABLE",                  NUC_TABLE,                        Useless_str,     Useless_str,   Useless_str    );
+#  endif
    ReadPara->Add( "MINMOD_COEFF",               &MINMOD_COEFF,                    1.5,             1.0,           2.0            );
-   ReadPara->Add( "OPT__LR_LIMITER",            &OPT__LR_LIMITER,                 VL_GMINMOD,      0,             5              );
+   ReadPara->Add( "OPT__LR_LIMITER",            &OPT__LR_LIMITER,             LR_LIMITER_DEFAULT, -1,             6              );
    ReadPara->Add( "OPT__1ST_FLUX_CORR",         &OPT__1ST_FLUX_CORR,             -1,               NoMin_int,     2              );
 #  ifdef MHD
    ReadPara->Add( "OPT__1ST_FLUX_CORR_SCHEME",  &OPT__1ST_FLUX_CORR_SCHEME,   RSOLVER_1ST_DEFAULT, NoMin_int,     4              );
 #  else
-   ReadPara->Add( "OPT__1ST_FLUX_CORR_SCHEME",  &OPT__1ST_FLUX_CORR_SCHEME,   RSOLVER_1ST_DEFAULT, NoMin_int,     3              );
+   ReadPara->Add( "OPT__1ST_FLUX_CORR_SCHEME",  &OPT__1ST_FLUX_CORR_SCHEME,   RSOLVER_1ST_DEFAULT,-1,             3              );
 #  endif
 #  ifdef DUAL_ENERGY
    ReadPara->Add( "DUAL_ENERGY_SWITCH",         &DUAL_ENERGY_SWITCH,              2.0e-2,          0.0,           NoMax_double   );
@@ -271,6 +274,7 @@ void Init_Load_Parameter()
    ReadPara->Add( "OPT__OVERLAP_MPI",           &OPT__OVERLAP_MPI,                false,           Useless_bool,  Useless_bool   );
    ReadPara->Add( "OPT__RESET_FLUID",           &OPT__RESET_FLUID,                false,           Useless_bool,  Useless_bool   );
 #  if ( MODEL == HYDRO )
+   ReadPara->Add( "OPT__CHECK_PRES_AFTER_FLU",  &OPT__CHECK_PRES_AFTER_FLU,      -1,               NoMin_int,     1              );
    ReadPara->Add( "OPT__LAST_RESORT_FLOOR",     &OPT__LAST_RESORT_FLOOR,          true,            Useless_bool,  Useless_bool   );
 #  endif
 #  if ( MODEL == HYDRO  ||  MODEL == ELBDM )
@@ -304,19 +308,27 @@ void Init_Load_Parameter()
    ReadPara->Add( "OPT__GRA_P5_GRADIENT",       &OPT__GRA_P5_GRADIENT,            false,           Useless_bool,  Useless_bool   );
    ReadPara->Add( "OPT__SELF_GRAVITY",          &OPT__SELF_GRAVITY,               true,            Useless_bool,  Useless_bool   );
    ReadPara->Add( "OPT__EXT_ACC",               &OPT__EXT_ACC,                    0,               0,             1              );
-   ReadPara->Add( "OPT__EXT_POT",               &OPT__EXT_POT,                    0,               0,             2              );
+   ReadPara->Add( "OPT__EXT_POT",               &OPT__EXT_POT,                    0,               0,             3              );
 // do not check the parameters of external potential table here --> do it in Init_LoadExtPotTable()
    ReadPara->Add( "EXT_POT_TABLE_NAME",          EXT_POT_TABLE_NAME,              Useless_str,     Useless_str,   Useless_str    );
    ReadPara->Add( "EXT_POT_TABLE_NPOINT_X",     &EXT_POT_TABLE_NPOINT[0],        -1,               NoMin_int,     NoMax_int      );
    ReadPara->Add( "EXT_POT_TABLE_NPOINT_Y",     &EXT_POT_TABLE_NPOINT[1],        -1,               NoMin_int,     NoMax_int      );
    ReadPara->Add( "EXT_POT_TABLE_NPOINT_Z",     &EXT_POT_TABLE_NPOINT[2],        -1,               NoMin_int,     NoMax_int      );
-   ReadPara->Add( "EXT_POT_TABLE_DH",           &EXT_POT_TABLE_DH,               -1.0,             NoMin_double,  NoMax_double   );
+   ReadPara->Add( "EXT_POT_TABLE_DH_X",         &EXT_POT_TABLE_DH[0],            -1.0,             NoMin_double,  NoMax_double   );
+   ReadPara->Add( "EXT_POT_TABLE_DH_Y",         &EXT_POT_TABLE_DH[1],            -1.0,             NoMin_double,  NoMax_double   );
+   ReadPara->Add( "EXT_POT_TABLE_DH_Z",         &EXT_POT_TABLE_DH[2],            -1.0,             NoMin_double,  NoMax_double   );
    ReadPara->Add( "EXT_POT_TABLE_EDGEL_X",      &EXT_POT_TABLE_EDGEL[0],          NoDef_double,    NoMin_double,  NoMax_double   );
    ReadPara->Add( "EXT_POT_TABLE_EDGEL_Y",      &EXT_POT_TABLE_EDGEL[1],          NoDef_double,    NoMin_double,  NoMax_double   );
    ReadPara->Add( "EXT_POT_TABLE_EDGEL_Z",      &EXT_POT_TABLE_EDGEL[2],          NoDef_double,    NoMin_double,  NoMax_double   );
 // fix EXT_POT_TABLE_FLOAT8 to -1 for now since this option is not supported yet
    ReadPara->Add( "EXT_POT_TABLE_FLOAT8",       &EXT_POT_TABLE_FLOAT8,           -1,              -1,            -1              );
    ReadPara->Add( "OPT__GRAVITY_EXTRA_MASS",    &OPT__GRAVITY_EXTRA_MASS,         false,           Useless_bool,  Useless_bool   );
+   ReadPara->Add( "GREP_CENTER_METHOD",        &GREP_CENTER_METHOD,               1,               1,              1             );
+   ReadPara->Add( "GREP_MAXITER",              &GREP_MAXITER,                     1000,            100,            NoMax_int     );
+   ReadPara->Add( "GREP_LOGBIN",               &GREP_LOGBIN,                      true,            Useless_bool,   Useless_bool  );
+   ReadPara->Add( "GREP_LOGBINRATIO",          &GREP_LOGBINRATIO,                 1.25,            1.0,            NoMax_double  );
+   ReadPara->Add( "GREP_MAXRADIUS",            &GREP_MAXRADIUS,                  -1.0,             NoMin_double,   NoMax_double  );
+   ReadPara->Add( "GREP_MINBINSIZE",           &GREP_MINBINSIZE,                 -1.0,             NoMin_double,   NoMax_double  );
 #  endif // #ifdef GRAVITY
 
 
@@ -325,6 +337,7 @@ void Init_Load_Parameter()
    ReadPara->Add( "RESTART_LOAD_NRANK",         &RESTART_LOAD_NRANK,              1,               1,             NoMax_int      );
    ReadPara->Add( "OPT__RESTART_RESET",         &OPT__RESTART_RESET,              false,           Useless_bool,  Useless_bool   );
    ReadPara->Add( "OPT__UM_IC_LEVEL",           &OPT__UM_IC_LEVEL,                0,               0,             TOP_LEVEL      );
+   ReadPara->Add( "OPT__UM_IC_NLEVEL",          &OPT__UM_IC_NLEVEL,               1,               1,             NoMax_int      );
 // do not check OPT__UM_IC_NVAR since it depends on OPT__INIT and MODEL
 // --> also, we do not load the density field for ELBDM
 #  if ( MODEL == ELBDM )
@@ -393,6 +406,7 @@ void Init_Load_Parameter()
 #  if ( MODEL == HYDRO )
    ReadPara->Add( "OPT__OUTPUT_PRES",           &OPT__OUTPUT_PRES,                false,           Useless_bool,  Useless_bool   );
    ReadPara->Add( "OPT__OUTPUT_TEMP",           &OPT__OUTPUT_TEMP,                false,           Useless_bool,  Useless_bool   );
+   ReadPara->Add( "OPT__OUTPUT_ENTR",           &OPT__OUTPUT_ENTR,                false,           Useless_bool,  Useless_bool   );
    ReadPara->Add( "OPT__OUTPUT_CS",             &OPT__OUTPUT_CS,                  false,           Useless_bool,  Useless_bool   );
    ReadPara->Add( "OPT__OUTPUT_DIVVEL",         &OPT__OUTPUT_DIVVEL,              false,           Useless_bool,  Useless_bool   );
    ReadPara->Add( "OPT__OUTPUT_MACH",           &OPT__OUTPUT_MACH,                false,           Useless_bool,  Useless_bool   );

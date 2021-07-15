@@ -35,6 +35,7 @@ extern double    *DumpTable;                          // dump table recording th
 extern int        DumpTable_NDump;                    // number of data dumps in the dump table
 extern int        DumpID;                             // index of the current output file
 extern double     DumpTime;                           // time of the next dump (for OPT__OUTPUT_MODE=1)
+extern int       *UM_IC_RefineRegion;                 // refinement region for OPT__UM_IC_NLEVEL>1
 
 extern int        MPI_Rank;                           // MPI rank ID in the MPI_COMM_WORLD
 extern int        MPI_Rank_X[3];                      // order of this MPI process in x/y/z directions
@@ -54,7 +55,7 @@ extern int        NX0_TOT[3], OUTPUT_STEP, REGRID_COUNT, FLU_GPU_NPGROUP, SRC_GP
 extern int        MPI_NRank, MPI_NRank_X[3];
 extern int        GPU_NSTREAM, FLAG_BUFFER_SIZE, FLAG_BUFFER_SIZE_MAXM1_LV, FLAG_BUFFER_SIZE_MAXM2_LV, MAX_LEVEL;
 
-extern int        OPT__UM_IC_LEVEL, OPT__UM_IC_NVAR, OPT__UM_IC_LOAD_NRANK, OPT__GPUID_SELECT, OPT__PATCH_COUNT;
+extern int        OPT__UM_IC_LEVEL, OPT__UM_IC_NLEVEL, OPT__UM_IC_NVAR, OPT__UM_IC_LOAD_NRANK, OPT__GPUID_SELECT, OPT__PATCH_COUNT;
 extern int        INIT_DUMPID, INIT_SUBSAMPLING_NCELL, OPT__TIMING_BARRIER, OPT__REUSE_MEMORY, RESTART_LOAD_NRANK;
 extern double     OUTPUT_PART_X, OUTPUT_PART_Y, OUTPUT_PART_Z, AUTO_REDUCE_DT_FACTOR, AUTO_REDUCE_DT_FACTOR_MIN;
 extern double     OPT__CK_MEMFREE, INT_MONO_COEFF, UNIT_L, UNIT_M, UNIT_T, UNIT_V, UNIT_D, UNIT_E, UNIT_P;
@@ -97,8 +98,8 @@ extern OptRSolver1st_t  OPT__1ST_FLUX_CORR_SCHEME;
 extern bool             OPT__FLAG_PRES_GRADIENT, OPT__FLAG_LOHNER_ENGY, OPT__FLAG_LOHNER_PRES, OPT__FLAG_LOHNER_TEMP;
 extern bool             OPT__FLAG_VORTICITY, OPT__FLAG_JEANS, JEANS_MIN_PRES, OPT__LAST_RESORT_FLOOR;
 extern bool             OPT__OUTPUT_DIVVEL, OPT__OUTPUT_MACH, OPT__OUTPUT_PRES, OPT__OUTPUT_CS;
-extern bool             OPT__OUTPUT_TEMP;
-extern int              OPT__CK_NEGATIVE, JEANS_MIN_PRES_LEVEL, JEANS_MIN_PRES_NCELL;
+extern bool             OPT__OUTPUT_TEMP, OPT__OUTPUT_ENTR;
+extern int              OPT__CK_NEGATIVE, JEANS_MIN_PRES_LEVEL, JEANS_MIN_PRES_NCELL, OPT__CHECK_PRES_AFTER_FLU;
 extern double           MIN_DENS, MIN_PRES, MIN_EINT, MIN_TEMP;
 #ifdef DUAL_ENERGY
 extern double           DUAL_ENERGY_SWITCH;
@@ -144,7 +145,7 @@ extern int           SOR_MAX_ITER, SOR_MIN_ITER;
 extern double        MG_TOLERATED_ERROR;
 extern int           MG_MAX_ITER, MG_NPRE_SMOOTH, MG_NPOST_SMOOTH;
 extern char          EXT_POT_TABLE_NAME[MAX_STRING];
-extern double        EXT_POT_TABLE_DH, EXT_POT_TABLE_EDGEL[3];
+extern double        EXT_POT_TABLE_DH[3], EXT_POT_TABLE_EDGEL[3];
 extern int           EXT_POT_TABLE_NPOINT[3], EXT_POT_TABLE_FLOAT8;
 extern IntScheme_t   OPT__POT_INT_SCHEME, OPT__RHO_INT_SCHEME, OPT__GRA_INT_SCHEME, OPT__REF_POT_INT_SCHEME;
 extern OptPotBC_t    OPT__BC_POT;
@@ -255,10 +256,23 @@ extern EoS_DT2P_t EoS_DensTemp2Pres_GPUPtr;
 extern EoS_GENE_t EoS_General_GPUPtr;
 #endif
 extern EoS_t EoS;
+#if ( EOS == EOS_NUCLEAR )
+extern char NUC_TABLE[MAX_STRING];
+#endif
 #endif // HYDRO
 
 
-// (2-10) source terms
+// (2-10) GREP
+// =======================================================================================================
+extern int    GREP_CENTER_METHOD;
+extern int    GREP_MAXITER;
+extern bool   GREP_LOGBIN;
+extern double GREP_LOGBINRATIO;
+extern double GREP_MAXRADIUS;
+extern double GREP_MINBINSIZE;
+
+
+// (2-11) source terms
 // =======================================================================================================
 extern SrcTerms_t SrcTerms;
 #if ( MODEL == HYDRO )

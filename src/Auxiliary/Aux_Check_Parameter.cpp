@@ -259,7 +259,12 @@ void Aux_Check_Parameter()
 #  if ( MODEL == HYDRO )
    if (  OPT__OUTPUT_TEMP  &&  EoS_DensEint2Temp_CPUPtr == NULL )
       Aux_Error( ERROR_INFO, "EoS_DensEint2Temp_CPUPtr == NULL for OPT__OUTPUT_TEMP !!\n" );
+
+#  if ( EOS != EOS_NUCLEAR )
+   if ( OPT__OUTPUT_ENTR )
+      Aux_Error( ERROR_INFO, "OPT__OUTPUT_ENTR is only supported by EOS_NUCLEAR !!\n" );
 #  endif
+#  endif // #if ( MODEL == HYDRO )
 
 
 
@@ -685,12 +690,12 @@ void Aux_Check_Parameter()
          Aux_Error( ERROR_INFO, "JEANS_MIN_PRES currently only supports EOS_GAMMA !!\n" );
 #  endif // if ( EOS != EOS_GAMMA )
 
-#  if ( EOS == EOS_NUCLEAR )
-      Aux_Error( ERROR_INFO, "EOS_NUCLEAR is not supported yet !!\n" );
-#  endif
-
 #  if ( EOS == EOS_TABULAR )
       Aux_Error( ERROR_INFO, "EOS_TABULAR is not supported yet !!\n" );
+#  endif
+
+#  if ( EOS == EOS_NUCLEAR  &&  !defined SUPPORT_HDF5 )
+#     error : ERROR : must enable SUPPORT_HDF5 for EOS_NUCLEAR !!
 #  endif
 
 #  ifdef BAROTROPIC_EOS
@@ -703,6 +708,9 @@ void Aux_Check_Parameter()
 #     endif
 #  endif // #ifdef BAROTROPIC_EOS ... else ...
 
+#  if ( defined NEUTRINO_SCHEME  &&  NEUTRINO_SCHEME != LIGHTBULB  &&  NEUTRINO_SCHEME != IDSA  &&  NEUTRINO_SCHEME != M1 )
+#     error : ERROR : unsupported neutrino updating scheme (LIGHTBULB/IDSA/M1) !!
+#  endif
 
    if ( OPT__1ST_FLUX_CORR != FIRST_FLUX_CORR_NONE )
    {
@@ -801,14 +809,13 @@ void Aux_Check_Parameter()
 
 // errors
 // ------------------------------
-#  if ( LR_SCHEME == PPM )
-   if ( OPT__LR_LIMITER == EXTPRE )
-      Aux_Error( ERROR_INFO, "currently the PPM reconstruction does not support the \"%s\" limiter\n",
-                 "extrema-preserving" );
-#  endif
+   if ( OPT__LR_LIMITER == LR_LIMITER_EXTPRE )
+      Aux_Error( ERROR_INFO, "\"%s\" limiter (OPT__LR_IMITER = %d) is not supported yet !!\n",
+                 "extrema-preserving", OPT__LR_LIMITER );
 
-   if ( OPT__LR_LIMITER != VANLEER  &&  OPT__LR_LIMITER != GMINMOD  &&  OPT__LR_LIMITER != ALBADA  &&
-        OPT__LR_LIMITER != EXTPRE   &&  OPT__LR_LIMITER != VL_GMINMOD )
+   if ( OPT__LR_LIMITER != LR_LIMITER_VANLEER     &&  OPT__LR_LIMITER != LR_LIMITER_GMINMOD  &&
+        OPT__LR_LIMITER != LR_LIMITER_ALBADA      &&  OPT__LR_LIMITER != LR_LIMITER_EXTPRE   &&
+        OPT__LR_LIMITER != LR_LIMITER_VL_GMINMOD  &&  OPT__LR_LIMITER != LR_LIMITER_CENTRAL    )
       Aux_Error( ERROR_INFO, "unsupported data reconstruction limiter (OPT__LR_IMITER = %d) !!\n",
                  OPT__LR_LIMITER );
 
@@ -816,6 +823,18 @@ void Aux_Check_Parameter()
 // warnings
 // ------------------------------
    if ( MPI_Rank == 0 ) {
+
+#     if ( FLU_SCHEME == MHM_RP  &&  LR_SCHEME == PPM )
+      if ( OPT__LR_LIMITER != LR_LIMITER_CENTRAL )
+         Aux_Message( stderr, "WARNING : OPT__LR_LIMITER = %d (LR_LIMITER_CENTRAL) is recommended for MHM_RP+PPM !!\n",
+                      LR_LIMITER_CENTRAL );
+#     endif
+
+#     if ( LR_SCHEME == PLM )
+      if ( OPT__LR_LIMITER == LR_LIMITER_CENTRAL )
+         Aux_Message( stderr, "WARNING : OPT__LR_LIMITER = %d (LR_LIMITER_CENTRAL) is not recommended for PLM !!\n",
+                      OPT__LR_LIMITER );
+#     endif
 
    } // if ( MPI_Rank == 0 )
 
@@ -827,19 +846,19 @@ void Aux_Check_Parameter()
 #  if ( FLU_SCHEME == MHM  ||  FLU_SCHEME == CTU )
 
 #  if ( LR_SCHEME == PLM )
-   if ( OPT__LR_LIMITER == EXTPRE  &&  FLU_GHOST_SIZE < 3 )
+   if ( OPT__LR_LIMITER == LR_LIMITER_EXTPRE  &&  FLU_GHOST_SIZE < 3 )
       Aux_Error( ERROR_INFO, "please set \"%s\" for \"%s\" !!\n",
                  "FLU_GHOST_SIZE = 3", "MHM/CTU scheme + PLM reconstruction + EXTPRE limiter" );
 
-   if ( OPT__LR_LIMITER == EXTPRE  &&  FLU_GHOST_SIZE > 3  &&  MPI_Rank == 0 )
+   if ( OPT__LR_LIMITER == LR_LIMITER_EXTPRE  &&  FLU_GHOST_SIZE > 3  &&  MPI_Rank == 0 )
       Aux_Message( stderr, "WARNING : please set \"%s\" in \"%s\" for higher performance !!\n",
                    "FLU_GHOST_SIZE = 3", "MHM/CTU scheme + PLM reconstruction + EXTPRE limiter" );
 
-   if ( OPT__LR_LIMITER != EXTPRE  &&  FLU_GHOST_SIZE < 2 )
+   if ( OPT__LR_LIMITER != LR_LIMITER_EXTPRE  &&  FLU_GHOST_SIZE < 2 )
       Aux_Error( ERROR_INFO, "please set \"%s\" for \"%s\" !!\n",
                  "FLU_GHOST_SIZE = 2", "MHM/CTU scheme + PLM reconstruction + non-EXTPRE limiter" );
 
-   if ( OPT__LR_LIMITER != EXTPRE  &&  FLU_GHOST_SIZE > 2  &&  MPI_Rank == 0 )
+   if ( OPT__LR_LIMITER != LR_LIMITER_EXTPRE  &&  FLU_GHOST_SIZE > 2  &&  MPI_Rank == 0 )
       Aux_Message( stderr, "WARNING : please set \"%s\" in \"%s\" for higher performance !!\n",
                    "FLU_GHOST_SIZE = 2", "MHM/CTU scheme + PLM reconstruction + non-EXTPRE limiter" );
 #  endif // #if ( LR_SCHEME == PLM )
@@ -862,19 +881,19 @@ void Aux_Check_Parameter()
 #  if ( FLU_SCHEME == MHM_RP )
 
 #  if ( LR_SCHEME == PLM )
-   if ( OPT__LR_LIMITER == EXTPRE  &&  FLU_GHOST_SIZE < 4 )
+   if ( OPT__LR_LIMITER == LR_LIMITER_EXTPRE  &&  FLU_GHOST_SIZE < 4 )
       Aux_Error( ERROR_INFO, "please set \"%s\" for \"%s\" !!\n",
                  "FLU_GHOST_SIZE = 4", "MHM_RP scheme + PLM reconstruction + EXTPRE limiter" );
 
-   if ( OPT__LR_LIMITER == EXTPRE  &&  FLU_GHOST_SIZE > 4  &&  MPI_Rank == 0 )
+   if ( OPT__LR_LIMITER == LR_LIMITER_EXTPRE  &&  FLU_GHOST_SIZE > 4  &&  MPI_Rank == 0 )
       Aux_Message( stderr, "WARNING : please set \"%s\" in \"%s\" for higher performance !!\n",
                    "FLU_GHOST_SIZE = 4", "MHM_RP scheme + PLM reconstruction + EXTPRE limiter" );
 
-   if ( OPT__LR_LIMITER != EXTPRE  &&  FLU_GHOST_SIZE < 3 )
+   if ( OPT__LR_LIMITER != LR_LIMITER_EXTPRE  &&  FLU_GHOST_SIZE < 3 )
       Aux_Error( ERROR_INFO, "please set \"%s\" for \"%s\" !!\n",
                  "FLU_GHOST_SIZE = 3", "MHM_RP scheme + PLM reconstruction + non-EXTPRE limiter" );
 
-   if ( OPT__LR_LIMITER != EXTPRE  &&  FLU_GHOST_SIZE > 3  &&  MPI_Rank == 0 )
+   if ( OPT__LR_LIMITER != LR_LIMITER_EXTPRE  &&  FLU_GHOST_SIZE > 3  &&  MPI_Rank == 0 )
       Aux_Message( stderr, "WARNING : please set \"%s\" in \"%s\" for higher performance !!\n",
                    "FLU_GHOST_SIZE = 3", "MHM_RP scheme + PLM reconstruction + non-EXTPRE limiter" );
 #  endif // #if ( LR_SCHEME == PLM )
@@ -1156,6 +1175,19 @@ void Aux_Check_Parameter()
       Aux_Error( ERROR_INFO, "unsupported option \"OPT__BC_POT = %d\" [1/2] !!\n", OPT__BC_POT );
 
    if ( NEWTON_G <= 0.0 )     Aux_Error( ERROR_INFO, "NEWTON_G (%14.7e) <= 0.0 !!\n", NEWTON_G );
+
+#  ifdef GREP
+   if ( OPT__EXT_POT != EXT_POT_GREP )
+      Aux_Error( ERROR_INFO, "OPT__EXT_POT != EXT_POT_GREP even though GREP is enabled in the Makefile !!\n" );
+
+#  ifdef UNSPLIT_GRAVITY
+#     error : ERROR : GREP and UNSPLIT_GRAVITY are incompatible !!
+#  endif
+
+#  else
+   if ( OPT__EXT_POT == EXT_POT_GREP )
+      Aux_Error( ERROR_INFO, "must enable GREP in the Makefile for OPT__EXT_POT == EXT_POT_GREP !!\n" );
+#  endif // #ifdef GREP ... else ...
 
 
 // warnings

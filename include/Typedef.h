@@ -50,6 +50,9 @@ const TestProbID_t
    TESTPROB_HYDRO_MHD_ORSZAG_TANG_VORTEX       =   14,
    TESTPROB_HYDRO_MHD_LINEAR_WAVE              =   15,
    TESTPROB_HYDRO_JEANS_INSTABILITY            =   16,
+   TESTPROB_HYDRO_BARRED_POT                   =   51,
+
+   TESTPROB_HYDRO_CCSN                         =   20,
 
    TESTPROB_ELBDM_EXTPOT                       = 1000;
 
@@ -102,12 +105,14 @@ const IntScheme_t
 // data reconstruction TVD limiters
 typedef int LR_Limiter_t;
 const LR_Limiter_t
-   LR_LIMITER_NONE = 0,
-   VANLEER         = 1,
-   GMINMOD         = 2,
-   ALBADA          = 3,
-   VL_GMINMOD      = 4,
-   EXTPRE          = 5;
+   LR_LIMITER_DEFAULT    = -1,
+   LR_LIMITER_NONE       = 0,
+   LR_LIMITER_VANLEER    = 1,
+   LR_LIMITER_GMINMOD    = 2,
+   LR_LIMITER_ALBADA     = 3,
+   LR_LIMITER_VL_GMINMOD = 4,
+   LR_LIMITER_EXTPRE     = 5,
+   LR_LIMITER_CENTRAL    = 6;
 
 
 // data output formats
@@ -290,7 +295,8 @@ typedef int OptExtPot_t;
 const OptExtPot_t
    EXT_POT_NONE  = 0,
    EXT_POT_FUNC  = 1,
-   EXT_POT_TABLE = 2;
+   EXT_POT_TABLE = 2,
+   EXT_POT_GREP  = 3;
 
 
 // different usages of external potential when computing total potential on level Lv

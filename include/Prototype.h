@@ -385,6 +385,8 @@ void Poi_Prepare_Rho( const int lv, const double PrepTime, real h_Rho_Array_P[][
 #ifdef STORE_POT_GHOST
 void Poi_StorePotWithGhostZone( const int lv, const int PotSg, const bool AllPatch );
 #endif
+void CPU_ComputeGREP( const Profile_t *DensAve, const Profile_t *EngyAve, const Profile_t *VrAve,
+                      const Profile_t *PresAve, Profile_t *Phi_eff );
 #endif // #ifdef GRAVITY
 
 
@@ -417,9 +419,9 @@ void LB_GetBufferData( const int lv, const int FluSg, const int MagSg, const int
 real*LB_GetBufferData_MemAllocate_Send( const int NSend );
 real*LB_GetBufferData_MemAllocate_Recv( const int NRecv );
 void LB_GrandsonCheck( const int lv );
-void LB_Init_LoadBalance( const bool Redistribute, const double ParWeight, const bool Reset, const int TLv );
+void LB_Init_LoadBalance( const bool Redistribute, const bool SendGridData, const double ParWeight, const bool Reset, const int TLv );
 void LB_Init_ByFunction();
-void LB_Init_Refine( const int FaLv );
+void LB_Init_Refine( const int FaLv, const bool AllocData );
 void LB_SetCutPoint( const int lv, const int NPG_Total, long *CutPoint, const bool InputLBIdx0AndLoad,
                      long *LBIdx0_AllRank_Input, double *Load_AllRank_Input, const double ParWeight );
 void LB_EstimateWorkload_AllPatchGroup( const int lv, const double ParWeight, double *Load_PG );

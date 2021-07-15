@@ -6,7 +6,7 @@
 
 void FillIn_Makefile (  Makefile_t &Makefile  );
 void FillIn_SymConst (  SymConst_t &SymConst  );
-void FillIn_InputPara( InputPara_t &InputPara );
+void FillIn_InputPara( InputPara_t &InputPara, const int NFieldStored, char FieldLabelOut[][MAX_STRING] );
 
 template <typename T>
 static herr_t LoadField( const char *FieldName, void *FieldPtr, const hid_t H5_SetID_Target,
@@ -201,8 +201,17 @@ void Init_ByRestart_HDF5( const char *FileName )
    LoadField( "AveDens_Init",         &KeyInfo.AveDens_Init,         H5_SetID_KeyInfo, H5_TypeID_KeyInfo,    Fatal,  NullPtr,              -1, NonFatal );
 #  endif
 
-   LoadField( "CodeVersion",          &KeyInfo.CodeVersion,          H5_SetID_KeyInfo, H5_TypeID_KeyInfo,    Fatal,  NullPtr,              -1, NonFatal );
-   LoadField( "DumpWallTime",         &KeyInfo.DumpWallTime,         H5_SetID_KeyInfo, H5_TypeID_KeyInfo,    Fatal,  NullPtr,              -1, NonFatal );
+// must initialize all char* pointers as NULL so that we can safely free them later
+// --> in case they do not exist in the restart file
+   KeyInfo.CodeVersion  = NULL;
+   KeyInfo.DumpWallTime = NULL;
+   KeyInfo.GitBranch    = NULL;
+   KeyInfo.GitCommit    = NULL;
+
+   LoadField( "CodeVersion",          &KeyInfo.CodeVersion,          H5_SetID_KeyInfo, H5_TypeID_KeyInfo, NonFatal,  VERSION,               1, NonFatal );
+   LoadField( "DumpWallTime",         &KeyInfo.DumpWallTime,         H5_SetID_KeyInfo, H5_TypeID_KeyInfo, NonFatal,  NullPtr,              -1, NonFatal );
+   LoadField( "GitBranch",            &KeyInfo.GitBranch,            H5_SetID_KeyInfo, H5_TypeID_KeyInfo, NonFatal,  EXPAND_AND_QUOTE(GIT_BRANCH), 1, NonFatal );
+   LoadField( "GitCommit",            &KeyInfo.GitCommit,            H5_SetID_KeyInfo, H5_TypeID_KeyInfo, NonFatal,  EXPAND_AND_QUOTE(GIT_COMMIT), 1, NonFatal );
 
 
 // 1-4. close all objects
@@ -876,8 +885,10 @@ void Init_ByRestart_HDF5( const char *FileName )
 
 
 // 4. close all HDF5 objects and free memory (especially for the variable-length string)
-   free ( KeyInfo.CodeVersion );
-   free ( KeyInfo.DumpWallTime );
+   free( KeyInfo.CodeVersion );
+   free( KeyInfo.DumpWallTime );
+   free( KeyInfo.GitBranch );
+   free( KeyInfo.GitCommit );
 
    delete [] FieldName;
    delete [] CrList_AllLv;
@@ -918,16 +929,18 @@ void Init_ByRestart_HDF5( const char *FileName )
    const double ParWeight_Zero   = 0.0;
    const bool   Redistribute_Yes = true;
    const bool   Redistribute_No  = false;
+   const bool   SendGridData_Yes = true;
+   const bool   SendGridData_No  = false;
    const bool   ResetLB_Yes      = true;
    const bool   ResetLB_No       = false;
    const int    AllLv            = -1;
 
-   LB_Init_LoadBalance( Redistribute_No, ParWeight_Zero, ResetLB_No, AllLv );
+   LB_Init_LoadBalance( Redistribute_No, SendGridData_No, ParWeight_Zero, ResetLB_No, AllLv );
 
 // redistribute patches again if we want to take into account the load-balance weighting of particles
 #  ifdef PARTICLE
    if ( amr->LB->Par_Weight > 0.0 )
-   LB_Init_LoadBalance( Redistribute_Yes, amr->LB->Par_Weight, ResetLB_Yes, AllLv );
+   LB_Init_LoadBalance( Redistribute_Yes, SendGridData_Yes, amr->LB->Par_Weight, ResetLB_Yes, AllLv );
 #  endif
 
 
@@ -1288,7 +1301,7 @@ void LoadOnePatch( const hid_t H5_FileID, const int lv, const int GID, const boo
       if ( H5_Status < 0 )   Aux_Error( ERROR_INFO, "failed to create a hyperslab for the particle data !!\n" );
 
       H5_MemID_ParData = H5Screate_simple( 1, H5_MemDims_ParData, NULL );
-      if ( H5_MemID_ParData < 0 )   Aux_Error( ERROR_INFO, "failed to create the space \"%s\" !!\n", "H5_MemDims_ParData" );
+      if ( H5_MemID_ParData < 0 )   Aux_Error( ERROR_INFO, "failed to create the space \"%s\" !!\n", "H5_MemID_ParData" );
 
 //    load particle data from disk
       for (int v=0; v<PAR_NATT_STORED; v++)
@@ -1443,6 +1456,7 @@ void Check_Makefile( const char *FileName, const int FormatVersion )
    LoadField( "CosmicRay",              &RS.CosmicRay,              SID, TID, NonFatal, &RT.CosmicRay,              1,    Fatal );
    LoadField( "EoS",                    &RS.EoS,                    SID, TID, NonFatal, &RT.EoS,                    1, NonFatal );
    LoadField( "BarotropicEoS",          &RS.BarotropicEoS,          SID, TID, NonFatal, &RT.BarotropicEoS,          1, NonFatal );
+   LoadField( "NeutrinoScheme",         &RS.NeutrinoScheme,         SID, TID, NonFatal, &RT.NeutrinoScheme,         1, NonFatal );
 
 #  elif ( MODEL == ELBDM )
    LoadField( "ConserveMass",           &RS.ConserveMass,           SID, TID, NonFatal, &RT.ConserveMass,           1, NonFatal );
@@ -1555,6 +1569,7 @@ void Check_SymConst( const char *FileName, const int FormatVersion )
    LoadField( "Gra_BlockSize",        &RS.Gra_BlockSize,        SID, TID, NonFatal, &RT.Gra_BlockSize,         1, NonFatal );
    LoadField( "ExtPotNAuxMax",        &RS.ExtPotNAuxMax,        SID, TID, NonFatal, &RT.ExtPotNAuxMax,         1, NonFatal );
    LoadField( "ExtAccNAuxMax",        &RS.ExtAccNAuxMax,        SID, TID, NonFatal, &RT.ExtAccNAuxMax,         1, NonFatal );
+   LoadField( "ExtPotGREPNAuxMax",    &RS.ExtPotGREPNAuxMax,    SID, TID, NonFatal, &RT.ExtPotGREPNAuxMax,     1, NonFatal );
    LoadField( "ExtPotNGeneMax",       &RS.ExtPotNGeneMax,       SID, TID, NonFatal, &RT.ExtPotNGeneMax,        1, NonFatal );
 #  if   ( POT_SCHEME == SOR )
    LoadField( "Pot_BlockSize_z",      &RS.Pot_BlockSize_z,      SID, TID, NonFatal, &RT.Pot_BlockSize_z,       1, NonFatal );
@@ -1638,6 +1653,8 @@ void Check_SymConst( const char *FileName, const int FormatVersion )
    LoadField( "Der_Nxt",              &RS.Der_Nxt,              SID, TID, NonFatal, &RT.Der_Nxt,               1, NonFatal );
    LoadField( "Der_NOut_Max",         &RS.Der_NOut_Max,         SID, TID, NonFatal, &RT.Der_NOut_Max,          1, NonFatal );
 
+   LoadField( "NFieldStoredMax",      &RS.NFieldStoredMax,      SID, TID, NonFatal, &RT.NFieldStoredMax,       1, NonFatal );
+
 
 // 5. close all objects
    Status = H5Tclose( TID );
@@ -1672,7 +1689,7 @@ void Check_InputPara( const char *FileName, const int FormatVersion )
 
 // 1. fill in the runtime parameters
    InputPara_t RT;   // RT = RunTime
-   FillIn_InputPara( RT );
+   FillIn_InputPara( RT, NCOMP_TOTAL, FieldLabel );   // no need to include all output fields here
 
 
 // 2. open the HDF5 file
@@ -1831,6 +1848,9 @@ void Check_InputPara( const char *FileName, const int FormatVersion )
    LoadField( "Gamma",                   &RS.Gamma,                   SID, TID, NonFatal, &RT.Gamma,                    1, NonFatal );
    LoadField( "MolecularWeight",         &RS.MolecularWeight,         SID, TID, NonFatal, &RT.MolecularWeight,          1, NonFatal );
    LoadField( "IsoTemp",                 &RS.IsoTemp,                 SID, TID, NonFatal, &RT.IsoTemp,                  1, NonFatal );
+#  if ( EOS == EOS_NUCLEAR )
+   LoadField( "NucTable",                &RS.NucTable,                SID, TID, NonFatal,  RT.NucTable,                 1, NonFatal );
+#  endif
    LoadField( "MinMod_Coeff",            &RS.MinMod_Coeff,            SID, TID, NonFatal, &RT.MinMod_Coeff,             1, NonFatal );
    LoadField( "Opt__LR_Limiter",         &RS.Opt__LR_Limiter,         SID, TID, NonFatal, &RT.Opt__LR_Limiter,          1, NonFatal );
    LoadField( "Opt__1stFluxCorr",        &RS.Opt__1stFluxCorr,        SID, TID, NonFatal, &RT.Opt__1stFluxCorr,         1, NonFatal );
@@ -1872,6 +1892,7 @@ void Check_InputPara( const char *FileName, const int FormatVersion )
    LoadField( "MinPres",                 &RS.MinPres,                 SID, TID, NonFatal, &RT.MinPres,                  1, NonFatal );
    LoadField( "MinEint",                 &RS.MinEint,                 SID, TID, NonFatal, &RT.MinEint,                  1, NonFatal );
    LoadField( "MinTemp",                 &RS.MinTemp,                 SID, TID, NonFatal, &RT.MinTemp,                  1, NonFatal );
+   LoadField( "Opt__CheckPresAfterFlu",  &RS.Opt__CheckPresAfterFlu,  SID, TID, NonFatal, &RT.Opt__CheckPresAfterFlu,   1, NonFatal );
    LoadField( "Opt__LastResortFloor",    &RS.Opt__LastResortFloor,    SID, TID, NonFatal, &RT.Opt__LastResortFloor,     1, NonFatal );
    LoadField( "JeansMinPres",            &RS.JeansMinPres,            SID, TID, NonFatal, &RT.JeansMinPres,             1, NonFatal );
    LoadField( "JeansMinPres_Level",      &RS.JeansMinPres_Level,      SID, TID, NonFatal, &RT.JeansMinPres_Level,       1, NonFatal );
@@ -1896,16 +1917,24 @@ void Check_InputPara( const char *FileName, const int FormatVersion )
 #  endif
    LoadField( "Pot_GPU_NPGroup",         &RS.Pot_GPU_NPGroup,         SID, TID, NonFatal, &RT.Pot_GPU_NPGroup,          1, NonFatal );
    LoadField( "Opt__GraP5Gradient",      &RS.Opt__GraP5Gradient,      SID, TID, NonFatal, &RT.Opt__GraP5Gradient,       1, NonFatal );
+   LoadField( "Opt__GravityExtraMass",   &RS.Opt__GravityExtraMass,   SID, TID, NonFatal, &RT.Opt__GravityExtraMass,    1, NonFatal );
    LoadField( "Opt__SelfGravity",        &RS.Opt__SelfGravity,        SID, TID, NonFatal, &RT.Opt__SelfGravity,         1, NonFatal );
    LoadField( "Opt__ExtAcc",             &RS.Opt__ExtAcc,             SID, TID, NonFatal, &RT.Opt__ExtAcc,              1, NonFatal );
    LoadField( "Opt__ExtPot",             &RS.Opt__ExtPot,             SID, TID, NonFatal, &RT.Opt__ExtPot,              1, NonFatal );
+
    LoadField( "ExtPotTable_Name",        &RS.ExtPotTable_Name,        SID, TID, NonFatal,  RT.ExtPotTable_Name,         1, NonFatal );
    LoadField( "ExtPotTable_NPoint",       RS.ExtPotTable_NPoint,      SID, TID, NonFatal,  RT.ExtPotTable_NPoint,       3, NonFatal );
-   LoadField( "ExtPotTable_dh",          &RS.ExtPotTable_dh,          SID, TID, NonFatal, &RT.ExtPotTable_dh,           1, NonFatal );
+   LoadField( "ExtPotTable_dh",           RS.ExtPotTable_dh,          SID, TID, NonFatal,  RT.ExtPotTable_dh,           3, NonFatal );
    LoadField( "ExtPotTable_EdgeL",        RS.ExtPotTable_EdgeL,       SID, TID, NonFatal,  RT.ExtPotTable_EdgeL,        3, NonFatal );
    LoadField( "ExtPotTable_Float8",      &RS.ExtPotTable_Float8,      SID, TID, NonFatal, &RT.ExtPotTable_Float8,       1, NonFatal );
-   LoadField( "Opt__GravityExtraMass",   &RS.Opt__GravityExtraMass,   SID, TID, NonFatal, &RT.Opt__GravityExtraMass,    1, NonFatal );
-#  endif
+
+   LoadField( "GREP_Center_Method",      &RS.GREP_Center_Method,      SID, TID, NonFatal, &RT.GREP_Center_Method,       1, NonFatal );
+   LoadField( "GREP_MaxIter",            &RS.GREP_MaxIter,            SID, TID, NonFatal, &RT.GREP_MaxIter,             1, NonFatal );
+   LoadField( "GREP_LogBin",             &RS.GREP_LogBin,             SID, TID, NonFatal, &RT.GREP_LogBin,              1, NonFatal );
+   LoadField( "GREP_LogBinRatio",        &RS.GREP_LogBinRatio,        SID, TID, NonFatal, &RT.GREP_LogBinRatio,         1, NonFatal );
+   LoadField( "GREP_MaxRadius",          &RS.GREP_MaxRadius,          SID, TID, NonFatal, &RT.GREP_MaxRadius,           1, NonFatal );
+   LoadField( "GREP_MinBinSize",         &RS.GREP_MinBinSize,         SID, TID, NonFatal, &RT.GREP_MinBinSize,          1, NonFatal );
+#  endif // #ifdef GRAVITY
 
 // source terms
    LoadField( "Src_Deleptonization",     &RS.Src_Deleptonization,     SID, TID, NonFatal, &RT.Src_Deleptonization,      1, NonFatal );
@@ -1947,6 +1976,7 @@ void Check_InputPara( const char *FileName, const int FormatVersion )
    LoadField( "RestartLoadNRank",        &RS.RestartLoadNRank,        SID, TID, NonFatal, &RT.RestartLoadNRank,         1, NonFatal );
    LoadField( "Opt__RestartReset",       &RS.Opt__RestartReset,       SID, TID, NonFatal, &RT.Opt__RestartReset,        1, NonFatal );
    LoadField( "Opt__UM_IC_Level",        &RS.Opt__UM_IC_Level,        SID, TID, NonFatal, &RT.Opt__UM_IC_Level,         1, NonFatal );
+   LoadField( "Opt__UM_IC_NLevel",       &RS.Opt__UM_IC_NLevel,       SID, TID, NonFatal, &RT.Opt__UM_IC_NLevel,        1, NonFatal );
    LoadField( "Opt__UM_IC_NVar",         &RS.Opt__UM_IC_NVar,         SID, TID, NonFatal, &RT.Opt__UM_IC_NVar,          1, NonFatal );
    LoadField( "Opt__UM_IC_Format",       &RS.Opt__UM_IC_Format,       SID, TID, NonFatal, &RT.Opt__UM_IC_Format,        1, NonFatal );
    LoadField( "Opt__UM_IC_Downgrade",    &RS.Opt__UM_IC_Downgrade,    SID, TID, NonFatal, &RT.Opt__UM_IC_Downgrade,     1, NonFatal );
@@ -1999,6 +2029,7 @@ void Check_InputPara( const char *FileName, const int FormatVersion )
 #  if ( MODEL == HYDRO )
    LoadField( "Opt__Output_Pres",        &RS.Opt__Output_Pres,        SID, TID, NonFatal, &RT.Opt__Output_Pres,         1, NonFatal );
    LoadField( "Opt__Output_Temp",        &RS.Opt__Output_Temp,        SID, TID, NonFatal, &RT.Opt__Output_Temp,         1, NonFatal );
+   LoadField( "Opt__Output_Entr",        &RS.Opt__Output_Entr,        SID, TID, NonFatal, &RT.Opt__Output_Entr,         1, NonFatal );
    LoadField( "Opt__Output_Cs",          &RS.Opt__Output_Cs,          SID, TID, NonFatal, &RT.Opt__Output_Cs,           1, NonFatal );
    LoadField( "Opt__Output_DivVel",      &RS.Opt__Output_DivVel,      SID, TID, NonFatal, &RT.Opt__Output_DivVel,       1, NonFatal );
    LoadField( "Opt__Output_Mach",        &RS.Opt__Output_Mach,        SID, TID, NonFatal, &RT.Opt__Output_Mach,         1, NonFatal );
