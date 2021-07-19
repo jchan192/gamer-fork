@@ -6,17 +6,17 @@
 
 GPU_DEVICE static
 void findtemp_bdry( const real x, const real y, const real z, 
-                     real *found_lt, const real *alltables_mode,
-                     const int nx, const int ny, const int nz, const int ntemp, 
-                     const real *xt, const real *yt, const real *zt, 
-                     const real *logtemp, const int keymode, int *keyerr );
+                    real *found_lt, const real *alltables_mode,
+                    const int nx, const int ny, const int nz, const int ntemp, 
+                    const real *xt, const real *yt, const real *zt, 
+                    const real *logtemp, const int keymode, int *keyerr );
 #ifdef __CUDACC__
 GPU_DEVICE static
 void findtemp( const real x, const real y, const real z, 
-                real *found_lt, const real *alltables_mode,
-                const int nx, const int ny, const int nz, const int ntemp, 
-                const real *xt, const real *yt, const real *zt, 
-                const real *logtemp, const int keymode, int *keyerr );
+               real *found_lt, const real *alltables_mode,
+               const int nx, const int ny, const int nz, const int ntemp, 
+               const real *xt, const real *yt, const real *zt, 
+               const real *logtemp, const int keymode, int *keyerr );
 #endif
 
 
@@ -35,24 +35,26 @@ void findtemp( const real x, const real y, const real z,
 //                   to search the corresponding energy given (rho, (eps, e, P), Y_e)
 //                2. Invoked by nuc_eos_C_short()
 //
-// Parameter   :  x              : input vector of first  variable (rho)
-//                y              : input vector of second variable (eps, e, P)
-//                z              : input vector of third  variable (Y_e)
-//                found_lt       : output log(temp) of interpolated function values
+// Parameter   :  x              : Input vector of first  variable (rho)
+//                y              : Input vector of second variable (eps, e, P)
+//                z              : Input vector of third  variable (Y_e)
+//                found_lt       : Output log(temp) of interpolated function values
 //                alltables_mode : 3d array of tabulated logtemp
-//                nx             : x-dimension of table
-//                ny             : y-dimension of table
-//                nz             : z-dimension of table
-//                ntemp          : size of temperature array in the Nuclear Eos table
-//                xt             : vector of x-coordinates of table
-//                yt             : vector of y-coordinates of table
-//                zt             : vector of z-coordinates of table
+//                nx             : Z-dimension of table
+//                ny             : Y-dimension of table
+//                nz             : Z-dimension of table
+//                ntemp          : Size of temperature array in the Nuclear Eos table
+//                xt             : Vector of x-coordinates of table
+//                yt             : Vector of y-coordinates of table
+//                zt             : Vector of z-coordinates of table
 //                logtemp        : log(T) array in the table
 //                keymode        : Which mode we will use
 //                                 --> 1: Energy mode   (coming in with internal energy)
 //                                     2: Entropy mode  (coming in with entropy)
 //                                     3: Pressure mode (coming in with P)
 //                keyerr         : output error
+//
+//                Return      :  found_lt
 //-------------------------------------------------------------------------------------
 GPU_DEVICE
 void findtemp( const real x, const real y, const real z, 
@@ -197,28 +199,31 @@ void findtemp( const real x, const real y, const real z,
 // Description :  Finding energy from specific internal energy (0)
 //                                    entropy                  (2)
 //                                    pressure                 (3) mode
-//                Using linear interpolation at boundaries of table
-//                to search the corresponding energy given
-//                (rho, (eps, e, P), Y_e)
 //
-// Parameter   :  x              : input vector of first  variable (rho)
-//                y              : input vector of second variable (eps, e, P)
-//                z              : input vector of third  variable (Y_e)
-//                found_t        : output log(T) of interpolated function values
+// Note        :  1. Use linear interpolation at boundaries of table to search the
+//                   corresponding energy given (rho, (eps, e, P), Y_e)
+//                2. Invoked by findtemp()
+//
+// Parameter   :  x              : Input vector of first  variable (rho)
+//                y              : Input vector of second variable (eps, e, P)
+//                z              : Input vector of third  variable (Y_e)
+//                found_t        : Output log(T) of interpolated function values
 //                alltables_mode : 3d array of tabulated logenergy
-//                nx             : x-dimension of table
-//                ny             : y-dimension of table
-//                nz             : z-dimension of table
-//                ntemp          : size of temperature array in the Nuclear Eos table
-//                xt             : vector of x-coordinates of table
-//                yt             : vector of y-coordinates of table
-//                zt             : vector of z-coordinates of table
+//                nx             : X-dimension of table
+//                ny             : Y-dimension of table
+//                nz             : Z-dimension of table
+//                ntemp          : Size of temperature array in the Nuclear Eos table
+//                xt             : Vector of x-coordinates of table
+//                yt             : Vector of y-coordinates of table
+//                zt             : Vector of z-coordinates of table
 //                logtemp        : log(temp) array in the table
-//                keymode        : which mode we will use
+//                keymode        : Which mode we will use
 //                                 0: energy mode      (coming in with eps)
 //                                 2: entropy mode     (coming in with entropy)
 //                                 3: pressure mode    (coming in with P)
-//                keyerr         : output error
+//                keyerr         : Output error
+//
+// Return      :  found_lt
 //-------------------------------------------------------------------------------------
 GPU_DEVICE
 void findtemp_bdry( const real x, const real y, const real z, 
@@ -228,6 +233,7 @@ void findtemp_bdry( const real x, const real y, const real z,
                      const real *logtemp, const int keymode, int *keyerr )
 {
 
+   
 // helper variables
   real fh[8], delx, dely, delz, a[8];
   real dx, dy, dz, dxi, dyi, dzi, dxyi, dxzi, dyzi, dxyzi;
