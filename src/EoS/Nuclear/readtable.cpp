@@ -305,9 +305,9 @@ void nuc_eos_C_ReadTable( char *nuceos_table_name )
    h_EoS_Table[NUC_TAB_YE       ] = g_yes;
    h_EoS_Table[NUC_TAB_RHO_MODE ] = g_logrho_mode;
 #if   ( NUC_TABLE_MODE == NUC_TABLE_MODE_TEMP )
-   h_EoS_Table[NUC_TAB_ENTE_MODE] = g_logeps_mode;
+   h_EoS_Table[NUC_TAB_EORT_MODE] = g_logeps_mode;
 #elif ( NUC_TABLE_MODE == NUC_TABLE_MODE_ENGY )
-   h_EoS_Table[NUC_TAB_ENTE_MODE] = g_logtemp_mode;
+   h_EoS_Table[NUC_TAB_EORT_MODE] = g_logtemp_mode;
 #endif
    h_EoS_Table[NUC_TAB_ENTR_MODE] = g_entr_mode;
    h_EoS_Table[NUC_TAB_PRES_MODE] = g_logprss_mode;
