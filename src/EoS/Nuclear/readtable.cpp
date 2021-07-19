@@ -30,23 +30,23 @@ extern int    g_nmode;
 extern int    g_nye_mode;
 extern double g_energy_shift;
 
-extern real *g_alltables;
-extern real *g_alltables_mode;
-extern real *g_logrho;
-extern real *g_yes;
-extern real *g_logrho_mode;
-extern real *g_entr_mode;
-extern real *g_logprss_mode;
-extern real *g_yes_mode;
+extern real  *g_alltables;
+extern real  *g_alltables_mode;
+extern real  *g_logrho;
+extern real  *g_yes;
+extern real  *g_logrho_mode;
+extern real  *g_entr_mode;
+extern real  *g_logprss_mode;
+extern real  *g_yes_mode;
 
 #if   ( NUC_TABLE_MODE == NUC_TABLE_MODE_TEMP )
 extern int    g_ntemp;
-extern real   *g_logtemp;
-extern real   *g_logeps_mode;
+extern real  *g_logtemp;
+extern real  *g_logeps_mode;
 #elif ( NUC_TABLE_MODE == NUC_TABLE_MODE_ENGY ) 
 extern int    g_neps;
-extern real   *g_logeps;
-extern real   *g_logtemp_mode;
+extern real  *g_logeps;
+extern real  *g_logtemp_mode;
 #endif
 
 
@@ -149,44 +149,44 @@ void nuc_eos_C_ReadTable( char *nuceos_table_name )
    if (  ! ( g_alltables         = (real*)malloc(g_nrho*n_def_mode*g_nye*NUC_TABLE_NVAR*sizeof(real)) )  )
       Aux_Error( ERROR_INFO, "cannot allocate memory for EOS table !!\n");
 
-   if (  ! ( alltables_mode_temp = (real*)malloc(g_nrho_mode*g_nmode*g_nye_mode*3   *sizeof(real)) )  )
+   if (  ! ( alltables_mode_temp = (real*)malloc(g_nrho_mode*g_nmode*g_nye_mode*3      *sizeof(real)) )  )
       Aux_Error( ERROR_INFO, "cannot allocate memory for EOS table !!\n" );
 
-   if (  ! ( g_alltables_mode    = (real*)malloc(g_nrho_mode*g_nmode*g_nye_mode*3   *sizeof(real)) )  )
+   if (  ! ( g_alltables_mode    = (real*)malloc(g_nrho_mode*g_nmode*g_nye_mode*3      *sizeof(real)) )  )
       Aux_Error( ERROR_INFO, "cannot allocate memory for EOS table !!\n");
 
-   if (  ! ( g_logrho            = (real*)malloc(g_nrho                             *sizeof(real)) )  )
+   if (  ! ( g_logrho            = (real*)malloc(g_nrho                                *sizeof(real)) )  )
       Aux_Error( ERROR_INFO, "cannot allocate memory for EOS table !!\n" );
 
-   if (  ! ( g_yes               = (real*)malloc(g_nye                              *sizeof(real)) )  )
+   if (  ! ( g_yes               = (real*)malloc(g_nye                                 *sizeof(real)) )  )
       Aux_Error( ERROR_INFO, "cannot allocate memory for EOS table !!\n");
  
-   if (  ! ( g_logrho_mode       = (real*)malloc(g_nrho_mode                        *sizeof(real)) )  )
+   if (  ! ( g_logrho_mode       = (real*)malloc(g_nrho_mode                           *sizeof(real)) )  )
       Aux_Error( ERROR_INFO, "cannot allocate memory for EOS table !!\n" );
 
-   if (  ! ( g_entr_mode         = (real*)malloc(g_nmode                            *sizeof(real)) )  )
+   if (  ! ( g_entr_mode         = (real*)malloc(g_nmode                               *sizeof(real)) )  )
       Aux_Error( ERROR_INFO, "cannot allocate memory for EOS table !!\n");
 
-   if (  ! ( g_logprss_mode      = (real*)malloc(g_nmode                            *sizeof(real)) )  )
+   if (  ! ( g_logprss_mode      = (real*)malloc(g_nmode                               *sizeof(real)) )  )
       Aux_Error( ERROR_INFO, "cannot allocate memory for EOS table !!\n");
 
-   if (  ! ( g_yes_mode          = (real*)malloc(g_nye_mode                         *sizeof(real)) )  )
+   if (  ! ( g_yes_mode          = (real*)malloc(g_nye_mode                            *sizeof(real)) )  )
       Aux_Error( ERROR_INFO, "cannot allocate memory for EOS table !!\n");
 
 #if   ( NUC_TABLE_MODE == NUC_TABLE_MODE_TEMP )
 
-   if (  ! ( g_logtemp           = (real*)malloc(n_def_mode                         *sizeof(real)) )  )
+   if (  ! ( g_logtemp           = (real*)malloc(n_def_mode                            *sizeof(real)) )  )
       Aux_Error( ERROR_INFO, "cannot allocate memory for EOS table !!\n" );
 
-   if (  ! ( g_logeps_mode       = (real*)malloc(g_nmode                            *sizeof(real)) )  )
+   if (  ! ( g_logeps_mode       = (real*)malloc(g_nmode                               *sizeof(real)) )  )
       Aux_Error( ERROR_INFO, "cannot allocate memory for EOS table !!\n");
 
 #elif ( NUC_TABLE_MODE == NUC_TABLE_MODE_ENGY )
 
-   if (  ! ( g_logeps            = (real*)malloc(n_def_mode                         *sizeof(real)) )  )
+   if (  ! ( g_logeps            = (real*)malloc(n_def_mode                            *sizeof(real)) )  )
       Aux_Error( ERROR_INFO, "cannot allocate memory for EOS table !!\n" );
 
-   if (  ! ( g_logtemp_mode      = (real*)malloc(g_nmode                            *sizeof(real)) )  )
+   if (  ! ( g_logtemp_mode      = (real*)malloc(g_nmode                               *sizeof(real)) )  )
       Aux_Error( ERROR_INFO, "cannot allocate memory for EOS table !!\n");
 
 #endif
@@ -234,9 +234,9 @@ void nuc_eos_C_ReadTable( char *nuceos_table_name )
 
 // energy for temp, entr modes
 #if   ( NUC_TABLE_MODE == NUC_TABLE_MODE_TEMP )
-   READ_EOSTABLE_MODE_HDF5( "logtemp_ener", 0 );
-   READ_EOSTABLE_MODE_HDF5( "logtemp_entr", 1 );
-   READ_EOSTABLE_MODE_HDF5( "logtemp_prss", 2 );
+   READ_EOSTABLE_MODE_HDF5( "logtemp_ener",   0 );
+   READ_EOSTABLE_MODE_HDF5( "logtemp_entr",   1 );
+   READ_EOSTABLE_MODE_HDF5( "logtemp_prss",   2 );
 #elif ( NUC_TABLE_MODE == NUC_TABLE_MODE_ENGY )
    READ_EOSTABLE_MODE_HDF5( "logenergy_temp", 0 );
    READ_EOSTABLE_MODE_HDF5( "logenergy_entr", 1 );
@@ -265,10 +265,10 @@ void nuc_eos_C_ReadTable( char *nuceos_table_name )
 
 
 // change ordering of g_alltables[] so that the table kind is the fastest changing index
-   for (int iv=0; iv<NUC_TABLE_NVAR; iv++)
-   for (int k=0; k<g_nye;   k++)
-   for (int j=0; j<n_def_mode; j++)
-   for (int i=0; i<g_nrho;  i++)
+   for ( int iv=0; iv<NUC_TABLE_NVAR; iv++ )
+   for ( int k=0;  k<g_nye;           k++  )
+   for ( int j=0;  j<n_def_mode;      j++  )
+   for ( int i=0;  i<g_nrho;          i++  )
    {
       const long indold = i + g_nrho*( j + n_def_mode*(k + g_nye*iv) );
       const long indnew = iv + NUC_TABLE_NVAR*( i + g_nrho*(j + n_def_mode*k) );
@@ -276,10 +276,10 @@ void nuc_eos_C_ReadTable( char *nuceos_table_name )
       g_alltables[indnew] = alltables_temp[indold];
    }
 
-   for (int iv=0; iv<3; iv++)
-   for (int k=0; k<g_nye_mode;   k++)
-   for (int j=0; j<g_nmode;      j++)
-   for (int i=0; i<g_nrho_mode;  i++)
+   for ( int iv=0; iv<3;          iv++ )
+   for ( int k=0;  k<g_nye_mode;  k++  )
+   for ( int j=0;  j<g_nmode;     j++  )
+   for ( int i=0;  i<g_nrho_mode; i++  )
    {
       const long indold = i + g_nrho_mode*( j + g_nmode*(k + g_nye_mode*iv) );
       const long indnew = iv + 3*( i + g_nrho_mode*(j + g_nmode*k) );
