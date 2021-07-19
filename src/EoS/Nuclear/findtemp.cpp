@@ -24,7 +24,7 @@ void findtemp( const real x, const real y, const real z,
 
 //-------------------------------------------------------------------------------------
 // Function    :  findtemp
-// Description :  Finding energy from different modes
+// Description :  Finding temperature from different modes
 //                -->                 energy mode   (0)
 //                                    entropy mode  (2)
 //                                    pressure mode (3)
