@@ -27,23 +27,23 @@ int    g_nmode;
 int    g_nye_mode;
 double g_energy_shift;
 
-real *g_alltables;
-real *g_alltables_mode;
-real *g_logrho;
-real *g_yes;
-real *g_logrho_mode;
-real *g_entr_mode;
-real *g_logprss_mode;
-real *g_yes_mode;
+real  *g_alltables      = NULL;
+real  *g_alltables_mode = NULL;
+real  *g_logrho         = NULL;
+real  *g_yes            = NULL;
+real  *g_logrho_mode    = NULL;
+real  *g_entr_mode      = NULL;
+real  *g_logprss_mode   = NULL;
+real  *g_yes_mode       = NULL;
 
 #if   ( NUC_TABLE_MODE == NUC_TABLE_MODE_TEMP )
 int    g_ntemp;
-real   *g_logtemp;
-real   *g_logeps_mode;
+real  *g_logtemp;
+real  *g_logeps_mode;
 #elif ( NUC_TABLE_MODE == NUC_TABLE_MODE_ENGY )
 int    g_neps;
-real   *g_logeps;
-real   *g_logtemp_mode;
+real  *g_logeps;
+real  *g_logtemp_mode;
 #endif
 
 
