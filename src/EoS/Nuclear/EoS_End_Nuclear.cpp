@@ -18,11 +18,11 @@ extern real *g_logprss_mode;
 extern real *g_yes_mode;
 
 #if   ( NUC_TABLE_MODE == NUC_TABLE_MODE_TEMP )
-extern real   *g_logtemp;
-extern real   *g_logeps_mode;
+extern real  *g_logtemp;
+extern real  *g_logeps_mode;
 #elif ( NUC_TABLE_MODE == NUC_TABLE_MODE_ENGY )
-extern real   *g_logeps;
-extern real   *g_logtemp_mode;
+extern real  *g_logeps;
+extern real  *g_logtemp_mode;
 #endif
 
 
@@ -56,6 +56,7 @@ void EoS_End_Nuclear()
    free( g_logeps         );  g_logeps         = NULL;
    free( g_logtemp_mode   );  g_logtemp_mode   = NULL;
 #endif
+   free( g_yes_mode       );  g_yes_mode       = NULL;
 
 
 
