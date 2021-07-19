@@ -28,7 +28,6 @@ void nuc_eos_C_linterp_some( const real x, const real y, const real z,
 
 
 
-
 //-------------------------------------------------------------------------------------
 // Function    :  nuc_eos_C_cubinterp_some
 // Description :  Find thermodynamic variables using 3D Catmull-Rom cubic interpolation
