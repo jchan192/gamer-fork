@@ -12,9 +12,9 @@ extern int g_nmode;
 extern int g_nye_mode;
 
 #if   ( NUC_TABLE_MODE == NUC_TABLE_MODE_TEMP )
-extern int    g_ntemp;
+extern int g_ntemp;
 #elif ( NUC_TABLE_MODE == NUC_TABLE_MODE_ENGY )
-extern int    g_neps;
+extern int g_neps;
 #endif
 
 extern real *d_EoS_Table[EOS_NTABLE_MAX];
