@@ -51,7 +51,7 @@ void CUAPI_PassNuclearEoSTable2GPU()
    EoS_TableSize[NUC_TAB_TORE     ] = sizeof(real)*n_def_mode;
    EoS_TableSize[NUC_TAB_YE       ] = sizeof(real)*g_nye;
    EoS_TableSize[NUC_TAB_RHO_MODE ] = sizeof(real)*g_nrho_mode;
-   EoS_TableSize[NUC_TAB_ENTE_MODE] = sizeof(real)*g_nmode;
+   EoS_TableSize[NUC_TAB_EORT_MODE] = sizeof(real)*g_nmode;
    EoS_TableSize[NUC_TAB_ENTR_MODE] = sizeof(real)*g_nmode;
    EoS_TableSize[NUC_TAB_PRES_MODE] = sizeof(real)*g_nmode;
    EoS_TableSize[NUC_TAB_YE_MODE  ] = sizeof(real)*g_nye_mode;
