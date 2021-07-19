@@ -264,7 +264,7 @@ static real EoS_DensEint2Pres_Nuclear( const real Dens_Code, const real Eint_Cod
    nuc_eos_C_short( Dens_CGS, &Temp_MeV, Ye, &sEint_CGS, &Entr, &Pres_CGS, &Useless, &Useless,
                     EnergyShift, NRho, NTorE, NYe, NRho_Mode, NMode, NYe_Mode,
                     Table[NUC_TAB_ALL], Table[NUC_TAB_ALL_MODE], Table[NUC_TAB_RHO], Table[NUC_TAB_TORE], Table[NUC_TAB_YE], 
-                    Table[NUC_TAB_RHO_MODE], Table[NUC_TAB_ENTE_MODE], Table[NUC_TAB_ENTR_MODE], Table[NUC_TAB_PRES_MODE],
+                    Table[NUC_TAB_RHO_MODE], Table[NUC_TAB_EORT_MODE], Table[NUC_TAB_ENTR_MODE], Table[NUC_TAB_PRES_MODE],
                     Table[NUC_TAB_YE_MODE], Mode, &Err, Tolerance );
 
 // trigger a *hard failure* if the EoS driver fails
@@ -402,7 +402,7 @@ static real EoS_DensPres2Eint_Nuclear( const real Dens_Code, const real Pres_Cod
    nuc_eos_C_short( Dens_CGS, &Useless, Ye, &sEint_CGS, &Useless, &Pres_CGS, &Useless, &Useless,
                     EnergyShift, NRho, NTorE, NYe, NRho_Mode, NMode, NYe_Mode,
                     Table[NUC_TAB_ALL], Table[NUC_TAB_ALL_MODE], Table[NUC_TAB_RHO], Table[NUC_TAB_TORE], Table[NUC_TAB_YE], 
-                    Table[NUC_TAB_RHO_MODE], Table[NUC_TAB_ENTE_MODE], Table[NUC_TAB_ENTR_MODE], Table[NUC_TAB_PRES_MODE],
+                    Table[NUC_TAB_RHO_MODE], Table[NUC_TAB_EORT_MODE], Table[NUC_TAB_ENTR_MODE], Table[NUC_TAB_PRES_MODE],
                     Table[NUC_TAB_YE_MODE], Mode, &Err, Tolerance );
 
 // trigger a *hard failure* if the EoS driver fails
@@ -519,7 +519,7 @@ static real EoS_DensPres2CSqr_Nuclear( const real Dens_Code, const real Pres_Cod
    nuc_eos_C_short( Dens_CGS, &Useless, Ye, &Useless, &Useless, &Pres_CGS, &Cs2_CGS, &Useless,
                     EnergyShift, NRho, NTorE, NYe, NRho_Mode, NMode, NYe_Mode,
                     Table[NUC_TAB_ALL], Table[NUC_TAB_ALL_MODE], Table[NUC_TAB_RHO], Table[NUC_TAB_TORE], Table[NUC_TAB_YE], 
-                    Table[NUC_TAB_RHO_MODE], Table[NUC_TAB_ENTE_MODE], Table[NUC_TAB_ENTR_MODE], Table[NUC_TAB_PRES_MODE],
+                    Table[NUC_TAB_RHO_MODE], Table[NUC_TAB_EORT_MODE], Table[NUC_TAB_ENTR_MODE], Table[NUC_TAB_PRES_MODE],
                     Table[NUC_TAB_YE_MODE], Mode, &Err, Tolerance );
 
 // trigger a *hard failure* if the EoS driver fails
@@ -740,7 +740,7 @@ static void EoS_General_Nuclear( const int Mode, real Out[], const real In[], co
          nuc_eos_C_short( Dens_CGS, &Temp_MeV, Ye, &sEint_CGS, &Entr, &Pres_CGS, &Useless, &Useless,
                           EnergyShift, NRho, NTorE, NYe, NRho_Mode, NMode, NYe_Mode,
                           Table[NUC_TAB_ALL], Table[NUC_TAB_ALL_MODE], Table[NUC_TAB_RHO], Table[NUC_TAB_TORE], Table[NUC_TAB_YE], 
-                          Table[NUC_TAB_RHO_MODE], Table[NUC_TAB_ENTE_MODE], Table[NUC_TAB_ENTR_MODE], Table[NUC_TAB_PRES_MODE],
+                          Table[NUC_TAB_RHO_MODE], Table[NUC_TAB_EORT_MODE], Table[NUC_TAB_ENTR_MODE], Table[NUC_TAB_PRES_MODE],
                           Table[NUC_TAB_YE_MODE], Mode, &Err, Tolerance );
 
 //       trigger a *hard failure* if the EoS driver fails
@@ -832,7 +832,7 @@ static void EoS_General_Nuclear( const int Mode, real Out[], const real In[], co
          nuc_eos_C_short( Dens_CGS, &Useless, Ye, &sEint_CGS, &Entr, &Useless, &Useless, &Useless,
                           EnergyShift, NRho, NTorE, NYe, NRho_Mode, NMode, NYe_Mode,
                           Table[NUC_TAB_ALL], Table[NUC_TAB_ALL_MODE], Table[NUC_TAB_RHO], Table[NUC_TAB_TORE], Table[NUC_TAB_YE], 
-                          Table[NUC_TAB_RHO_MODE], Table[NUC_TAB_ENTE_MODE], Table[NUC_TAB_ENTR_MODE], Table[NUC_TAB_PRES_MODE],
+                          Table[NUC_TAB_RHO_MODE], Table[NUC_TAB_EORT_MODE], Table[NUC_TAB_ENTR_MODE], Table[NUC_TAB_PRES_MODE],
                           Table[NUC_TAB_YE_MODE], Mode, &Err, Tolerance );
 
 //       trigger a *hard failure* if the EoS driver fails
