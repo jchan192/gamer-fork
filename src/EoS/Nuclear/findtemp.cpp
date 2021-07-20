@@ -292,9 +292,9 @@ void findtemp_bdry( const real x, const real y, const real z,
    idx[7] = 3*(  (ix-1) + nx*( (iy-1) + ny*(iz-1) )  );
 
    int iv;
-   if      ( keymode == NUC_MODE_ENGY )  iv = 0; // temperature table for the temperature mode
-   else if ( keymode == NUC_MODE_ENTR )  iv = 1; // temperature table for the entropy mode
-   else if ( keymode == NUC_MODE_PRES )  iv = 2; // temperature table for the pressure mode
+   if      ( keymode == NUC_MODE_ENGY )   iv = 0; // temperature table for the temperature mode
+   else if ( keymode == NUC_MODE_ENTR )   iv = 1; // temperature table for the entropy mode
+   else if ( keymode == NUC_MODE_PRES )   iv = 2; // temperature table for the pressure mode
 
 
 // set up aux vars for interpolation assuming array ordering (iv, ix, iy, iz)
