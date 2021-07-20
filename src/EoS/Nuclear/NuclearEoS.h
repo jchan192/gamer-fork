@@ -48,11 +48,11 @@
 #define NUC_MODE_PRES         3     // pressure mode
 
 
-// Torlerance for Newton-Raphson or bisection method in temperature driver
+// Tolerance for Newton-Raphson or bisection method in temperature driver
 #ifdef FLOAT8
-   const real Tolerance = 1e-10;
+const real Tolerance = 1e-10;
 #else
-   const real Tolerance = 1e-6;
+const real Tolerance = 1e-6;
 #endif
 
 
