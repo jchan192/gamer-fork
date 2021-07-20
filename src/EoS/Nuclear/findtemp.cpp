@@ -28,19 +28,17 @@ void findtemp( const real x, const real y, const real z,
 //                -->                 energy mode   (0)
 //                                    entropy mode  (2)
 //                                    pressure mode (3)
-//                Using 3D Catmull-Rom cubic interpolation formula
-//                to search the corresponding temperature given (rho, (eps, e, P), Y_e)
 //
 // Note        :  1. Use 3D Catmull-Rom cubic interpolation formula
-//                   to search the corresponding energy given (rho, (eps, e, P), Y_e)
+//                   to search the corresponding temperature given (rho, (eps, entropy, P), Y_e)
 //                2. Invoked by nuc_eos_C_short()
 //
 // Parameter   :  x              : Input vector of first  variable (rho)
-//                y              : Input vector of second variable (eps, e, P)
+//                y              : Input vector of second variable (eps, entropy, P)
 //                z              : Input vector of third  variable (Y_e)
 //                found_lt       : Output log(temp) of interpolated function values
 //                alltables_mode : 3d array of tabulated logtemp
-//                nx             : Z-dimension of table
+//                nx             : X-dimension of table
 //                ny             : Y-dimension of table
 //                nz             : Z-dimension of table
 //                ntemp          : Size of temperature array in the Nuclear Eos table
@@ -52,9 +50,9 @@ void findtemp( const real x, const real y, const real z,
 //                                 --> 1: Energy mode   (coming in with internal energy)
 //                                     2: Entropy mode  (coming in with entropy)
 //                                     3: Pressure mode (coming in with P)
-//                keyerr         : output error
+//                keyerr         : Output error
 //
-//                Return      :  found_lt
+// Return      :  found_lt
 //-------------------------------------------------------------------------------------
 GPU_DEVICE
 void findtemp( const real x, const real y, const real z, 
@@ -99,9 +97,9 @@ void findtemp( const real x, const real y, const real z,
 
 
    // determine location in table
-   ix = (int)floor( (x - xt[0] )*dxi );
-   iy = (int)floor( (y - yt[0] )*dyi );
-   iz = (int)floor( (z - zt[0] )*dzi );
+   ix = (int)( (x - xt[0] )*dxi );
+   iy = (int)( (y - yt[0] )*dyi );
+   iz = (int)( (z - zt[0] )*dzi );
    
     
    // linear interpolation at boundaries
@@ -145,9 +143,9 @@ void findtemp( const real x, const real y, const real z,
    
    
    int iv;
-   if      ( keymode == NUC_MODE_ENGY ) iv = 0; // energy table for the energy mode
-   else if ( keymode == NUC_MODE_ENTR ) iv = 1; // energy table for the entropy mode
-   else if ( keymode == NUC_MODE_PRES ) iv = 2; // energy table for the pressure mode
+   if      ( keymode == NUC_MODE_ENGY ) iv = 0; // temperature table for the energy mode
+   else if ( keymode == NUC_MODE_ENTR ) iv = 1; // temperature table for the entropy mode
+   else if ( keymode == NUC_MODE_PRES ) iv = 2; // temperature table for the pressure mode
    
    vox = (real)0.0;
     
@@ -196,16 +194,17 @@ void findtemp( const real x, const real y, const real z,
 
 //-------------------------------------------------------------------------------------
 // Function    :  findtemp_bdry
-// Description :  Finding energy from specific internal energy (0)
-//                                    entropy                  (2)
-//                                    pressure                 (3) mode
+// Description :  Finding temperature from different modes
+//                --->                energy   mode (0)
+//                                    entropy  mode (2)
+//                                    pressure mode (3)
 //
 // Note        :  1. Use linear interpolation at boundaries of table to search the
-//                   corresponding energy given (rho, (eps, e, P), Y_e)
+//                   corresponding temperature given (rho, (eps, entropy, P), Y_e)
 //                2. Invoked by findtemp()
 //
 // Parameter   :  x              : Input vector of first  variable (rho)
-//                y              : Input vector of second variable (eps, e, P)
+//                y              : Input vector of second variable (eps, entropy, P)
 //                z              : Input vector of third  variable (Y_e)
 //                found_t        : Output log(T) of interpolated function values
 //                alltables_mode : 3d array of tabulated logenergy
@@ -268,9 +267,9 @@ void findtemp_bdry( const real x, const real y, const real z,
 
 
 // determine location in table
-   ix = 1 + (int)floor( (x - xt[0])*dxi );
-   iy = 1 + (int)floor( (y - yt[0])*dyi );
-   iz = 1 + (int)floor( (z - zt[0])*dzi );
+   ix = 1 + (int)( (x - xt[0])*dxi );
+   iy = 1 + (int)( (y - yt[0])*dyi );
+   iz = 1 + (int)( (z - zt[0])*dzi );
 
    ix = MAX( 1, MIN( ix, nx-1 ) );
    iy = MAX( 1, MIN( iy, ny-1 ) );
@@ -293,9 +292,9 @@ void findtemp_bdry( const real x, const real y, const real z,
    idx[7] = 3*(  (ix-1) + nx*( (iy-1) + ny*(iz-1) )  );
 
    int iv;
-   if      ( keymode == NUC_MODE_ENGY )  iv = 0; // energy table for the temperature mode
-   else if ( keymode == NUC_MODE_ENTR )  iv = 1; // energy table for the entropy mode
-   else if ( keymode == NUC_MODE_PRES )  iv = 2; // energy table for the pressure mode
+   if      ( keymode == NUC_MODE_ENGY )  iv = 0; // temperature table for the temperature mode
+   else if ( keymode == NUC_MODE_ENTR )  iv = 1; // temperature table for the entropy mode
+   else if ( keymode == NUC_MODE_PRES )  iv = 2; // temperature table for the pressure mode
 
 
 // set up aux vars for interpolation assuming array ordering (iv, ix, iy, iz)
