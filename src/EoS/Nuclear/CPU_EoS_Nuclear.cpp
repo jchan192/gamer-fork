@@ -38,12 +38,12 @@ real  *g_yes_mode       = NULL;
 
 #if   ( NUC_TABLE_MODE == NUC_TABLE_MODE_TEMP )
 int    g_ntemp;
-real  *g_logtemp;
-real  *g_logeps_mode;
+real  *g_logtemp        = NULL;
+real  *g_logeps_mode    = NULL;
 #elif ( NUC_TABLE_MODE == NUC_TABLE_MODE_ENGY )
 int    g_neps;
-real  *g_logeps;
-real  *g_logtemp_mode;
+real  *g_logeps         = NULL;
+real  *g_logtemp_mode   = NULL;
 #endif
 
 
@@ -123,11 +123,11 @@ void EoS_SetAuxArray_Nuclear( double AuxArray_Flt[], int AuxArray_Int[] )
    AuxArray_Flt[NUC_AUX_MEV2KELVIN] = 1.0 / AuxArray_Flt[NUC_AUX_KELVIN2MEV];
 
    AuxArray_Int[NUC_AUX_NRHO      ] = g_nrho;
-#if   ( NUC_TABLE_MODE == NUC_TABLE_MODE_TEMP )
+#  if   ( NUC_TABLE_MODE == NUC_TABLE_MODE_TEMP )
    AuxArray_Int[NUC_AUX_NTORE     ] = g_ntemp;
-#elif ( NUC_TABLE_MODE == NUC_TABLE_MODE_ENGY )
+#  elif ( NUC_TABLE_MODE == NUC_TABLE_MODE_ENGY )
    AuxArray_Int[NUC_AUX_NTORE     ] = g_neps;
-#endif
+#  endif
    AuxArray_Int[NUC_AUX_NYE       ] = g_nye;
    AuxArray_Int[NUC_AUX_NRHO_MODE ] = g_nrho_mode;
    AuxArray_Int[NUC_AUX_NMODE     ] = g_nmode;
