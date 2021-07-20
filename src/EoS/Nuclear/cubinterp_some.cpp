@@ -93,9 +93,9 @@ void nuc_eos_C_cubinterp_some( const real x, const real y, const real z,
 
 
 // determine location in table
-   ix = (int)( x - xt[0] )*dxi );
-   iy = (int)( y - yt[0] )*dyi );
-   iz = (int)( z - zt[0] )*dzi );
+   ix = (int)( ( x - xt[0] )*dxi );
+   iy = (int)( ( y - yt[0] )*dyi );
+   iz = (int)( ( z - zt[0] )*dzi );
 
 // linear interpolation at boundaries
    if ( ix == 0  ||  iy == 0  ||  iz == 0  ||
