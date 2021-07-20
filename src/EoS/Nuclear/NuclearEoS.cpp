@@ -138,8 +138,8 @@ void nuc_eos_C_short( const real xrho, real *xtemp, const real xye,
    if ( xye <  yes  [     0] )  {  *keyerr = 102;  return;  }
    if ( xye != xye           )  {  *keyerr = 201;  return;  }
 
-// find temperature (temp-based table)
-#if ( NUC_TABLE_MODE == NUC_TABLE_MODE_TEMP )
+// find temperature (temperature-based table)
+#  if ( NUC_TABLE_MODE == NUC_TABLE_MODE_TEMP )
 
    const int   ntemp   = ntoreps;
    const real *logtemp = logtoreps;
@@ -231,7 +231,7 @@ void nuc_eos_C_short( const real xrho, real *xtemp, const real xye,
 
 
 // find energy (energy-based table)
-#elif ( NUC_TABLE_MODE == NUC_TABLE_MODE_ENGY )
+#  elif ( NUC_TABLE_MODE == NUC_TABLE_MODE_ENGY )
 
    const int   neps   = ntoreps;
    const real *logeps = logtoreps;
@@ -312,7 +312,7 @@ void nuc_eos_C_short( const real xrho, real *xtemp, const real xye,
    *xmunu = res[3];
    *xcs2  = res[4];
 
-#endif // #elif NUC_TABLE_MODE ... else ...
+#  endif // #elif NUC_TABLE_MODE ... else ...
 
 
    return;
