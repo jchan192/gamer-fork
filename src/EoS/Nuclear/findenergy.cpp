@@ -97,9 +97,9 @@ void findenergy( const real x, const real y, const real z,
 
 
 // determine location in table
-   ix = (int)floor( (x - xt[0] )*dxi );
-   iy = (int)floor( (y - yt[0] )*dyi );
-   iz = (int)floor( (z - zt[0] )*dzi );
+   ix = (int)( (x - xt[0] )*dxi );
+   iy = (int)( (y - yt[0] )*dyi );
+   iz = (int)( (z - zt[0] )*dzi );
 
 
 // linear interpolation at boundaries
@@ -266,9 +266,9 @@ void findenergy_bdry( const real x, const real y, const real z,
 
 
 // determine location in table
-   ix = 1 + (int)floor( (x - xt[0] )*dxi );
-   iy = 1 + (int)floor( (y - yt[0] )*dyi );
-   iz = 1 + (int)floor( (z - zt[0] )*dzi );
+   ix = 1 + (int)( (x - xt[0] )*dxi );
+   iy = 1 + (int)( (y - yt[0] )*dyi );
+   iz = 1 + (int)( (z - zt[0] )*dzi );
 
    ix = MAX( 1, MIN( ix, nx-1 ) );
    iy = MAX( 1, MIN( iy, ny-1 ) );
