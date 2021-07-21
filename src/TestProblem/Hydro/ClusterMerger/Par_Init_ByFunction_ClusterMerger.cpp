@@ -6,6 +6,9 @@
 
 #include <string>
 
+#define PTYPE_CEN    100   // particle type for Merger_Coll_LabelCenter
+                           // --> the particle closest to the center of x-th cluster is labeled as "PTYPE_CEN + x"
+
 // floating-point type in the input particle file
 typedef double real_par_in;
 //typedef float  real_par_in;
@@ -26,6 +29,7 @@ extern double  Merger_Coll_VelX2;
 extern double  Merger_Coll_VelY2;
 extern double  Merger_Coll_VelX3;
 extern double  Merger_Coll_VelY3;
+extern bool    Merger_Coll_LabelCenter;
 
 extern FieldIdx_t ParTypeIdx;
 
@@ -290,6 +294,57 @@ void Par_Init_ByFunction_ClusterMerger( const long NPar_ThisRank, const long NPa
    }
 
    if ( MPI_Rank == 0 )    Aux_Message( stdout, "done\n" );
+
+
+   // label cluster centers
+   if ( Merger_Coll_LabelCenter ) {
+      if ( MPI_Rank == 0 )    Aux_Message( stdout, "   Labeling cluster centers ... " );
+
+      const double Centers[3][3] = {  { ClusterCenter1[0], ClusterCenter1[1], ClusterCenter1[2] },
+                                      { ClusterCenter2[0], ClusterCenter2[1], ClusterCenter2[2] },
+                                      { ClusterCenter3[0], ClusterCenter3[1], ClusterCenter3[2] }  };
+      long pidx_offset = 0;
+
+      for (int c=0; c<NCluster; c++) {
+         long   min_pidx   = -1;
+         real   min_pos[3] = { NULL_REAL, NULL_REAL, NULL_REAL };
+         double min_r      = __DBL_MAX__;
+
+         // get the particle in this rank closest to the cluster center
+         for (long p=pidx_offset; p<pidx_offset+NPar_ThisRank_EachCluster[c]; p++) {
+            const double r = SQR( ParPos[0][p] - Centers[c][0] ) +
+                             SQR( ParPos[1][p] - Centers[c][1] ) +
+                             SQR( ParPos[2][p] - Centers[c][2] );
+            if ( r < min_r ) {
+               min_pidx   = p;
+               min_r      = r;
+               min_pos[0] = ParPos[0][p];
+               min_pos[1] = ParPos[1][p];
+               min_pos[2] = ParPos[2][p];
+            }
+         }
+
+         // collect data among all ranks
+         double min_r_allrank;
+         int    NFound_ThisRank=0, NFound_AllRank;
+         MPI_Allreduce( &min_r, &min_r_allrank, 1, MPI_DOUBLE, MPI_MIN, MPI_COMM_WORLD );
+         if ( min_r == min_r_allrank ) {
+            AllAttribute[ParTypeIdx][min_pidx] = PTYPE_CEN + c;
+            NFound_ThisRank = 1;
+         }
+
+         // check if one and only one particle is labeled
+         MPI_Allreduce( &NFound_ThisRank, &NFound_AllRank, 1, MPI_INT, MPI_SUM, MPI_COMM_WORLD );
+         if ( NFound_AllRank != 1 )
+            Aux_Error( ERROR_INFO, "NFound_AllRank (%d) != 1 for cluster %d !!\n", NFound_AllRank, c );
+
+         // update the particle index offset for the next cluster
+         pidx_offset += NPar_ThisRank_EachCluster[c];
+      } // for (int c=0; c<NCluster; c++)
+
+      if ( MPI_Rank == 0 )    Aux_Message( stdout, "done\n" );
+   } // if ( Merger_Coll_LabelCenter )
+
 
    if ( MPI_Rank == 0 )    Aux_Message( stdout, "%s ... done\n", __FUNCTION__ );
 
