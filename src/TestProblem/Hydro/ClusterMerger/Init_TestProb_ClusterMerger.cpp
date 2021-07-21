@@ -20,6 +20,7 @@ static char    Merger_File_Prof3[1000];   // profile table of cluster 3
        bool    Merger_Coll_IsGas2;        // (true/false) --> does cluster 2 have gas
        bool    Merger_Coll_IsGas3;        // (true/false) --> does cluster 3 have gas
        bool    Merger_Coll_UseMetals;     // (true/false) --> do the clusters have a metal field
+       bool    Merger_Coll_LabelCenter;   // (true/false) --> label the particle closest to the center of each cluster
        double  Merger_Coll_PosX1;         // x-position of the first cluster
        double  Merger_Coll_PosY1;         // y-position of the first cluster
        double  Merger_Coll_PosX2;         // x-position of the second cluster
@@ -194,6 +195,7 @@ void SetParameter()
    ReadPara->Add( "Merger_Coll_VelX3",      &Merger_Coll_VelX3,      -1.0,             NoMin_double,  NoMax_double   );
    ReadPara->Add( "Merger_Coll_VelY3",      &Merger_Coll_VelY3,      -1.0,             NoMin_double,  NoMax_double   );
    ReadPara->Add( "Merger_Coll_UseMetals",  &Merger_Coll_UseMetals,  true,             Useless_bool,  Useless_bool   );
+   ReadPara->Add( "Merger_Coll_LabelCenter",&Merger_Coll_LabelCenter,true,             Useless_bool,  Useless_bool   );
    ReadPara->Add( "Merger_Coll_ColorRad1",  &Merger_Coll_ColorRad1,  -1.0,             NoMin_double,  NoMax_double   );
    ReadPara->Add( "Merger_Coll_ColorRad2",  &Merger_Coll_ColorRad2,  -1.0,             NoMin_double,  NoMax_double   );
    ReadPara->Add( "Merger_Coll_ColorRad3",  &Merger_Coll_ColorRad3,  -1.0,             NoMin_double,  NoMax_double   );
@@ -203,7 +205,6 @@ void SetParameter()
    delete ReadPara;
 
 // Validate that we have the correct number of passive scalars
-
    if ( Merger_Coll_NumHalos + (int)Merger_Coll_UseMetals != NCOMP_PASSIVE_USER )
       Aux_Error( ERROR_INFO,
                  "please set NCOMP_PASSIVE_USER (currently %d) == Merger_Coll_NumHalos + Merger_Coll_UseMetals (currently %d) in the Makefile !!\n", NCOMP_PASSIVE_USER, Merger_Coll_NumHalos + (int)Merger_Coll_UseMetals );
@@ -410,6 +411,7 @@ void SetParameter()
       Aux_Message( stdout, "  cluster 3 y-velocity   = %g\n",           Merger_Coll_VelY3 );
       }
       Aux_Message( stdout, "  use metals             = %s\n",          (Merger_Coll_UseMetals)? "yes":"no" );
+      Aux_Message( stdout, "  label cluster centers  = %s\n",          (Merger_Coll_LabelCenter)? "yes":"no" );
       Aux_Message( stdout, "=============================================================================\n" );
    }
 
