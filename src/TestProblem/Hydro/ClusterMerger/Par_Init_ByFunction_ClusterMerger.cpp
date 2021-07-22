@@ -584,9 +584,79 @@ void Read_Particles_ClusterMerger( std::string filename, long offset, long num,
 } // FUNCTION : Read_Particles_ClusterMerger
 
 #endif // #ifdef SUPPORT_HDF5
+
+
+//-------------------------------------------------------------------------------------------------------
+// Function    :  Aux_Record_ClusterMerger
+// Description :  Record the cluster centers
+//
+// Note        :  1. Invoked by main() using the function pointer "Aux_Record_User_Ptr",
+//                   which must be set by a test problem initializer
+//                2. Enabled by the runtime option "OPT__RECORD_USER"
+//                3. This function will be called both during the program initialization and after each full update
+//                4. Must enable Merger_Coll_LabelCenter
+//
+// Parameter   :  None
+//-------------------------------------------------------------------------------------------------------
+void Aux_Record_ClusterMerger()
+{
+
+   const char FileName[] = "Record__Center";
+   static bool FirstTime = true;
+
+   // header
+   if ( FirstTime )
+   {
+      if ( MPI_Rank == 0 )
+      {
+         if ( ! Merger_Coll_LabelCenter )
+            Aux_Message( stderr, "WARNING : Merger_Coll_LabelCenter is disabled in %s !!\n", __FUNCTION__ );
+
+         if ( Aux_CheckFileExist(FileName) )
+            Aux_Message( stderr, "WARNING : file \"%s\" already exists !!\n", FileName );
+
+         FILE *File_User = fopen( FileName, "a" );
+         fprintf( File_User, "#%13s%14s",  "Time", "Step" );
+         for (int c=0; c<Merger_Coll_NumHalos; c++)
+            fprintf( File_User, " %13s%1d %13s%1d %13s%1d", "x", c, "y", c, "z", c );
+         fprintf( File_User, "\n" );
+         fclose( File_User );
+      }
+
+      FirstTime = false;
+   } // if ( FirstTime )
+
+
+   // collect data from all ranks
+   const real *ParPos[3] = { amr->Par->PosX, amr->Par->PosY, amr->Par->PosZ };
+   double Cen[3][3] = {  { NULL_REAL, NULL_REAL, NULL_REAL },
+                         { NULL_REAL, NULL_REAL, NULL_REAL },
+                         { NULL_REAL, NULL_REAL, NULL_REAL }  };
+
+   for (int c=0; c<Merger_Coll_NumHalos; c++) {
+      double Cen_Tmp[3] = { -__FLT_MAX__, -__FLT_MAX__, -__FLT_MAX__ };   // set to -inf
+      for (long p=0; p<amr->Par->NPar_AcPlusInac; p++) {
+         if ( amr->Par->Attribute[ParTypeIdx][p] == real(PTYPE_CEN+c) ) {
+            for (int d=0; d<3; d++) Cen_Tmp[d] = ParPos[d][p];
+            break;
+         }
+      }
+      // use MPI_MAX since Cen_Tmp[] is initialized as -inf
+      MPI_Reduce( Cen_Tmp, Cen[c], 3, MPI_DOUBLE, MPI_MAX, 0, MPI_COMM_WORLD );
+   }
+
+
+   // output cluster centers
+   if ( MPI_Rank == 0 )
+   {
+      FILE *File_User = fopen( FileName, "a" );
+      fprintf( File_User, "%14.7e%14ld", Time[0], Step );
+      for (int c=0; c<Merger_Coll_NumHalos; c++)
+         fprintf( File_User, " %14.7e %14.7e %14.7e", Cen[c][0], Cen[c][1], Cen[c][2] );
+      fprintf( File_User, "\n" );
+      fclose( File_User );
+   }
+
+} // FUNCTION : Aux_Record_ClusterMerger
+
 #endif // #ifdef PARTICLE
-
-
-
-
-

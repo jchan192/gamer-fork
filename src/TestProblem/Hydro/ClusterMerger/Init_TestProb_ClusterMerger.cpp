@@ -70,6 +70,7 @@ void Par_Init_ByFunction_ClusterMerger(const long NPar_ThisRank,
                                        real *ParMass, real *ParPosX, real *ParPosY, real *ParPosZ,
                                        real *ParVelX, real *ParVelY, real *ParVelZ, real *ParTime,
                                        real *AllAttribute[PAR_NATT_TOTAL]);
+void Aux_Record_ClusterMerger();
 #endif
 
 int Read_Num_Points_ClusterMerger(std::string filename);
@@ -369,6 +370,11 @@ void SetParameter()
       PRINT_WARNING( "END_T", END_T, FORMAT_REAL );
    }
 
+   if ( Merger_Coll_LabelCenter  &&  !OPT__RECORD_USER ) {
+      OPT__RECORD_USER = true;
+      PRINT_WARNING( "OPT__RECORD_USER", OPT__RECORD_USER, FORMAT_BOOL );
+   }
+
 
 // (4) make a note
    if ( MPI_Rank == 0 )
@@ -637,6 +643,7 @@ void Init_TestProb_Hydro_ClusterMerger()
 // set the function pointers of various problem-specific routines
    Init_Function_User_Ptr         = SetGridIC;
    End_User_Ptr                   = End_ClusterMerger;
+   Aux_Record_User_Ptr            = Aux_Record_ClusterMerger;
    Par_Init_ByFunction_Ptr        = Par_Init_ByFunction_ClusterMerger;
    Init_Field_User_Ptr            = AddNewField_ClusterMerger;
    Par_Init_Attribute_User_Ptr    = AddNewParticleAttribute_ClusterMerger;
