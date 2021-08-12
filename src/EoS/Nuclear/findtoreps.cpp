@@ -147,7 +147,7 @@ void findtoreps( const real x, const real y, const real z,
    if      ( keymode == NUC_MODE_ENGY ) iv = 0; // temperature table for the energy mode
 #  elif ( NUC_TABLE_MODE == NUC_TABLE_MODE_ENGY )
    if      ( keymode == NUC_MODE_TEMP ) iv = 0; // energy table for the temperautre mode
-#  endif
+#  endif // #elif NUC_TABLE_MODE ... else ...
    else if ( keymode == NUC_MODE_ENTR ) iv = 1; // temperature/energy table for the entropy mode
    else if ( keymode == NUC_MODE_PRES ) iv = 2; // temperature/energy table for the pressure mode
 
@@ -183,9 +183,11 @@ void findtoreps( const real x, const real y, const real z,
 // linear interpolation when cubic interpolations failed
    if ( vox != vox )
    {
+#     if   ( NUC_TABLE_MODE == NUC_TABLE_MODE_TEMP )
       if ( keymode == NUC_MODE_PRES ) { *keyerr = 683; return; }
-      findtoreps_bdry( x, y, z, found_ltoreps, alltables_mode,
-                       nx, ny, nz, ntoreps, xt, yt, zt, logtoreps, keymode, keyerr );
+#     endif // if NUC_TABLE_MODE == NUC_TABLE_MODE_TEMP
+      findtoreps_bdry( x, y, z, found_ltoreps, alltables_mode, nx, ny, nz,
+                       ntoreps, xt, yt, zt, logtoreps, keymode, keyerr );
       return;
    }
 
@@ -254,7 +256,7 @@ void findtoreps_bdry( const real x, const real y, const real z,
    dzi = (real)1.0 / dz;
 #endif
 
-#if 0
+#  if 0
    dx = drho;
    dy = dtemp;
    dz = dye;
@@ -262,7 +264,7 @@ void findtoreps_bdry( const real x, const real y, const real z,
    dxi = drhoi;
    dyi = dtempi;
    dzi = dyei;
-#endif
+#  endif
 
    dxyi  = dxi*dyi;
    dxzi  = dxi*dzi;
