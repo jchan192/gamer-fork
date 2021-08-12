@@ -1,1 +1,0 @@
-findtemp2.cpp
