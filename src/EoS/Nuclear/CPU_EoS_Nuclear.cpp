@@ -36,6 +36,7 @@ real  *g_entr_mode      = NULL;
 real  *g_logprss_mode   = NULL;
 real  *g_yes_mode       = NULL;
 
+
 #if   ( NUC_TABLE_MODE == NUC_TABLE_MODE_TEMP )
 int    g_ntemp;
 real  *g_logtemp        = NULL;
@@ -56,7 +57,7 @@ void nuc_eos_C_short( const real xrho, real *xtemp, const real xye,
                       const real *alltables, const real *alltables_mode,
                       const real *logrho, const real *logtoreps, const real *yes, const real *logrho_mode,
                       const real *logepsort_mode, const real *entr_mode, const real *logprss_mode, const real *yes_mode,
-                      const int keymode, int *keyerr, const real rfeps );
+                      const int interpol_scheme, const int keymode, int *keyerr, const real rfeps );
 void nuc_eos_C_ReadTable( char *nuceos_table_name );
 void CUAPI_PassNuclearEoSTable2GPU();
 
@@ -132,6 +133,7 @@ void EoS_SetAuxArray_Nuclear( double AuxArray_Flt[], int AuxArray_Int[] )
    AuxArray_Int[NUC_AUX_NRHO_MODE ] = g_nrho_mode;
    AuxArray_Int[NUC_AUX_NMODE     ] = g_nmode;
    AuxArray_Int[NUC_AUX_NYE_MODE  ] = g_nye_mode;
+   AuxArray_Int[NUC_AUX_INT_SCHEME] = NUC_EOS_INTERPOL_SCHEME;
 
 } // FUNCTION : EoS_SetAuxArray_Nuclear
 #endif // #ifndef __CUDACC__
@@ -224,12 +226,13 @@ static real EoS_DensEint2Pres_Nuclear( const real Dens_Code, const real Eint_Cod
    const real Pres2Code   = AuxArray_Flt[NUC_AUX_PRES2CODE ];
    const real MeV2Kelvin  = AuxArray_Flt[NUC_AUX_MEV2KELVIN];
 
-   const int  NRho        = AuxArray_Int[NUC_AUX_NRHO     ];
-   const int  NTorE       = AuxArray_Int[NUC_AUX_NTORE    ];
-   const int  NYe         = AuxArray_Int[NUC_AUX_NYE      ];
-   const int  NRho_Mode   = AuxArray_Int[NUC_AUX_NRHO_MODE];
-   const int  NMode       = AuxArray_Int[NUC_AUX_NMODE    ];
-   const int  NYe_Mode    = AuxArray_Int[NUC_AUX_NYE_MODE ];
+   const int  NRho        = AuxArray_Int[NUC_AUX_NRHO      ];
+   const int  NTorE       = AuxArray_Int[NUC_AUX_NTORE     ];
+   const int  NYe         = AuxArray_Int[NUC_AUX_NYE       ];
+   const int  NRho_Mode   = AuxArray_Int[NUC_AUX_NRHO_MODE ];
+   const int  NMode       = AuxArray_Int[NUC_AUX_NMODE     ];
+   const int  NYe_Mode    = AuxArray_Int[NUC_AUX_NYE_MODE  ];
+   const int  INt_Scheme  = AuxArray_Int[NUC_AUX_INT_SCHEME];
 
    int  Mode      = NUC_MODE_ENGY;
    real Dens_CGS  = Dens_Code * Dens2CGS;
@@ -265,7 +268,7 @@ static real EoS_DensEint2Pres_Nuclear( const real Dens_Code, const real Eint_Cod
                     EnergyShift, NRho, NTorE, NYe, NRho_Mode, NMode, NYe_Mode,
                     Table[NUC_TAB_ALL], Table[NUC_TAB_ALL_MODE], Table[NUC_TAB_RHO], Table[NUC_TAB_TORE], Table[NUC_TAB_YE], 
                     Table[NUC_TAB_RHO_MODE], Table[NUC_TAB_EORT_MODE], Table[NUC_TAB_ENTR_MODE], Table[NUC_TAB_PRES_MODE],
-                    Table[NUC_TAB_YE_MODE], Mode, &Err, Tolerance );
+                    Table[NUC_TAB_YE_MODE], INt_Scheme, Mode, &Err, Tolerance );
 
 // trigger a *hard failure* if the EoS driver fails
    if ( Err )
@@ -310,7 +313,6 @@ static real EoS_DensEint2Pres_Nuclear( const real Dens_Code, const real Eint_Cod
    {
       ExtraInOut[0] = Temp_Kelv;
       ExtraInOut[1] = Entr;
-      ExtraInOut[2] = mu_nu;
    }
 
 
@@ -361,17 +363,18 @@ static real EoS_DensPres2Eint_Nuclear( const real Dens_Code, const real Pres_Cod
 
 
 
-   const real EnergyShift = AuxArray_Flt[NUC_AUX_ESHIFT   ];
-   const real Dens2CGS    = AuxArray_Flt[NUC_AUX_DENS2CGS ];
-   const real Pres2CGS    = AuxArray_Flt[NUC_AUX_PRES2CGS ];
-   const real sEint2Code  = AuxArray_Flt[NUC_AUX_VSQR2CODE];
+   const real EnergyShift = AuxArray_Flt[NUC_AUX_ESHIFT    ];
+   const real Dens2CGS    = AuxArray_Flt[NUC_AUX_DENS2CGS  ];
+   const real Pres2CGS    = AuxArray_Flt[NUC_AUX_PRES2CGS  ];
+   const real sEint2Code  = AuxArray_Flt[NUC_AUX_VSQR2CODE ];
 
-   const int  NRho        = AuxArray_Int[NUC_AUX_NRHO     ];
-   const int  NTorE       = AuxArray_Int[NUC_AUX_NTORE    ];
-   const int  NYe         = AuxArray_Int[NUC_AUX_NYE      ];
-   const int  NRho_Mode   = AuxArray_Int[NUC_AUX_NRHO_MODE];
-   const int  NMode       = AuxArray_Int[NUC_AUX_NMODE    ];
-   const int  NYe_Mode    = AuxArray_Int[NUC_AUX_NYE_MODE ];
+   const int  NRho        = AuxArray_Int[NUC_AUX_NRHO      ];
+   const int  NTorE       = AuxArray_Int[NUC_AUX_NTORE     ];
+   const int  NYe         = AuxArray_Int[NUC_AUX_NYE       ];
+   const int  NRho_Mode   = AuxArray_Int[NUC_AUX_NRHO_MODE ];
+   const int  NMode       = AuxArray_Int[NUC_AUX_NMODE     ];
+   const int  NYe_Mode    = AuxArray_Int[NUC_AUX_NYE_MODE  ];
+   const int  INt_Scheme  = AuxArray_Int[NUC_AUX_INT_SCHEME];
 
    int  Mode      = NUC_MODE_PRES;
    real Dens_CGS  = Dens_Code * Dens2CGS;
@@ -403,7 +406,7 @@ static real EoS_DensPres2Eint_Nuclear( const real Dens_Code, const real Pres_Cod
                     EnergyShift, NRho, NTorE, NYe, NRho_Mode, NMode, NYe_Mode,
                     Table[NUC_TAB_ALL], Table[NUC_TAB_ALL_MODE], Table[NUC_TAB_RHO], Table[NUC_TAB_TORE], Table[NUC_TAB_YE], 
                     Table[NUC_TAB_RHO_MODE], Table[NUC_TAB_EORT_MODE], Table[NUC_TAB_ENTR_MODE], Table[NUC_TAB_PRES_MODE],
-                    Table[NUC_TAB_YE_MODE], Mode, &Err, Tolerance );
+                    Table[NUC_TAB_YE_MODE], INt_Scheme, Mode, &Err, Tolerance );
 
 // trigger a *hard failure* if the EoS driver fails
    if ( Err )  sEint_CGS = NAN;
@@ -478,17 +481,18 @@ static real EoS_DensPres2CSqr_Nuclear( const real Dens_Code, const real Pres_Cod
 #  endif // GAMER_DEBUG
 
 
-   const real EnergyShift = AuxArray_Flt[NUC_AUX_ESHIFT   ];
-   const real Dens2CGS    = AuxArray_Flt[NUC_AUX_DENS2CGS ];
-   const real Pres2CGS    = AuxArray_Flt[NUC_AUX_PRES2CGS ];
-   const real CsSqr2Code  = AuxArray_Flt[NUC_AUX_VSQR2CODE];
+   const real EnergyShift = AuxArray_Flt[NUC_AUX_ESHIFT    ];
+   const real Dens2CGS    = AuxArray_Flt[NUC_AUX_DENS2CGS  ];
+   const real Pres2CGS    = AuxArray_Flt[NUC_AUX_PRES2CGS  ];
+   const real CsSqr2Code  = AuxArray_Flt[NUC_AUX_VSQR2CODE ];
 
-   const int  NRho        = AuxArray_Int[NUC_AUX_NRHO     ];
-   const int  NTorE       = AuxArray_Int[NUC_AUX_NTORE    ];
-   const int  NYe         = AuxArray_Int[NUC_AUX_NYE      ];
-   const int  NRho_Mode   = AuxArray_Int[NUC_AUX_NRHO_MODE];
-   const int  NMode       = AuxArray_Int[NUC_AUX_NMODE    ];
-   const int  NYe_Mode    = AuxArray_Int[NUC_AUX_NYE_MODE ];
+   const int  NRho        = AuxArray_Int[NUC_AUX_NRHO      ];
+   const int  NTorE       = AuxArray_Int[NUC_AUX_NTORE     ];
+   const int  NYe         = AuxArray_Int[NUC_AUX_NYE       ];
+   const int  NRho_Mode   = AuxArray_Int[NUC_AUX_NRHO_MODE ];
+   const int  NMode       = AuxArray_Int[NUC_AUX_NMODE     ];
+   const int  NYe_Mode    = AuxArray_Int[NUC_AUX_NYE_MODE  ];
+   const int  INt_Scheme  = AuxArray_Int[NUC_AUX_INT_SCHEME];
 
    int  Mode     = NUC_MODE_PRES;
    real Dens_CGS = Dens_Code * Dens2CGS;
@@ -520,7 +524,7 @@ static real EoS_DensPres2CSqr_Nuclear( const real Dens_Code, const real Pres_Cod
                     EnergyShift, NRho, NTorE, NYe, NRho_Mode, NMode, NYe_Mode,
                     Table[NUC_TAB_ALL], Table[NUC_TAB_ALL_MODE], Table[NUC_TAB_RHO], Table[NUC_TAB_TORE], Table[NUC_TAB_YE], 
                     Table[NUC_TAB_RHO_MODE], Table[NUC_TAB_EORT_MODE], Table[NUC_TAB_ENTR_MODE], Table[NUC_TAB_PRES_MODE],
-                    Table[NUC_TAB_YE_MODE], Mode, &Err, Tolerance );
+                    Table[NUC_TAB_YE_MODE], INt_Scheme, Mode, &Err, Tolerance );
 
 // trigger a *hard failure* if the EoS driver fails
    if ( Err )  Cs2_CGS = NAN;
@@ -677,14 +681,15 @@ static void EoS_General_Nuclear( const int Mode, real Out[], const real In[], co
    const real Dens2CGS    = AuxArray_Flt[NUC_AUX_DENS2CGS  ];
    const real Kelvin2MeV  = AuxArray_Flt[NUC_AUX_KELVIN2MEV];
    const real sEint2Code  = AuxArray_Flt[NUC_AUX_VSQR2CODE ];
-   const real Pres2Code   = AuxArray_Flt[NUC_AUX_PRES2CODE];
+   const real Pres2Code   = AuxArray_Flt[NUC_AUX_PRES2CODE ];
 
-   const int  NRho        = AuxArray_Int[NUC_AUX_NRHO     ];
-   const int  NTorE       = AuxArray_Int[NUC_AUX_NTORE    ];
-   const int  NYe         = AuxArray_Int[NUC_AUX_NYE      ];
-   const int  NRho_Mode   = AuxArray_Int[NUC_AUX_NRHO_MODE];
-   const int  NMode       = AuxArray_Int[NUC_AUX_NMODE    ];
-   const int  NYe_Mode    = AuxArray_Int[NUC_AUX_NYE_MODE ];
+   const int  NRho        = AuxArray_Int[NUC_AUX_NRHO      ];
+   const int  NTorE       = AuxArray_Int[NUC_AUX_NTORE     ];
+   const int  NYe         = AuxArray_Int[NUC_AUX_NYE       ];
+   const int  NRho_Mode   = AuxArray_Int[NUC_AUX_NRHO_MODE ];
+   const int  NMode       = AuxArray_Int[NUC_AUX_NMODE     ];
+   const int  NYe_Mode    = AuxArray_Int[NUC_AUX_NYE_MODE  ];
+   const int  INt_Scheme  = AuxArray_Int[NUC_AUX_INT_SCHEME];
 
 
    switch ( Mode )
@@ -741,7 +746,7 @@ static void EoS_General_Nuclear( const int Mode, real Out[], const real In[], co
                           EnergyShift, NRho, NTorE, NYe, NRho_Mode, NMode, NYe_Mode,
                           Table[NUC_TAB_ALL], Table[NUC_TAB_ALL_MODE], Table[NUC_TAB_RHO], Table[NUC_TAB_TORE], Table[NUC_TAB_YE], 
                           Table[NUC_TAB_RHO_MODE], Table[NUC_TAB_EORT_MODE], Table[NUC_TAB_ENTR_MODE], Table[NUC_TAB_PRES_MODE],
-                          Table[NUC_TAB_YE_MODE], Mode, &Err, Tolerance );
+                          Table[NUC_TAB_YE_MODE], INt_Scheme, Mode, &Err, Tolerance );
 
 //       trigger a *hard failure* if the EoS driver fails
          if ( Err )
@@ -833,7 +838,7 @@ static void EoS_General_Nuclear( const int Mode, real Out[], const real In[], co
                           EnergyShift, NRho, NTorE, NYe, NRho_Mode, NMode, NYe_Mode,
                           Table[NUC_TAB_ALL], Table[NUC_TAB_ALL_MODE], Table[NUC_TAB_RHO], Table[NUC_TAB_TORE], Table[NUC_TAB_YE], 
                           Table[NUC_TAB_RHO_MODE], Table[NUC_TAB_EORT_MODE], Table[NUC_TAB_ENTR_MODE], Table[NUC_TAB_PRES_MODE],
-                          Table[NUC_TAB_YE_MODE], Mode, &Err, Tolerance );
+                          Table[NUC_TAB_YE_MODE], INt_Scheme, Mode, &Err, Tolerance );
 
 //       trigger a *hard failure* if the EoS driver fails
          if ( Err )  sEint_CGS = NAN;

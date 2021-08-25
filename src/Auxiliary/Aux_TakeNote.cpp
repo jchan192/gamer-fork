@@ -918,6 +918,7 @@ void Aux_TakeNote()
       fprintf( Note, "ISO_TEMP                        %13.7e\n",  ISO_TEMP                );
 #     if ( EOS == EOS_NUCLEAR )
       fprintf( Note, "NUC_TABLE                       %s\n",      NUC_TABLE               );
+      fprintf( Note, "NUC_EOS_INTERPOL_SCHEME         %d\n",      NUC_EOS_INTERPOL_SCHEME );
 #     endif
       fprintf( Note, "MINMOD_COEFF                    %13.7e\n",  MINMOD_COEFF            );
       fprintf( Note, "OPT__LR_LIMITER                 %s\n",      ( OPT__LR_LIMITER == LR_LIMITER_VANLEER    ) ? "VANLEER"    :

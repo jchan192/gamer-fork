@@ -23,10 +23,10 @@ void nuc_eos_C_linterp_some( const real x, const real y, const real z,
                              const int nx, const int ny, const int nz, const int nvars,
                              const real *xt, const real *yt, const real *zt );
 void findtoreps( const real x, const real y, const real z,
-                real *found_lt, const real *alltables_mode,
-                const int nx, const int ny, const int nz, const int ntemp,
-                const real *xt, const real *yt, const real *zt,
-                const real *logtemp, const int keymode, int *keyerr );
+                 real *found_lt, const real *alltables_mode,
+                 const int nx, const int ny, const int nz, const int ntemp,
+                 const real *xt, const real *yt, const real *zt, const real *logtoreps, 
+                 const int interpol_scheme, const int keymode, int *keyerr );
 void findtemp_NR_bisection( const real lr, const real lt0, const real ye, const real varin, real *ltout,
                             const int nrho, const int ntemp, const int nye, const real *alltables, 
                             const real *logrho, const real *logtemp, const real *yes,
@@ -72,20 +72,23 @@ void findenergy( const real x, const real y, const real z,
 //                nrho            : Size of density array in the Nuclear EoS table
 //                ntoreps         : Size of (temperature/energy) array in the Nuclear EoS table (temp/energy-based table)
 //                nye             : Size of Y_e array in the Nuclear EoS table
-//                nmode           : Size of log(eps)   (0)
-//                                          entropy    (2)
-//                                          log(P)     (3) array in the Nuclear EoS table
-//                                                         for each mode
+//                nrho_mode       : Size of density array of look-up tables (logtemp_energy.../logenergy_temp...)
+//                nmode           : Size of log(eps/temp) arrays of look-up tables
+//                                          entropy
+//                                          log(P)        array in the Nuclear EoS table
+//                                                        for each mode
+//                nye_mode        : Size of Y_e array of lookup tables
 //                alltables       : Nuclear EoS table
-//                alltables_mode  : Auxiliary log(T) arrays for energy mode
-//                                                              entropy mode
-//                                                              pressure mode
+//                alltables_mode  : Auxiliary log(T/eps) arrays for energy/temperature mode
+//                                                                  entropy mode
+//                                                                  pressure mode
 //                logrho          : log(rho) array in the table
 //                logtoreps       : log(T) or log(eps) array for (T/eps) mode (temp/energy-based table)
 //                yes             : Y_e      array in the table
 //                logepsort_mode  : log(eps) or log(T) array for (eps/T) mode (temp/energy-based table)
 //                entropy_mode    : entropy  array for entropy mode
 //                logpress_mode   : log(P)   array for pressure mode
+//                interpol_scheme : interpolation schemes (linear/cubic)
 //                keymode         : Which mode we will use
 //                                  0 : energy mode      (coming in with eps)
 //                                  1 : temperature mode (coming in with T)
@@ -122,7 +125,7 @@ void nuc_eos_C_short( const real xrho, real *xtemp, const real xye,
                       const real *logrho, const real *logtoreps, const real *yes, 
                       const real *logrho_mode, const real *logepsort_mode, 
                       const real *entr_mode, const real *logprss_mode, const real *yes_mode,
-                      const int keymode, int *keyerr, const real rfeps )
+                      const int interpol_scheme, const int keymode, int *keyerr, const real rfeps )
 {
 
 // check whether the input density and Ye are within the table
@@ -212,7 +215,7 @@ void nuc_eos_C_short( const real xrho, real *xtemp, const real xye,
       {
 // find temperature from energy, entorpy or pressure
          findtoreps( lr, var0, xye, &ltoreps, alltables_mode, nrho_mode, nmode, nye_mode, ntoreps,
-                     logrho_mode, mode_arr, yes_mode, logtoreps, keymode, keyerr );
+                     logrho_mode, mode_arr, yes_mode, logtoreps, interpol_scheme, keymode, keyerr );
       }
       if ( *keyerr != 0 ) 
       {
@@ -228,7 +231,7 @@ void nuc_eos_C_short( const real xrho, real *xtemp, const real xye,
    {
 // find energy from temperature, entorpy or pressure
       findtoreps( lr, var0, xye, &ltoreps, alltables_mode, nrho_mode, nmode, nye_mode, ntoreps,
-                  logrho_mode, mode_arr, yes_mode, logtoreps, keymode, keyerr );
+                  logrho_mode, mode_arr, yes_mode, logtoreps, interpol_scheme, keymode, keyerr );
       if ( *keyerr != 0 ) return;
    }
 #  endif // #elif NUC_TABLE_MODE ... else ...
@@ -237,13 +240,17 @@ void nuc_eos_C_short( const real xrho, real *xtemp, const real xye,
    real res[5]; // result array
 
 // linear interolation for other variables
-   nuc_eos_C_linterp_some( lr, ltoreps, xye, res, alltables,
-                           nrho, ntoreps, nye, 5, logrho, logtoreps, yes );
-
+   if      ( interpol_scheme == NUC_INTERPOL_LINEAR )
+   {
+      nuc_eos_C_linterp_some( lr, ltoreps, xye, res, alltables,
+                              nrho, ntoreps, nye, 5, logrho, logtoreps, yes );
+   }
 // cubic interpolation for other variables
-   //nuc_eos_C_cubinterp_some( lr, lt, xye, res, alltables,
-   //                          nrho, ntemp, nye, 5, logrho, logtemp, yes );
-
+   else if ( interpol_scheme == NUC_INTERPOL_CUBIC  )
+   {
+      nuc_eos_C_cubinterp_some( lr, ltoreps, xye, res, alltables,
+                                nrho, ntoreps, nye, 5, logrho, logtoreps, yes );
+   }
 
 // assign results
 #  if   ( NUC_TABLE_MODE == NUC_TABLE_MODE_TEMP )

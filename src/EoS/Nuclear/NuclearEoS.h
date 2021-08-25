@@ -27,6 +27,11 @@
 #define NUC_AUX_NMODE         4     // AuxArray_Int: nmode
 #define NUC_AUX_NYE_MODE      5     // AuxArray_Int: nye_mode
 
+// Interpolation schemes
+#define NUC_AUX_INT_SCHEME    6     // AuxArray_Int: scheme
+#define NUC_INTERPOL_LINEAR   0     // linear interpolation
+#define NUC_INTERPOL_CUBIC    1     // cubic  interpolation
+
 
 // table indices
 #define NUC_TAB_ALL           0     // alltables
@@ -46,6 +51,10 @@
 #define NUC_MODE_TEMP         1     // temperature mode
 #define NUC_MODE_ENTR         2     // entropy mode
 #define NUC_MODE_PRES         3     // pressure mode
+
+
+
+
 
 
 // Tolerance for Newton-Raphson or bisection method in temperature driver

@@ -258,6 +258,7 @@ extern EoS_GENE_t EoS_General_GPUPtr;
 extern EoS_t EoS;
 #if ( EOS == EOS_NUCLEAR )
 extern char NUC_TABLE[MAX_STRING];
+extern int  NUC_EOS_INTERPOL_SCHEME;
 #endif
 #endif // HYDRO
 

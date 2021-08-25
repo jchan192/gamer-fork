@@ -246,6 +246,7 @@ EoS_t EoS;
 // d. others
 #if ( EOS == EOS_NUCLEAR )
 char NUC_TABLE[MAX_STRING];
+int  NUC_EOS_INTERPOL_SCHEME;
 #endif
 #endif // HYDRO
 
