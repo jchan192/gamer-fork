@@ -15,7 +15,7 @@ GPU_DEVICE static
 void findtoreps( const real x, const real y, const real z,
                  real *found_lt, const real *alltables_mode,
                  const int nx, const int ny, const int nz, const int ntemp,
-                 const real *xt, const real *yt, const real *zt, const real *logtoreps, 
+                 const real *xt, const real *yt, const real *zt, const real *logtoreps,
                  const int interpol_scheme, const int keymode, int *keyerr );
 #endif
 
@@ -30,11 +30,12 @@ void findtoreps( const real x, const real y, const real z,
 //                                    pressure mode (3)
 //
 // Note        :  1. Use 3D Catmull-Rom cubic interpolation formula
-//                   to search the corresponding temperature given (rho, (eps, entropy, P), Y_e)
+//                   to search the corresponding temperature/energy given 
+//                   (rho, (eps, T, entropy, P), Y_e)
 //                2. Invoked by nuc_eos_C_short()
 //
 // Parameter   :  x              : Input vector of first  variable (rho)
-//                y              : Input vector of second variable (eps, entropy, P)
+//                y              : Input vector of second variable (eps, T, entropy, P)
 //                z              : Input vector of third  variable (Y_e)
 //                found_ltoreps  : Output log(temp)/log(energy) of interpolated function values
 //                alltables_mode : 3d array of tabulated logtemp
@@ -53,14 +54,14 @@ void findtoreps( const real x, const real y, const real z,
 //                                     3: Pressure mode (coming in with P)
 //                keyerr         : Output error
 //
-// Return      :  found_lt
+// Return      :  found_ltoreps
 //-------------------------------------------------------------------------------------
 GPU_DEVICE
 void findtoreps( const real x, const real y, const real z,
                  real *found_ltoreps, const real *alltables_mode,
                  const int nx, const int ny, const int nz, const int ntoreps,
-                 const real *xt, const real *yt, const real *zt,
-                 const real *logtoreps, const int interpol_scheme, const int keymode, int *keyerr )
+                 const real *xt, const real *yt, const real *zt, const real *logtoreps,
+                 const int interpol_scheme, const int keymode, int *keyerr )
 {
 
 
@@ -68,6 +69,7 @@ void findtoreps( const real x, const real y, const real z,
    {
       findtoreps_bdry( x, y, z, found_ltoreps, alltables_mode, nx, ny, nz, ntoreps,
                        xt, yt, zt, logtoreps, keymode, keyerr );
+      return;
    }
    else if ( interpol_scheme == NUC_INTERPOL_CUBIC  )
    {
@@ -201,10 +203,11 @@ void findtoreps( const real x, const real y, const real z,
       }
 
 
+   return;
+
+
    }
 
-
-   return;
 
 } // FUNCTION : findtoreps
 
@@ -213,16 +216,17 @@ void findtoreps( const real x, const real y, const real z,
 //-------------------------------------------------------------------------------------
 // Function    :  findtoreps_bdry
 // Description :  Finding temperature from different modes
-//                --->                energy   mode (0)
-//                                    entropy  mode (2)
-//                                    pressure mode (3)
+//                --->                energy   mode    (0)
+//                                    temperature mode (1)
+//                                    entropy  mode    (2)
+//                                    pressure mode    (3)
 //
 // Note        :  1. Use linear interpolation at boundaries of table to search the
-//                   corresponding temperature given (rho, (eps, entropy, P), Y_e)
+//                   corresponding temperature/energy given (rho, (eps, T, entropy, P), Y_e)
 //                2. Invoked by findtoreps()
 //
 // Parameter   :  x              : Input vector of first  variable (rho)
-//                y              : Input vector of second variable (eps, entropy, P)
+//                y              : Input vector of second variable (eps, T, entropy, P)
 //                z              : Input vector of third  variable (Y_e)
 //                found_ltoreps  : Output log(T)/log(energy) of interpolated function values
 //                alltables_mode : 3d array of tabulated logenergy
@@ -236,6 +240,7 @@ void findtoreps( const real x, const real y, const real z,
 //                logtoreps      : log(temp)/log(energy) array in the table
 //                keymode        : Which mode we will use
 //                                 0: energy mode      (coming in with eps)
+//                                 1: temperature mode (coming in with T)
 //                                 2: entropy mode     (coming in with entropy)
 //                                 3: pressure mode    (coming in with P)
 //                keyerr         : Output error

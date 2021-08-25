@@ -25,17 +25,12 @@ void nuc_eos_C_linterp_some( const real x, const real y, const real z,
 void findtoreps( const real x, const real y, const real z,
                  real *found_lt, const real *alltables_mode,
                  const int nx, const int ny, const int nz, const int ntemp,
-                 const real *xt, const real *yt, const real *zt, const real *logtoreps, 
+                 const real *xt, const real *yt, const real *zt, const real *logtoreps,
                  const int interpol_scheme, const int keymode, int *keyerr );
 void findtemp_NR_bisection( const real lr, const real lt0, const real ye, const real varin, real *ltout,
-                            const int nrho, const int ntemp, const int nye, const real *alltables, 
+                            const int nrho, const int ntemp, const int nye, const real *alltables,
                             const real *logrho, const real *logtemp, const real *yes,
                             const int keymode, int *keyerrt, const real prec );
-void findenergy( const real x, const real y, const real z,
-                 real *found_leps, const real *alltables_mode,
-                 const int nx, const int ny, const int nz, const int neps,
-                 const real *xt, const real *yt, const real *zt,
-                 const real *logeps, const int keymode, int *keyerr );
 
 #endif // #ifdef __CUDACC__ ... else ...
 
