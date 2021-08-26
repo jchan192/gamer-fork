@@ -11,7 +11,6 @@
 #include "findtoreps.cu"
 #include "findtemp_NR_bisection.cu"
 
-
 #else
 
 void nuc_eos_C_cubinterp_some( const real x, const real y, const real z,
