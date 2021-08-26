@@ -266,4 +266,5 @@ void nuc_eos_C_short( const real xrho, real *xtemp, const real xye,
 } // FUNCTION : nuc_eos_C_short
 
 
+
 #endif // #if ( MODEL == HYDRO  &&  EOS == EOS_NUCLEAR )
