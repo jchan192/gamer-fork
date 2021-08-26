@@ -241,7 +241,6 @@ static real EoS_DensEint2Pres_Nuclear( const real Dens_Code, const real Eint_Cod
    real Temp_MeV  = NULL_REAL;
    real Entr      = NULL_REAL;
    real Pres_CGS  = NULL_REAL;
-   real mu_nu     = NULL_REAL;
    real Useless   = NULL_REAL;
 
    int  Err       = NULL_INT;
@@ -276,7 +275,6 @@ static real EoS_DensEint2Pres_Nuclear( const real Dens_Code, const real Eint_Cod
       Temp_MeV = NAN;
       Entr     = NAN;
       Pres_CGS = NAN;
-      mu_nu    = NAN;
    }
 
    const real Temp_Kelv = Temp_MeV * MeV2Kelvin;
