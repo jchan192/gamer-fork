@@ -214,7 +214,7 @@ void SetGridIC( real fluid[], const double x, const double y, const double z, co
    const double x0 = x - BoxCenter[0];
    const double y0 = y - BoxCenter[1];
    const double z0 = z - BoxCenter[2];
-   const double r  = SQRT( SQR( x0 ) + SQR( y0 ) + SQR( z0 ) );
+   const double r  = SQRT(  SQR( x0 ) + SQR( y0 ) + SQR( z0 )  );
 
    double Dens, Velr, Pres, Momx, Momy, Momz, Eint, Etot, Ye, Temp, Entr;
 
@@ -279,7 +279,7 @@ void SetGridIC( real fluid[], const double x, const double y, const double z, co
    fluid[MOMZ] = Momz;
    fluid[ENGY] = Etot;
 #  if ( EOS == EOS_NUCLEAR )
-   for (int v=0; v<NCOMP_PASSIVE; v++) fluid[ NCOMP_FLUID + v ] = Passive[v];
+   for (int v=0; v<NCOMP_PASSIVE; v++)   fluid[ NCOMP_FLUID + v ] = Passive[v];
 #  endif
 
 
@@ -340,10 +340,10 @@ void SetBFieldIC( real magnetic[], const double x, const double y, const double 
    double r_yp, dens_yp, pres_yp;
    double r_zp, dens_zp, pres_zp;
 
-   r    = SQRT( SQR( x0         ) + SQR( y0         ) + SQR( z0         ) );
-   r_xp = SQRT( SQR( x0 + delta ) + SQR( y0         ) + SQR( z0         ) );
-   r_yp = SQRT( SQR( x0         ) + SQR( y0 + delta ) + SQR( z0         ) );
-   r_zp = SQRT( SQR( x0         ) + SQR( y0         ) + SQR( z0 + delta ) );
+   r    = SQRT(  SQR( x0         ) + SQR( y0         ) + SQR( z0         )  );
+   r_xp = SQRT(  SQR( x0 + delta ) + SQR( y0         ) + SQR( z0         )  );
+   r_yp = SQRT(  SQR( x0         ) + SQR( y0 + delta ) + SQR( z0         )  );
+   r_zp = SQRT(  SQR( x0         ) + SQR( y0         ) + SQR( z0 + delta )  );
 
    dens    = Mis_InterpolateFromTable( CCSN_Prof_NBin, Table_R, Table_Dens, r    );
    dens_xp = Mis_InterpolateFromTable( CCSN_Prof_NBin, Table_R, Table_Dens, r_xp );
@@ -472,11 +472,6 @@ void Record_CCSN_CentralDens()
             for (int j=0; j<PS1; j++)  {  const double y = amr->patch[0][lv][PID]->EdgeL[1] + (j+0.5)*dh;
             for (int i=0; i<PS1; i++)  {  const double x = amr->patch[0][lv][PID]->EdgeL[0] + (i+0.5)*dh;
 
-               const double dx = x - BoxCenter[0];
-               const double dy = y - BoxCenter[1];
-               const double dz = z - BoxCenter[2];
-               const double r2 = SQR(dx) + SQR(dy) + SQR(dz);
-
                const double dens = amr->patch[ amr->FluSg[lv] ][lv][PID]->fluid[DENS][k][j][i];
 
                if ( dens > OMP_DataCoord[TID][0] )
@@ -505,7 +500,7 @@ void Record_CCSN_CentralDens()
 
 
 // collect data from all ranks
-# ifndef SERIAL
+#  ifndef SERIAL
    {
       double DataCoord_All[4 * MPI_NRank];
 
@@ -517,7 +512,7 @@ void Record_CCSN_CentralDens()
             for (int b=0; b<4; b++)   DataCoord[b] = DataCoord_All[4 * i + b];
       }
    }
-# endif // ifndef SERIAL
+#  endif // ifndef SERIAL
 
 
 // output to file
@@ -607,7 +602,7 @@ bool Flag_User_CCSN( const int i, const int j, const int k, const int lv, const 
    const real (*Rho )[PS1][PS1] = amr->patch[ amr->FluSg[lv] ][lv][PID]->fluid[DENS];  // density
    const real dens = Rho[k][j][i];
 
-   if ( ( r > Threshold[0] )  &&  ( r < Threshold[1])  &&  ( dens > Threshold[2] ) )
+   if (  ( r > Threshold[0] )  &&  ( r < Threshold[1])  &&  ( dens > Threshold[2] )  )
       Flag = true;
 
    return Flag;
