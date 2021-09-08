@@ -54,6 +54,9 @@ static bool Do_TEMPINT_in_ComputeProfile = true;
 void Poi_UserWorkBeforePoisson_GREP( const double Time, const int lv )
 {
 
+// ignore level containing no patches
+   if ( NPatchTotal[lv] == 0 )   return;
+
 // compute GREP
    Poi_Prepare_GREP( Time, lv );
 
