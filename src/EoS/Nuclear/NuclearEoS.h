@@ -19,6 +19,8 @@
 #define NUC_AUX_VSQR2CODE     5     // AuxArray_Flt: convert velocity^2 to code unit
 #define NUC_AUX_KELVIN2MEV    6     // AuxArray_Flt: convert kelvin     to MeV
 #define NUC_AUX_MEV2KELVIN    7     // AuxArray_Flt: convert MeV        to kelvin
+#define NUC_AUX_M_kB          8     // AuxArray_Flt: mean molecular weight*atomic mass unit/
+                                    //               Bolzmann constant*(UNIT_E/UNIT_M)
 
 #define NUC_AUX_NRHO          0     // AuxArray_Int: nrho
 #define NUC_AUX_NTORE         1     // AuxArray_Int: ntemp/neps

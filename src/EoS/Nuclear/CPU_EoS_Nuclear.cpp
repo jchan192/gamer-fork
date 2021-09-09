@@ -122,6 +122,7 @@ void EoS_SetAuxArray_Nuclear( double AuxArray_Flt[], int AuxArray_Int[] )
    AuxArray_Flt[NUC_AUX_VSQR2CODE ] = 1.0 / SQR(UNIT_V);
    AuxArray_Flt[NUC_AUX_KELVIN2MEV] = Const_kB_eV*1.0e-6;
    AuxArray_Flt[NUC_AUX_MEV2KELVIN] = 1.0 / AuxArray_Flt[NUC_AUX_KELVIN2MEV];
+   AuxArray_Flt[NUC_AUX_M_kB      ] = 0.5*Const_amu/Const_kB*(UNIT_E/UNIT_M);
 
    AuxArray_Int[NUC_AUX_NRHO      ] = g_nrho;
 #  if   ( NUC_TABLE_MODE == NUC_TABLE_MODE_TEMP )
@@ -225,6 +226,7 @@ static real EoS_DensEint2Pres_Nuclear( const real Dens_Code, const real Eint_Cod
    const real sEint2CGS   = AuxArray_Flt[NUC_AUX_VSQR2CGS  ];
    const real Pres2Code   = AuxArray_Flt[NUC_AUX_PRES2CODE ];
    const real MeV2Kelvin  = AuxArray_Flt[NUC_AUX_MEV2KELVIN];
+   const real m_kB        = AuxArray_Flt[NUC_AUX_M_kB      ];
 
    const int  NRho        = AuxArray_Int[NUC_AUX_NRHO      ];
    const int  NTorE       = AuxArray_Int[NUC_AUX_NTORE     ];
@@ -234,11 +236,13 @@ static real EoS_DensEint2Pres_Nuclear( const real Dens_Code, const real Eint_Cod
    const int  NYe_Mode    = AuxArray_Int[NUC_AUX_NYE_MODE  ];
    const int  INt_Scheme  = AuxArray_Int[NUC_AUX_INT_SCHEME];
 
+
+
    int  Mode      = NUC_MODE_ENGY;
    real Dens_CGS  = Dens_Code * Dens2CGS;
    real sEint_CGS = ( Eint_Code / Dens_Code ) * sEint2CGS - EnergyShift;
    real Ye        = Passive_Code[ YE - NCOMP_FLUID ] / Dens_Code;
-   real Temp_MeV  = NULL_REAL;
+   real Temp_MeV  = ( Eint_Code*(2.0/3.0) ) * m_kB / Dens_Code / MeV2Kelvin;
    real Entr      = NULL_REAL;
    real Pres_CGS  = NULL_REAL;
    real Useless   = NULL_REAL;
@@ -365,6 +369,8 @@ static real EoS_DensPres2Eint_Nuclear( const real Dens_Code, const real Pres_Cod
    const real Dens2CGS    = AuxArray_Flt[NUC_AUX_DENS2CGS  ];
    const real Pres2CGS    = AuxArray_Flt[NUC_AUX_PRES2CGS  ];
    const real sEint2Code  = AuxArray_Flt[NUC_AUX_VSQR2CODE ];
+   const real MeV2Kelvin  = AuxArray_Flt[NUC_AUX_MEV2KELVIN];
+   const real m_kB        = AuxArray_Flt[NUC_AUX_M_kB      ];
 
    const int  NRho        = AuxArray_Int[NUC_AUX_NRHO      ];
    const int  NTorE       = AuxArray_Int[NUC_AUX_NTORE     ];
@@ -378,6 +384,7 @@ static real EoS_DensPres2Eint_Nuclear( const real Dens_Code, const real Pres_Cod
    real Dens_CGS  = Dens_Code * Dens2CGS;
    real Pres_CGS  = Pres_Code * Pres2CGS;
    real Ye        = Passive_Code[ YE - NCOMP_FLUID ] / Dens_Code;
+   real Temp_MeV  = m_kB * Pres_Code / Dens_Code / MeV2Kelvin;
    real sEint_CGS = NULL_REAL;
    real Useless   = NULL_REAL;
    int  Err       = NULL_INT;
@@ -400,7 +407,7 @@ static real EoS_DensPres2Eint_Nuclear( const real Dens_Code, const real Pres_Cod
 
 
 // invoke the nuclear EoS driver
-   nuc_eos_C_short( Dens_CGS, &Useless, Ye, &sEint_CGS, &Useless, &Pres_CGS, &Useless, &Useless,
+   nuc_eos_C_short( Dens_CGS, &Temp_MeV, Ye, &sEint_CGS, &Useless, &Pres_CGS, &Useless, &Useless,
                     EnergyShift, NRho, NTorE, NYe, NRho_Mode, NMode, NYe_Mode,
                     Table[NUC_TAB_ALL], Table[NUC_TAB_ALL_MODE], Table[NUC_TAB_RHO], Table[NUC_TAB_TORE], Table[NUC_TAB_YE], 
                     Table[NUC_TAB_RHO_MODE], Table[NUC_TAB_EORT_MODE], Table[NUC_TAB_ENTR_MODE], Table[NUC_TAB_PRES_MODE],
@@ -483,6 +490,8 @@ static real EoS_DensPres2CSqr_Nuclear( const real Dens_Code, const real Pres_Cod
    const real Dens2CGS    = AuxArray_Flt[NUC_AUX_DENS2CGS  ];
    const real Pres2CGS    = AuxArray_Flt[NUC_AUX_PRES2CGS  ];
    const real CsSqr2Code  = AuxArray_Flt[NUC_AUX_VSQR2CODE ];
+   const real MeV2Kelvin  = AuxArray_Flt[NUC_AUX_MEV2KELVIN];
+   const real m_kB        = AuxArray_Flt[NUC_AUX_M_kB      ];
 
    const int  NRho        = AuxArray_Int[NUC_AUX_NRHO      ];
    const int  NTorE       = AuxArray_Int[NUC_AUX_NTORE     ];
@@ -496,6 +505,7 @@ static real EoS_DensPres2CSqr_Nuclear( const real Dens_Code, const real Pres_Cod
    real Dens_CGS = Dens_Code * Dens2CGS;
    real Pres_CGS = Pres_Code * Pres2CGS;
    real Ye       = Passive_Code[ YE - NCOMP_FLUID ] / Dens_Code;
+   real Temp_MeV = m_kB * Pres_Code / Dens_Code / MeV2Kelvin;
    real Cs2_CGS  = NULL_REAL;
    real Useless  = NULL_REAL;
    int  Err      = NULL_INT;
@@ -518,7 +528,7 @@ static real EoS_DensPres2CSqr_Nuclear( const real Dens_Code, const real Pres_Cod
 
 
 // invoke the nuclear EoS driver
-   nuc_eos_C_short( Dens_CGS, &Useless, Ye, &Useless, &Useless, &Pres_CGS, &Cs2_CGS, &Useless,
+   nuc_eos_C_short( Dens_CGS, &Temp_MeV, Ye, &Useless, &Useless, &Pres_CGS, &Cs2_CGS, &Useless,
                     EnergyShift, NRho, NTorE, NYe, NRho_Mode, NMode, NYe_Mode,
                     Table[NUC_TAB_ALL], Table[NUC_TAB_ALL_MODE], Table[NUC_TAB_RHO], Table[NUC_TAB_TORE], Table[NUC_TAB_YE], 
                     Table[NUC_TAB_RHO_MODE], Table[NUC_TAB_EORT_MODE], Table[NUC_TAB_ENTR_MODE], Table[NUC_TAB_PRES_MODE],

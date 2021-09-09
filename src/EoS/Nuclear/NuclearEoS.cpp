@@ -89,8 +89,9 @@ void findtemp_NR_bisection( const real lr, const real lt0, const real ye, const 
 //                                  2 : entropy mode     (coming in with entropy)
 //                                  3 : pressure mode    (coming in with P)
 //                keyerr          : Output error
-//                                  665: fail in finding T (tempearture-based table)
-//                                  667: fail in finding e (energy-based table)
+//                                  669 : bisection failed (only in tempearture-based table)
+//                                  668 : bisection failed (only in tempearture-based table)
+//                                  665 : fail in finding T/e
 //                                  101 : Y_e too high
 //                                  102 : Y_e too low
 //                                  103 : temp too high 
@@ -116,7 +117,7 @@ void nuc_eos_C_short( const real xrho, real *xtemp, const real xye,
                       const int nrho, const int ntoreps, const int nye,
                       const int nrho_mode, const int nmode, const int nye_mode,
                       const real *alltables, const real *alltables_mode,
-                      const real *logrho, const real *logtoreps, const real *yes, 
+                      const real *logrho, const real *logtoreps, const real *yes,
                       const real *logrho_mode, const real *logepsort_mode, 
                       const real *entr_mode, const real *logprss_mode, const real *yes_mode,
                       const int interpol_scheme, const int keymode, int *keyerr, const real rfeps )
@@ -139,8 +140,14 @@ void nuc_eos_C_short( const real xrho, real *xtemp, const real xye,
 #  if   ( NUC_TABLE_MODE == NUC_TABLE_MODE_TEMP )
    real ltoreps   = LOG10( *xtemp );
    real lt0       = NULL_REAL;
-   if      ( *xtemp == *xtemp ) { lt0 = ltoreps; }
-   else if ( *xtemp != *xtemp ) { lt0 = 1.0;     }
+   if ( *xtemp == *xtemp )
+   {
+      lt0 = ltoreps;
+      lt0 = MAX(  MIN( lt0, logtoreps[ntoreps-1] ), logtoreps[0]  );
+   else if ( *xtemp != *xtemp )
+   {
+      lt0 = 1.0;
+   }
 #  elif ( NUC_TABLE_MODE == NUC_TABLE_MODE_ENGY )
    real ltoreps   = LOG10( *xenr + energy_shift );
 #  endif // #elif NUC_TABLE_MODE ... else ...
@@ -207,13 +214,13 @@ void nuc_eos_C_short( const real xrho, real *xtemp, const real xye,
    if ( keymode != NUC_MODE_TEMP ) {
       if ( *keyerr == 0 ) 
       {
-// find temperature from energy, entorpy or pressure
-         findtoreps( lr, var0, xye, &ltoreps, alltables_mode, nrho_mode, nmode, nye_mode, ntoreps,
-                     logrho_mode, mode_arr, yes_mode, logtoreps, interpol_scheme, keymode, keyerr );
-      }
-      if ( *keyerr != 0 ) 
-      {
-// find temperature by Netwon-Rapshon or bisection if above failed
+//// find temperature from energy, entorpy or pressure
+//         findtoreps( lr, var0, xye, &ltoreps, alltables_mode, nrho_mode, nmode, nye_mode, ntoreps,
+//                     logrho_mode, mode_arr, yes_mode, logtoreps, interpol_scheme, keymode, keyerr );
+//      }
+//      if ( *keyerr != 0 ) 
+//      {
+//// find temperature by Netwon-Rapshon or bisection if above failed
          findtemp_NR_bisection( lr, lt0, xye, var0, &ltoreps, nrho, ntoreps, nye, alltables,
                                 logrho, logtoreps, yes, keymode, keyerr, rfeps );
          if ( *keyerr != 0 ) return;
