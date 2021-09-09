@@ -694,9 +694,16 @@ void Aux_Check_Parameter()
       Aux_Error( ERROR_INFO, "EOS_TABULAR is not supported yet !!\n" );
 #  endif
 
-#  if ( EOS == EOS_NUCLEAR  &&  !defined SUPPORT_HDF5 )
-#     error : ERROR : must enable SUPPORT_HDF5 for EOS_NUCLEAR !!
-#  endif
+#  if ( EOS == EOS_NUCLEAR )
+#     if ( !defined SUPPORT_HDF5 )
+#        error : ERROR : must enable SUPPORT_HDF5 for EOS_NUCLEAR !!
+#     endif
+#     if ( !defined NUC_TABLE_MODE )
+#        error : ERROR : must enable NUC_TABLE_MODE for EOS_NUCLEAR !!
+#     elif ( NUC_TABLE_MODE != NUC_TABLE_MODE_TEMP  &&  NUC_TABLE_MODE != NUC_TABLE_MODE_ENGY )
+#        error : ERROR : unspported nuclear eos table type (NUC_TABLE_MODE_TEMP/NUC_TABLE_MODE_ENGY) !!
+#     endif
+#  endif // if ( EOS != EOS_NUCLEAR )
 
 #  ifdef BAROTROPIC_EOS
 #     if ( EOS == EOS_GAMMA  ||  EOS == EOS_NUCLEAR )
