@@ -144,6 +144,7 @@ void nuc_eos_C_short( const real xrho, real *xtemp, const real xye,
    {
       lt0 = ltoreps;
       lt0 = MAX(  MIN( lt0, logtoreps[ntoreps-1] ), logtoreps[0]  );
+   }
    else if ( *xtemp != *xtemp )
    {
       lt0 = 1.0;
