@@ -215,13 +215,13 @@ void nuc_eos_C_short( const real xrho, real *xtemp, const real xye,
    if ( keymode != NUC_MODE_TEMP ) {
       if ( *keyerr == 0 ) 
       {
-//// find temperature from energy, entorpy or pressure
-//         findtoreps( lr, var0, xye, &ltoreps, alltables_mode, nrho_mode, nmode, nye_mode, ntoreps,
-//                     logrho_mode, mode_arr, yes_mode, logtoreps, interpol_scheme, keymode, keyerr );
-//      }
-//      if ( *keyerr != 0 ) 
-//      {
-//// find temperature by Netwon-Rapshon or bisection if above failed
+// find temperature from energy, entorpy or pressure
+         findtoreps( lr, var0, xye, &ltoreps, alltables_mode, nrho_mode, nmode, nye_mode, ntoreps,
+                     logrho_mode, mode_arr, yes_mode, logtoreps, interpol_scheme, keymode, keyerr );
+      }
+      if ( *keyerr != 0 ) 
+      {
+// find temperature by Netwon-Rapshon or bisection if above failed
          findtemp_NR_bisection( lr, lt0, xye, var0, &ltoreps, nrho, ntoreps, nye, alltables,
                                 logrho, logtoreps, yes, keymode, keyerr, rfeps );
          if ( *keyerr != 0 ) return;
