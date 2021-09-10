@@ -112,10 +112,14 @@ void findtoreps( const real x, const real y, const real z,
       iy = (int)( (y - yt[0] )*dyi );
       iz = (int)( (z - zt[0] )*dzi );
 
+      ix = MAX( 1, MIN( ix, nx-2 ) );
+      iy = MAX( 1, MIN( iy, ny-2 ) );
+      iz = MAX( 1, MIN( iz, nz-2 ) );
+
 
       // linear interpolation at boundaries
       if ( ix == 0    || iy == 0    || iz == 0 ||
-           ix >= nx-2 || iy >= ny-2 || iz >= nz-2 )
+           ix == nx-2 || iy == ny-2 || iz == nz-2 )
       {
          findtoreps_bdry( x, y, z, found_ltoreps, alltables_mode, nx, ny, nz, ntoreps,
                           xt, yt, zt, logtoreps, keymode, keyerr );
