@@ -230,7 +230,8 @@ void Init_Load_Parameter()
 #  endif
 #  if ( EOS == EOS_NUCLEAR )
    ReadPara->Add( "NUC_TABLE",                   NUC_TABLE,                        Useless_str,     Useless_str,   Useless_str    );
-   ReadPara->Add( "NUC_EOS_INTERPOL_SCHEME",    &NUC_EOS_INTERPOL_SCHEME,          0,               0,             1              );
+   ReadPara->Add( "NUC_EOS_INTERPOL_TL",        &NUC_EOS_INTERPOL_TL,              0,               0,             1              );
+   ReadPara->Add( "NUC_EOS_INTERPOL_OTHER",     &NUC_EOS_INTERPOL_OTHER,           0,               0,             1              );
 #  endif
    ReadPara->Add( "MINMOD_COEFF",               &MINMOD_COEFF,                    1.5,             1.0,           2.0            );
    ReadPara->Add( "OPT__LR_LIMITER",            &OPT__LR_LIMITER,             LR_LIMITER_DEFAULT, -1,             6              );

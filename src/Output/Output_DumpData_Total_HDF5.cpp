@@ -216,7 +216,6 @@ Procedure for outputting new variables:
 //                2443 : 2021/06/05 --> output git information
 //                2444 : 2021/06/05 --> output UniqueDataID
 //                2445 : 2021/06/17 --> output NFieldStored, NMagStored, and NFieldStoredMax
-//                2446 : 2021/08/24 --> output Nuc_EoS_Interpol_Scheme
 //-------------------------------------------------------------------------------------------------------
 void Output_DumpData_Total_HDF5( const char *FileName )
 {
@@ -2424,7 +2423,6 @@ void FillIn_InputPara( InputPara_t &InputPara, const int NFieldStored, char Fiel
    InputPara.IsoTemp                 = ISO_TEMP;
 #  if ( EOS == EOS_NUCLEAR )
    InputPara.NucTable                = NUC_TABLE;
-   InputPara.Nuc_EoS_Interpol_Scheme = NUC_EOS_INTERPOL_SCHEME;
 #  endif
    InputPara.MinMod_Coeff            = MINMOD_COEFF;
    InputPara.Opt__LR_Limiter         = OPT__LR_LIMITER;
@@ -3269,7 +3267,6 @@ void GetCompound_InputPara( hid_t &H5_TypeID, const int NFieldStored )
    H5Tinsert( H5_TypeID, "IsoTemp",                 HOFFSET(InputPara_t,IsoTemp                ), H5T_NATIVE_DOUBLE  );
 #  if ( EOS == EOS_NUCLEAR )
    H5Tinsert( H5_TypeID, "NucTable",                HOFFSET(InputPara_t,NucTable               ), H5_TypeID_VarStr   );
-   H5Tinsert( H5_TypeID, "Nuc_EoS_Interpol_Scheme", HOFFSET(InputPara_t,Nuc_EoS_Interpol_Scheme), H5T_NATIVE_INT     );
 #  endif
    H5Tinsert( H5_TypeID, "MinMod_Coeff",            HOFFSET(InputPara_t,MinMod_Coeff           ), H5T_NATIVE_DOUBLE  );
    H5Tinsert( H5_TypeID, "Opt__LR_Limiter",         HOFFSET(InputPara_t,Opt__LR_Limiter        ), H5T_NATIVE_INT     );

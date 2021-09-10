@@ -457,7 +457,6 @@ struct InputPara_t
    double IsoTemp;
 #  if ( EOS == EOS_NUCLEAR )
    char  *NucTable;
-   int    Nuc_EoS_Interpol_Scheme;
 #  endif
    double MinMod_Coeff;
    int    Opt__LR_Limiter;

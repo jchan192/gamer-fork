@@ -1850,7 +1850,6 @@ void Check_InputPara( const char *FileName, const int FormatVersion )
    LoadField( "IsoTemp",                 &RS.IsoTemp,                 SID, TID, NonFatal, &RT.IsoTemp,                  1, NonFatal );
 #  if ( EOS == EOS_NUCLEAR )
    LoadField( "NucTable",                &RS.NucTable,                SID, TID, NonFatal,  RT.NucTable,                 1, NonFatal );
-   LoadField( "Nuc_EoS_Interpol_Scheme", &RS.Nuc_EoS_Interpol_Scheme, SID, TID, NonFatal, &RT.Nuc_EoS_Interpol_Scheme,  1, NonFatal );
 #  endif
    LoadField( "MinMod_Coeff",            &RS.MinMod_Coeff,            SID, TID, NonFatal, &RT.MinMod_Coeff,             1, NonFatal );
    LoadField( "Opt__LR_Limiter",         &RS.Opt__LR_Limiter,         SID, TID, NonFatal, &RT.Opt__LR_Limiter,          1, NonFatal );
