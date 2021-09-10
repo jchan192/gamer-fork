@@ -109,8 +109,8 @@ void findtemp_NR_bisection( const real lr, const real lt0, const real ye, const 
 //                                  114 : log(P) too low   (energy-based table)
 //                                  201 : lr  has NaN value
 //                                  202 : xye has NaN value
-//                                  203 : xtemp has NaN value
-//                                  204 : xenr has NaN value
+//                                  203 : xenr has NaN value
+//                                  204 : xtemp has NaN value
 //                                  205 : xent has NaN value
 //                                  206 : xprs has NaN value
 
@@ -137,11 +137,11 @@ void nuc_eos_C_short( const real xrho, real *xtemp, const real xye,
 
    if ( lr >  logrho[nrho-1] )  {  *keyerr = 105;  return;  }
    if ( lr <  logrho[     0] )  {  *keyerr = 106;  return;  }
-   if ( lr != lr             )  {  *keyerr = 202;  return;  }
+   if ( lr != lr             )  {  *keyerr = 201;  return;  }
 
    if ( xye >  yes  [nye -1] )  {  *keyerr = 101;  return;  }
    if ( xye <  yes  [     0] )  {  *keyerr = 102;  return;  }
-   if ( xye != xye           )  {  *keyerr = 201;  return;  }
+   if ( xye != xye           )  {  *keyerr = 202;  return;  }
 
 // find temperature (temperature-based table)
 #  if   ( NUC_TABLE_MODE == NUC_TABLE_MODE_TEMP )
@@ -175,9 +175,9 @@ void nuc_eos_C_short( const real xrho, real *xtemp, const real xye,
          if ( *xenr != *xenr                  )     {  *keyerr = 203;           }
 #     elif ( NUC_TABLE_MODE == NUC_TABLE_MODE_ENGY )
          real leps = LOG10( MAX( *xenr + energy_shift, 1.0 ) );
-         if ( leps > logtoreps[ntoreps-1] )        {  *keyerr = 107;  return;  }
-         if ( leps < logtoreps[        0] )        {  *keyerr = 108;  return;  }
-         if ( *xenr != *xenr              )        {  *keyerr = 203;           }
+         if ( leps > logtoreps[ntoreps-1] )         {  *keyerr = 107;  return;  }
+         if ( leps < logtoreps[        0] )         {  *keyerr = 108;  return;  }
+         if ( *xenr != *xenr              )         {  *keyerr = 203;           }
 #     endif // #elif NUC_TABLE_MODE ... else ...
       }
       break;
@@ -186,16 +186,16 @@ void nuc_eos_C_short( const real xrho, real *xtemp, const real xye,
       {
 #     if   ( NUC_TABLE_MODE == NUC_TABLE_MODE_TEMP )
          real lt  = LOG10( *xtemp );
-         if ( lt > logtoreps[ntoreps-1] )         {  *keyerr = 103; return;  }
-         if ( lt < logtoreps[        0] )         {  *keyerr = 104; return;  }
-         if ( *xtemp != *xtemp          )         {  *keyerr = 204; return;  }
+         if ( lt > logtoreps[ntoreps-1] )           {  *keyerr = 103;  return;  }
+         if ( lt < logtoreps[        0] )           {  *keyerr = 104;  return;  }
+         if ( *xtemp != *xtemp          )           {  *keyerr = 204;  return;  }
 #     elif ( NUC_TABLE_MODE == NUC_TABLE_MODE_ENGY )
          const real lt  = LOG10( *xtemp );
          mode_arr = logepsort_mode;
          var0     = lt;
-         if ( lt > logepsort_mode[nmode-1] )       {  *keyerr = 109; return;  }
-         if ( lt < logepsort_mode[      0] )       {  *keyerr = 110; return;  }
-         if ( *xtemp != *xtemp             )       {  *keyerr = 204; return;  }
+         if ( lt > logepsort_mode[nmode-1] )        {  *keyerr = 109;  return;  }
+         if ( lt < logepsort_mode[      0] )        {  *keyerr = 110;  return;  }
+         if ( *xtemp != *xtemp             )        {  *keyerr = 204;  return;  }
 #     endif // #elif NUC_TABLE_MODE ... else ...
       }
       break;
@@ -205,9 +205,9 @@ void nuc_eos_C_short( const real xrho, real *xtemp, const real xye,
          const real entr = *xent;
          var0            =  entr;
          mode_arr        =  entr_mode;
-         if ( entr > entr_mode[nmode-1] )          {  *keyerr = 111;          }
-         if ( entr < entr_mode[      0] )          {  *keyerr = 112;          }
-         if ( *xent != *xent            )          {  *keyerr = 205; return;  }
+         if ( entr > entr_mode[nmode-1] )           {  *keyerr = 111;           }
+         if ( entr < entr_mode[      0] )           {  *keyerr = 112;           }
+         if ( *xent != *xent            )           {  *keyerr = 205;  return;  }
       }
       break;
 
@@ -216,9 +216,9 @@ void nuc_eos_C_short( const real xrho, real *xtemp, const real xye,
          const real lprs = LOG10( *xprs );
          var0            = lprs;
          mode_arr        = logprss_mode;
-         if ( lprs > logprss_mode[nmode-1] )       {  *keyerr = 113;          }
-         if ( lprs < logprss_mode[      0] )       {  *keyerr = 114;          }
-         if ( *xprs != *xprs               )       {  *keyerr = 205; return;  }
+         if ( lprs > logprss_mode[nmode-1] )        {  *keyerr = 113;           }
+         if ( lprs < logprss_mode[      0] )        {  *keyerr = 114;           }
+         if ( *xprs != *xprs               )        {  *keyerr = 205;  return;  }
       }
       break;
    } // switch ( keymode )
