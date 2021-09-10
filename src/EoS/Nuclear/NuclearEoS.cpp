@@ -218,7 +218,7 @@ void nuc_eos_C_short( const real xrho, real *xtemp, const real xye,
          mode_arr        = logprss_mode;
          if ( lprs > logprss_mode[nmode-1] )        {  *keyerr = 113;           }
          if ( lprs < logprss_mode[      0] )        {  *keyerr = 114;           }
-         if ( *xprs != *xprs               )        {  *keyerr = 205;  return;  }
+         if ( *xprs != *xprs               )        {  *keyerr = 206;  return;  }
       }
       break;
    } // switch ( keymode )
