@@ -924,14 +924,14 @@ void Aux_TakeNote()
 #     if ( EOS == EOS_NUCLEAR )
       fprintf( Note, "NUC_TABLE                       %s\n",      NUC_TABLE               );
 #     if   ( NUC_EOS_INTERPOL_TL == NUC_INTERPOL_LINEAR )
-      fprintf( Note, "NUC_EOS_INTERPOL_TL             NUC_INTERPOL_LINEAR\n" );
+      fprintf( Note, "NUC_EOS_INTERPOL_TL             LINEAR\n" );
 #     elif ( NUC_EOS_INTERPOL_TL == NUC_INTERPOL_CUBIC )
-      fprintf( Note, "NUC_EOS_INTERPOL_TL             NUC_INTERPOL_CUBIC\n" );
+      fprintf( Note, "NUC_EOS_INTERPOL_TL             CUBIC\n" );
 #     endif
 #     if   ( NUC_EOS_INTERPOL_OTHER == NUC_INTERPOL_LINEAR )
-      fprintf( Note, "NUC_EOS_INTERPOL_OTHER          NUC_INTERPOL_LINEAR\n" );
+      fprintf( Note, "NUC_EOS_INTERPOL_OTHER          LINEAR\n" );
 #     elif ( NUC_EOS_INTERPOL_OTHER == NUC_INTERPOL_CUBIC )
-      fprintf( Note, "NUC_EOS_INTERPOL_OTHER          NUC_INTERPOL_CUBIC\n" );
+      fprintf( Note, "NUC_EOS_INTERPOL_OTHER          CUBIC\n" );
 #     endif
 #     endif
       fprintf( Note, "MINMOD_COEFF                    %13.7e\n",  MINMOD_COEFF            );
