@@ -112,7 +112,7 @@ void findtemp_NR_bisection( const real lr, const real lt0, const real ye, const 
    nuc_eos_C_linterp_for_temp( lr, lt, ye, &var, alltables, nrho, ntemp, nye,
                                logrho, logtemp, yes, &dvardlt, keymode );
 
-   if( fabs( var-var0 ) < prec*fabs( var0 ) ) {
+   if( FABS( var-var0 ) < prec*FABS( var0 ) ) {
       *ltout = lt0;
       return;
    }
@@ -182,10 +182,6 @@ void findtemp_NR_bisection( const real lr, const real lt0, const real ye, const 
          *ltout = ( logtemp[itemp] - logtemp[itemp-1] )/( vart2 - vart1 )*
                   ( var0 - vart1 ) + logtemp[itemp-1];
 
-#     if DEBUG
-         fprintf(stderr,"it: %d, bracketed solution\n", it);
-#     endif
-
          return;
 
       }
@@ -202,11 +198,7 @@ void findtemp_NR_bisection( const real lr, const real lt0, const real ye, const 
    nuc_eos_C_linterp_for_temp( lr, lt, ye, &var, alltables, nrho, ntemp, nye,
                                logrho, logtemp, yes, &dvardlt, keymode );
 
-#  if DEBUG
-   fprintf(stderr,"findtemp it: %d, err: %15.6E \n", it, fabs((var-var0) / var0));
-#  endif
-
-   if( fabs( var - var0 ) < prec*fabs( var0 ) ) {
+   if( FABS( var - var0 ) < prec*FABS( var0 ) ) {
       *ltout = lt;
       return;
    }
@@ -215,7 +207,7 @@ void findtemp_NR_bisection( const real lr, const real lt0, const real ye, const 
 // root (prs-prs0)=0, we are switching to
 // the secant method, since the table is rather coarse and the
 // derivatives may be garbage.
-      if ( fabs( var - var0 ) < 1.0e-3*fabs( var0 ) ) {
+      if ( FABS( var - var0 ) < 1.0e-3*FABS( var0 ) ) {
          dvardlt = ( var - var1 )/( lt - lt1 );
       }
 
@@ -224,14 +216,8 @@ void findtemp_NR_bisection( const real lr, const real lt0, const real ye, const 
 
    if ( it >= itmax-1 ) {
 // try bisection
-#     if DEBUG
-      fprintf(stderr,"trying bisection\n");
-#     endif
       bisection( lr, lt0, ye, var0, ltout, nrho, ntemp, nye,
                  alltables, logrho, logtemp, yes, keymode, keyerr, prec );
-#     if DEBUG
-      fprintf( stderr, "bisection keyerr: %d\n", *keyerr);
-#     endif
       return;
    }
 
@@ -500,11 +486,6 @@ void bisection( const real lr, const real lt0, const real ye, const real var0,
       f1 = f1a[iv] - var0;
       f2 = f2a[iv] - var0;
 
-#  if DEBUG
-   // fprintf( stderr, "bisection bracketing it %d, f1: %15.6E, f2: %15.6E, lt1: %15.6E, lt2: %15.6E, f1a: %18.11E, f2a: %18.11E var0: %18.11E\n",
-   //          bcount, f1, f2, lt1, lt2, f1a[iv], f2a[iv], var0 );
-#  endif
-
       bcount++;
       if( bcount >= maxbcount ) {
          *keyerr = 668;
@@ -530,12 +511,7 @@ void bisection( const real lr, const real lt0, const real ye, const real var0,
       fmid = f2a[iv] - var0;
       if ( fmid <= 0.0 ) lt=ltmid;
 
-#     if DEBUG
-      // fprintf( stderr, "bisection step 2 it %d, fmid: %15.6E ltmid: %15.6E dlt: %15.6E\n",
-      //          it, fmid, dlt, ltmid );
-#     endif
-
-      if( fabs( (real)1.0 - f2a[iv]/var0 ) <= (real)prec ) {
+      if( FABS( (real)1.0 - f2a[iv]/var0 ) <= (real)prec ) {
          *ltout = ltmid;
          return;
       }

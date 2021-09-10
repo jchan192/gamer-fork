@@ -185,6 +185,11 @@ void Aux_TakeNote()
       fprintf( Note, "EOS                             EOS_ISOTHERMAL\n" );
 #     elif ( EOS == EOS_NUCLEAR )
       fprintf( Note, "EOS                             EOS_NUCLEAR\n" );
+#     if   ( NUC_TABLE_MODE == NUC_TABLE_MODE_TEMP )
+      fprintf( Note, "NUC_TABLE_MODE                  NUC_TABLE_MODE_TEMP\n" );
+#     elif ( NUC_TABLE_MODE == NUC_TABLE_MODE_ENGY )
+      fprintf( Note, "NUC_TABLE_MODE                  NUC_TABLE_MODE_ENGY\n" );
+#     endif
 #     elif ( EOS == EOS_TABULAR )
       fprintf( Note, "EOS                             EOS_TABULAR\n" );
 #     elif ( EOS == EOS_USER )
@@ -917,9 +922,17 @@ void Aux_TakeNote()
       fprintf( Note, "MOLECULAR_WEIGHT                %13.7e\n",  MOLECULAR_WEIGHT        );
       fprintf( Note, "ISO_TEMP                        %13.7e\n",  ISO_TEMP                );
 #     if ( EOS == EOS_NUCLEAR )
-      fprintf( Note, "NUC_TABLE_MODE                  %d\n",      NUC_TABLE_MODE          );
       fprintf( Note, "NUC_TABLE                       %s\n",      NUC_TABLE               );
-      fprintf( Note, "NUC_EOS_INTERPOL_SCHEME         %d\n",      NUC_EOS_INTERPOL_SCHEME );
+#     if   ( NUC_EOS_INTERPOL_TL == NUC_INTERPOL_LINEAR )
+      fprintf( Note, "NUC_EOS_INTERPOL_TL             NUC_INTERPOL_LINEAR\n" );
+#     elif ( NUC_EOS_INTERPOL_TL == NUC_INTERPOL_CUBIC )
+      fprintf( Note, "NUC_EOS_INTERPOL_TL             NUC_INTERPOL_CUBIC\n" );
+#     endif
+#     if   ( NUC_EOS_INTERPOL_OTHER == NUC_INTERPOL_LINEAR )
+      fprintf( Note, "NUC_EOS_INTERPOL_OTHER          NUC_INTERPOL_LINEAR\n" );
+#     elif ( NUC_EOS_INTERPOL_OTHER == NUC_INTERPOL_CUBIC )
+      fprintf( Note, "NUC_EOS_INTERPOL_OTHER          NUC_INTERPOL_CUBIC\n" );
+#     endif
 #     endif
       fprintf( Note, "MINMOD_COEFF                    %13.7e\n",  MINMOD_COEFF            );
       fprintf( Note, "OPT__LR_LIMITER                 %s\n",      ( OPT__LR_LIMITER == LR_LIMITER_VANLEER    ) ? "VANLEER"    :

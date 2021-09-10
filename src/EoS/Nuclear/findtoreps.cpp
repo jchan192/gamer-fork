@@ -16,7 +16,7 @@ void findtoreps( const real x, const real y, const real z,
                  real *found_lt, const real *alltables_mode,
                  const int nx, const int ny, const int nz, const int ntemp,
                  const real *xt, const real *yt, const real *zt, const real *logtoreps,
-                 const int interpol_scheme, const int keymode, int *keyerr );
+                 const int interpol_TL, const int keymode, int *keyerr );
 #endif
 
 
@@ -47,7 +47,7 @@ void findtoreps( const real x, const real y, const real z,
 //                yt             : Vector of y-coordinates of table
 //                zt             : Vector of z-coordinates of table
 //                logtoreps      : log(T)/log(energy) array in the table
-//                interpol_scheme: interpolation schemes (linear/cubic)
+//                interpol_TL    : interpolation schemes for table look-ups (linear/cubic)
 //                keymode        : Which mode we will use
 //                                 --> 1: Energy mode   (coming in with internal energy)
 //                                     2: Entropy mode  (coming in with entropy)
@@ -61,17 +61,17 @@ void findtoreps( const real x, const real y, const real z,
                  real *found_ltoreps, const real *alltables_mode,
                  const int nx, const int ny, const int nz, const int ntoreps,
                  const real *xt, const real *yt, const real *zt, const real *logtoreps,
-                 const int interpol_scheme, const int keymode, int *keyerr )
+                 const int interpol_TL, const int keymode, int *keyerr )
 {
 
 
-   if      ( interpol_scheme == NUC_INTERPOL_LINEAR )
+   if      ( interpol_TL == NUC_INTERPOL_LINEAR )
    {
       findtoreps_bdry( x, y, z, found_ltoreps, alltables_mode, nx, ny, nz, ntoreps,
                        xt, yt, zt, logtoreps, keymode, keyerr );
       return;
    }
-   else if ( interpol_scheme == NUC_INTERPOL_CUBIC  )
+   else if ( interpol_TL == NUC_INTERPOL_CUBIC  )
    {
       const real *pv = NULL;
 
@@ -115,7 +115,7 @@ void findtoreps( const real x, const real y, const real z,
 
       // linear interpolation at boundaries
       if ( ix == 0    || iy == 0    || iz == 0 ||
-           ix == nx-2 || iy == ny-2 || iz == nz-2 )
+           ix >= nx-2 || iy >= ny-2 || iz >= nz-2 )
       {
          findtoreps_bdry( x, y, z, found_ltoreps, alltables_mode, nx, ny, nz, ntoreps,
                           xt, yt, zt, logtoreps, keymode, keyerr );
