@@ -97,14 +97,10 @@ void nuc_eos_C_cubinterp_some( const real x, const real y, const real z,
    iy = (int)( ( y - yt[0] )*dyi );
    iz = (int)( ( z - zt[0] )*dzi );
 
-   ix = MAX( 0, MIN( ix, nx-2 ) );
-   iy = MAX( 0, MIN( iy, ny-2 ) );
-   iz = MAX( 0, MIN( iz, nz-2 ) );
-
 
 // linear interpolation at boundaries
    if ( ix == 0  ||  iy == 0  ||  iz == 0  ||
-        ix == nx-2  ||  iy == ny-2  ||  iz == nz-2 )
+        ix >= nx-2  ||  iy >= ny-2  ||  iz >= nz-2 )
    {
       nuc_eos_C_linterp_some( x, y, z, output_vars, alltables,
                               nx, ny, nz, nvars, xt, yt, zt );
