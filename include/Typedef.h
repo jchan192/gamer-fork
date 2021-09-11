@@ -402,6 +402,15 @@ const PatchType_t
    PATCH_LEAF_PLUS_MAXNONLEAF = 3;
 
 
+// Nuclear EoS interpolation schemes
+#if ( MODEL == HYDRO && EOS == EOS_NUCLEAR )
+typedef int NucEoSInterpol_t;
+const NucEoSInterpol_t
+   NUC_INTERPOL_LINEAR = 0,
+   NUC_INTERPOL_CUBIC  = 1;
+#endif
+
+
 // function pointers
 typedef real (*EoS_DE2P_t)( const real Dens, const real Eint, const real Passive[],
                             const double AuxArray_Flt[], const int AuxArray_Int[],
