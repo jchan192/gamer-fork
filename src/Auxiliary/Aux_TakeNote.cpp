@@ -923,16 +923,14 @@ void Aux_TakeNote()
       fprintf( Note, "ISO_TEMP                        %13.7e\n",  ISO_TEMP                );
 #     if ( EOS == EOS_NUCLEAR )
       fprintf( Note, "NUC_TABLE                       %s\n",      NUC_TABLE               );
-#     if   ( NUC_EOS_INTERPOL_TL == NUC_INTERPOL_LINEAR )
-      fprintf( Note, "NUC_EOS_INTERPOL_TL             LINEAR\n" );
-#     elif ( NUC_EOS_INTERPOL_TL == NUC_INTERPOL_CUBIC )
-      fprintf( Note, "NUC_EOS_INTERPOL_TL             CUBIC\n" );
-#     endif
-#     if   ( NUC_EOS_INTERPOL_OTHER == NUC_INTERPOL_LINEAR )
-      fprintf( Note, "NUC_EOS_INTERPOL_OTHER          LINEAR\n" );
-#     elif ( NUC_EOS_INTERPOL_OTHER == NUC_INTERPOL_CUBIC )
-      fprintf( Note, "NUC_EOS_INTERPOL_OTHER          CUBIC\n" );
-#     endif
+      if      ( NUC_EOS_INTERPOL_TL == NUC_INTERPOL_LINEAR ) {
+      fprintf( Note, "NUC_EOS_INTERPOL_TL             LINEAR\n" ); }
+      else if ( NUC_EOS_INTERPOL_TL == NUC_INTERPOL_CUBIC )  {
+      fprintf( Note, "NUC_EOS_INTERPOL_TL             CUBIC\n" );  }
+      if      ( NUC_EOS_INTERPOL_OTHER == NUC_INTERPOL_LINEAR ) {
+      fprintf( Note, "NUC_EOS_INTERPOL_OTHER          LINEAR\n" ); }
+      else if ( NUC_EOS_INTERPOL_OTHER == NUC_INTERPOL_CUBIC )  {
+      fprintf( Note, "NUC_EOS_INTERPOL_OTHER          CUBIC\n" );  }
 #     endif
       fprintf( Note, "MINMOD_COEFF                    %13.7e\n",  MINMOD_COEFF            );
       fprintf( Note, "OPT__LR_LIMITER                 %s\n",      ( OPT__LR_LIMITER == LR_LIMITER_VANLEER    ) ? "VANLEER"    :
