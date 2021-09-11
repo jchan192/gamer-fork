@@ -32,8 +32,6 @@
 // Interpolation schemes
 #define NUC_AUX_INT_TL        6     // AuxArray_Int: interpolation scheme for table look-ups
 #define NUC_AUX_INT_OTHER     7     // AuxArray_Int: interpolation scheme for other thermodynamic variables
-#define NUC_INTERPOL_LINEAR   0     // linear interpolation
-#define NUC_INTERPOL_CUBIC    1     // cubic  interpolation
 
 
 // table indices
