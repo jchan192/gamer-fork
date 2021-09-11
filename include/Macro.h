@@ -84,6 +84,11 @@
 #define NUC_TABLE_MODE_ENGY 1
 
 
+// nuclear eos interpolation schemes
+#define NUC_INTERPOL_LINEAR   0     // linear interpolation
+#define NUC_INTERPOL_CUBIC    1     // cubic  interpolation
+
+
 // neutrino updating schemes
 #define LIGHTBULB    1
 #define IDSA         2
