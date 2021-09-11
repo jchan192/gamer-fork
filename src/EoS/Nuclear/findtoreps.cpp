@@ -112,9 +112,9 @@ void findtoreps( const real x, const real y, const real z,
       iy = (int)( (y - yt[0] )*dyi );
       iz = (int)( (z - zt[0] )*dzi );
 
-      ix = MAX( 1, MIN( ix, nx-2 ) );
-      iy = MAX( 1, MIN( iy, ny-2 ) );
-      iz = MAX( 1, MIN( iz, nz-2 ) );
+      ix = MAX( 0, MIN( ix, nx-2 ) );
+      iy = MAX( 0, MIN( iy, ny-2 ) );
+      iz = MAX( 0, MIN( iz, nz-2 ) );
 
 
       // linear interpolation at boundaries
