@@ -189,6 +189,8 @@ void Aux_TakeNote()
       fprintf( Note, "NUC_TABLE_MODE                  NUC_TABLE_MODE_TEMP\n" );
 #     elif ( NUC_TABLE_MODE == NUC_TABLE_MODE_ENGY )
       fprintf( Note, "NUC_TABLE_MODE                  NUC_TABLE_MODE_ENGY\n" );
+#     else
+      fprintf( Note, "NUC_TABLE_MODE                  UNKNOWN\n" );
 #     endif
 #     elif ( EOS == EOS_TABULAR )
       fprintf( Note, "EOS                             EOS_TABULAR\n" );

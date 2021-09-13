@@ -701,7 +701,7 @@ void Aux_Check_Parameter()
 #     if ( !defined NUC_TABLE_MODE )
 #        error : ERROR : must enable NUC_TABLE_MODE for EOS_NUCLEAR !!
 #     elif ( NUC_TABLE_MODE != NUC_TABLE_MODE_TEMP  &&  NUC_TABLE_MODE != NUC_TABLE_MODE_ENGY )
-#        error : ERROR : unspported nuclear eos table type (NUC_TABLE_MODE_TEMP/NUC_TABLE_MODE_ENGY) !!
+#        error : ERROR : unsupported nuclear EoS table type (NUC_TABLE_MODE_TEMP/NUC_TABLE_MODE_ENGY) !!
 #     endif
 #  endif // if ( EOS != EOS_NUCLEAR )
 

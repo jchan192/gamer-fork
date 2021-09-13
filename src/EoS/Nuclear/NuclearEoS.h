@@ -40,7 +40,7 @@
 #define NUC_TAB_RHO           2     // logrho
 #define NUC_TAB_TORE          3     // logtemp/logenergy
 #define NUC_TAB_YE            4     // yes
-#define NUC_TAB_RHO_MODE      5     // logrho_mode 
+#define NUC_TAB_RHO_MODE      5     // logrho_mode
 #define NUC_TAB_EORT_MODE     6     // logenergy_mode/logtemp_mode
 #define NUC_TAB_ENTR_MODE     7     // entr_mode
 #define NUC_TAB_PRES_MODE     8     // logprss_mode

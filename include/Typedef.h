@@ -402,8 +402,8 @@ const PatchType_t
    PATCH_LEAF_PLUS_MAXNONLEAF = 3;
 
 
-// Nuclear EoS interpolation schemes
-#if ( MODEL == HYDRO && EOS == EOS_NUCLEAR )
+// nuclear EoS interpolation schemes
+#if ( MODEL == HYDRO  &&  EOS == EOS_NUCLEAR )
 typedef int NucEoSInterpol_t;
 const NucEoSInterpol_t
    NUC_INTERPOL_LINEAR = 1,

@@ -30,7 +30,7 @@ void findtoreps( const real x, const real y, const real z,
 //                                    pressure mode (3)
 //
 // Note        :  1. Use 3D Catmull-Rom cubic interpolation formula
-//                   to search the corresponding temperature/energy given 
+//                   to search the corresponding temperature/energy given
 //                   (rho, (eps, T, entropy, P), Y_e)
 //                2. Invoked by nuc_eos_C_short()
 //
@@ -355,7 +355,7 @@ void findtoreps_bdry( const real x, const real y, const real z,
                   + a[6]*dely*delz
                   + a[7]*delx*dely*delz;
 
-   if ( *found_ltoreps != *found_ltoreps || 
+   if ( *found_ltoreps != *found_ltoreps ||
         ! ( *found_ltoreps>logtoreps[0] && *found_ltoreps<logtoreps[ntoreps-1] )  )
       *keyerr = 665;
 

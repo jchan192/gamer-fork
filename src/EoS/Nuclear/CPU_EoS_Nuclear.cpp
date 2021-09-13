@@ -57,7 +57,7 @@ void nuc_eos_C_short( const real xrho, real *xtemp, const real xye,
                       const real *alltables, const real *alltables_mode,
                       const real *logrho, const real *logtoreps, const real *yes, const real *logrho_mode,
                       const real *logepsort_mode, const real *entr_mode, const real *logprss_mode, const real *yes_mode,
-                      const int interpol_TL, const int interpol_other, 
+                      const int interpol_TL, const int interpol_other,
                       const int keymode, int *keyerr, const real rfeps );
 void nuc_eos_C_ReadTable( char *nuceos_table_name );
 void CUAPI_PassNuclearEoSTable2GPU();
@@ -272,7 +272,7 @@ static real EoS_DensEint2Pres_Nuclear( const real Dens_Code, const real Eint_Cod
 // invoke the nuclear EoS driver
    nuc_eos_C_short( Dens_CGS, &Temp_MeV, Ye, &sEint_CGS, &Entr, &Pres_CGS, &Useless, &Useless,
                     EnergyShift, NRho, NTorE, NYe, NRho_Mode, NMode, NYe_Mode,
-                    Table[NUC_TAB_ALL], Table[NUC_TAB_ALL_MODE], Table[NUC_TAB_RHO], Table[NUC_TAB_TORE], Table[NUC_TAB_YE], 
+                    Table[NUC_TAB_ALL], Table[NUC_TAB_ALL_MODE], Table[NUC_TAB_RHO], Table[NUC_TAB_TORE], Table[NUC_TAB_YE],
                     Table[NUC_TAB_RHO_MODE], Table[NUC_TAB_EORT_MODE], Table[NUC_TAB_ENTR_MODE], Table[NUC_TAB_PRES_MODE],
                     Table[NUC_TAB_YE_MODE], INt_TL, INt_Other, Mode, &Err, Tolerance );
 
@@ -413,7 +413,7 @@ static real EoS_DensPres2Eint_Nuclear( const real Dens_Code, const real Pres_Cod
 // invoke the nuclear EoS driver
    nuc_eos_C_short( Dens_CGS, &Temp_MeV, Ye, &sEint_CGS, &Useless, &Pres_CGS, &Useless, &Useless,
                     EnergyShift, NRho, NTorE, NYe, NRho_Mode, NMode, NYe_Mode,
-                    Table[NUC_TAB_ALL], Table[NUC_TAB_ALL_MODE], Table[NUC_TAB_RHO], Table[NUC_TAB_TORE], Table[NUC_TAB_YE], 
+                    Table[NUC_TAB_ALL], Table[NUC_TAB_ALL_MODE], Table[NUC_TAB_RHO], Table[NUC_TAB_TORE], Table[NUC_TAB_YE],
                     Table[NUC_TAB_RHO_MODE], Table[NUC_TAB_EORT_MODE], Table[NUC_TAB_ENTR_MODE], Table[NUC_TAB_PRES_MODE],
                     Table[NUC_TAB_YE_MODE], INt_TL, INt_Other, Mode, &Err, Tolerance );
 
@@ -535,7 +535,7 @@ static real EoS_DensPres2CSqr_Nuclear( const real Dens_Code, const real Pres_Cod
 // invoke the nuclear EoS driver
    nuc_eos_C_short( Dens_CGS, &Temp_MeV, Ye, &Useless, &Useless, &Pres_CGS, &Cs2_CGS, &Useless,
                     EnergyShift, NRho, NTorE, NYe, NRho_Mode, NMode, NYe_Mode,
-                    Table[NUC_TAB_ALL], Table[NUC_TAB_ALL_MODE], Table[NUC_TAB_RHO], Table[NUC_TAB_TORE], Table[NUC_TAB_YE], 
+                    Table[NUC_TAB_ALL], Table[NUC_TAB_ALL_MODE], Table[NUC_TAB_RHO], Table[NUC_TAB_TORE], Table[NUC_TAB_YE],
                     Table[NUC_TAB_RHO_MODE], Table[NUC_TAB_EORT_MODE], Table[NUC_TAB_ENTR_MODE], Table[NUC_TAB_PRES_MODE],
                     Table[NUC_TAB_YE_MODE], INt_TL, INt_Other, Mode, &Err, Tolerance );
 
@@ -758,7 +758,7 @@ static void EoS_General_Nuclear( const int Mode, real Out[], const real In[], co
 //       invoke the nuclear EoS driver
          nuc_eos_C_short( Dens_CGS, &Temp_MeV, Ye, &sEint_CGS, &Entr, &Pres_CGS, &Useless, &Useless,
                           EnergyShift, NRho, NTorE, NYe, NRho_Mode, NMode, NYe_Mode,
-                          Table[NUC_TAB_ALL], Table[NUC_TAB_ALL_MODE], Table[NUC_TAB_RHO], Table[NUC_TAB_TORE], Table[NUC_TAB_YE], 
+                          Table[NUC_TAB_ALL], Table[NUC_TAB_ALL_MODE], Table[NUC_TAB_RHO], Table[NUC_TAB_TORE], Table[NUC_TAB_YE],
                           Table[NUC_TAB_RHO_MODE], Table[NUC_TAB_EORT_MODE], Table[NUC_TAB_ENTR_MODE], Table[NUC_TAB_PRES_MODE],
                           Table[NUC_TAB_YE_MODE], INt_TL, INt_Other, Mode, &Err, Tolerance );
 
@@ -850,7 +850,7 @@ static void EoS_General_Nuclear( const int Mode, real Out[], const real In[], co
 //       invoke the nuclear EoS driver
          nuc_eos_C_short( Dens_CGS, &Useless, Ye, &sEint_CGS, &Entr, &Useless, &Useless, &Useless,
                           EnergyShift, NRho, NTorE, NYe, NRho_Mode, NMode, NYe_Mode,
-                          Table[NUC_TAB_ALL], Table[NUC_TAB_ALL_MODE], Table[NUC_TAB_RHO], Table[NUC_TAB_TORE], Table[NUC_TAB_YE], 
+                          Table[NUC_TAB_ALL], Table[NUC_TAB_ALL_MODE], Table[NUC_TAB_RHO], Table[NUC_TAB_TORE], Table[NUC_TAB_YE],
                           Table[NUC_TAB_RHO_MODE], Table[NUC_TAB_EORT_MODE], Table[NUC_TAB_ENTR_MODE], Table[NUC_TAB_PRES_MODE],
                           Table[NUC_TAB_YE_MODE], INt_TL, INt_Other, Mode, &Err, Tolerance );
 

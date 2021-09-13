@@ -56,7 +56,7 @@ void nuc_eos_C_linterp_some( const real x, const real y, const real z,
 //                lt0         : log(T0) (initial guess of T)
 //                ye          : Ye
 //                varin       : Input variable (eps, e or P)
-//                ltout       : Ouput temperature                
+//                ltout       : Output temperature
 //                logrho      : logrho array in the table
 //                logtemp     : logtemp array in the table
 //                yes         : Ye array in the table
@@ -247,7 +247,7 @@ real linterp2D( const real* xs, const real* ys, const real* fs, const real x, co
 {
 
 
-//  2     3 
+//  2     3
 //
 //  0     1
 //
@@ -267,7 +267,7 @@ real linterp2D( const real* xs, const real* ys, const real* fs, const real x, co
 //-------------------------------------------------------------------------------------
 // Function    :  nuc_eos_C_linterp_for_temp
 // Description :  Interpolation of a function of three variables in an
-//                equidistant(!!!) table. 
+//                equidistant(!!!) table.
 //                method:  8-point Lagrange linear interpolation formula
 //
 // Note        :  1. Invoked by findtemp_NR_bisection()
@@ -300,7 +300,7 @@ void nuc_eos_C_linterp_for_temp( const real x, const real y, const real z,
    real fh[8], delx, dely, delz, a[8];
    real dx, dy, dz, dxi, dyi, dzi, dxyi, dxzi, dyzi, dxyzi;
    int  ix, iy, iz;
-   
+
 // determine spacing parameters of equidistant (!!!) table
    dx = ( xt[nx-1] - xt[0] )/( (real)1.0*(nx-1) );
    dy = ( yt[ny-1] - yt[0] )/( (real)1.0*(ny-1) );
@@ -372,7 +372,7 @@ void nuc_eos_C_linterp_for_temp( const real x, const real y, const real z,
 
    *dvardlt = -a[2];
 
-   *f = a[0] 
+   *f = a[0]
       + a[1] * delx
       + a[2] * dely
       + a[3] * delz
@@ -401,7 +401,7 @@ void nuc_eos_C_linterp_for_temp( const real x, const real y, const real z,
 //                lt0         : log(T0) (initial guess of T)
 //                ye          : Ye
 //                var0        : Input variable (eps, e or P)
-//                ltout       : Ouput temperature                
+//                ltout       : Output temperature
 //                logrho      : logrho array in the table
 //                logtemp     : logtemp array in the table
 //                yes         : Ye array in the table
@@ -415,7 +415,7 @@ void nuc_eos_C_linterp_for_temp( const real x, const real y, const real z,
 //-------------------------------------------------------------------------------------
 GPU_DEVICE
 void bisection( const real lr, const real lt0, const real ye, const real var0,
-                real* ltout, const int nrho, const int ntemp, const int nye, 
+                real* ltout, const int nrho, const int ntemp, const int nye,
                 const real *alltables, const real *logrho, const real *logtemp, const real *yes,
                 const int keymode, int* keyerr, const real prec )
 {
@@ -431,7 +431,6 @@ void bisection( const real lr, const real lt0, const real ye, const real var0,
    real ltmin = logtemp[0];
    real ltmax = logtemp[ntemp-1];
    double f1, f2, fmid, dlt, ltmid;
-   real dvardlt;
    real f1a[3] = {0.0};
    real f2a[3] = {0.0};
 
@@ -465,7 +464,7 @@ void bisection( const real lr, const real lt0, const real ye, const real var0,
 #  endif
 
    while( f1*f2 >= 0.0 ) {
-     
+
       lt1 = LOG10( MIN( POW( (real)10.0, ltmax ), ( 1.2 )*( POW( (real)10.0, lt1 ) ) ) );
       lt2 = LOG10( MAX( POW( (real)10.0, ltmin ), ( 0.8 )*( POW( (real)10.0, lt2 ) ) ) );
       nuc_eos_C_linterp_some( lr, lt1, ye, f1a, alltables,
@@ -506,7 +505,7 @@ void bisection( const real lr, const real lt0, const real ye, const real var0,
    for ( it=0; it<itmax; it++ ) {
       dlt   = LOG10( POW( (real)10.0, dlt )*(real)0.5 );
       ltmid = LOG10( POW( (real)10.0, lt ) + POW( (real)10.0, dlt ) );
-      nuc_eos_C_linterp_some( lr, ltmid, ye, f2a, alltables, 
+      nuc_eos_C_linterp_some( lr, ltmid, ye, f2a, alltables,
                                 nrho, ntemp, nye, nvars, logrho, logtemp, yes );
       fmid = f2a[iv] - var0;
       if ( fmid <= 0.0 ) lt=ltmid;

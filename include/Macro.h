@@ -1010,6 +1010,10 @@
 #  if ( FLU_SCHEME != MHM  &&  FLU_SCHEME != MHM_RP  &&  FLU_SCHEME != CTU )
 #  undef RSOLVER
 #  endif
+
+#  if ( EOS != EOS_NUCLEAR )
+#  undef NUC_TABLE_MODE
+#  endif
 #endif
 
 #if ( MODEL == PAR_ONLY )

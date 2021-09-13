@@ -43,7 +43,7 @@ extern real  *g_yes_mode;
 extern int    g_ntemp;
 extern real  *g_logtemp;
 extern real  *g_logeps_mode;
-#elif ( NUC_TABLE_MODE == NUC_TABLE_MODE_ENGY ) 
+#elif ( NUC_TABLE_MODE == NUC_TABLE_MODE_ENGY )
 extern int    g_neps;
 extern real  *g_logeps;
 extern real  *g_logtemp_mode;
@@ -137,7 +137,7 @@ void nuc_eos_C_ReadTable( char *nuceos_table_name )
 #  elif ( NUC_TABLE_MODE == NUC_TABLE_MODE_ENGY )
    int n_def_mode = g_neps;
 #  endif
- 
+
 
 // allocate memory for tables
    real *alltables_tmp      = NULL;
@@ -145,7 +145,7 @@ void nuc_eos_C_ReadTable( char *nuceos_table_name )
 
    if (  ! ( alltables_tmp       = (real*)malloc(g_nrho*n_def_mode*g_nye*NUC_TABLE_NVAR*sizeof(real)) )  )
       Aux_Error( ERROR_INFO, "cannot allocate memory for EOS table !!\n" );
-   
+
    if (  ! ( g_alltables         = (real*)malloc(g_nrho*n_def_mode*g_nye*NUC_TABLE_NVAR*sizeof(real)) )  )
       Aux_Error( ERROR_INFO, "cannot allocate memory for EOS table !!\n" );
 
@@ -160,7 +160,7 @@ void nuc_eos_C_ReadTable( char *nuceos_table_name )
 
    if (  ! ( g_yes               = (real*)malloc(g_nye                                 *sizeof(real)) )  )
       Aux_Error( ERROR_INFO, "cannot allocate memory for EOS table !!\n" );
- 
+
    if (  ! ( g_logrho_mode       = (real*)malloc(g_nrho_mode                           *sizeof(real)) )  )
       Aux_Error( ERROR_INFO, "cannot allocate memory for EOS table !!\n" );
 

@@ -40,7 +40,7 @@ void findtemp_NR_bisection( const real lr, const real lt0, const real ye, const 
 // Function    :  nuc_eos_C_short
 // Description :  Function to find thermodynamic varibles by searching
 //                a pre-calculated nuclear equation of state table
-// 
+//
 // Note        :  1. It will strictly return values in cgs or MeV
 //                2. Four modes are supported
 //                3. The defalut mode is temperature (1) mode
@@ -95,7 +95,7 @@ void findtemp_NR_bisection( const real lr, const real lt0, const real ye, const 
 //                                  665 : fail in finding T/e
 //                                  101 : Y_e too high
 //                                  102 : Y_e too low
-//                                  103 : temp too high 
+//                                  103 : temp too high
 //                                  104 : temp too low
 //                                  105 : rho too high
 //                                  106 : rho too low
@@ -124,7 +124,7 @@ void nuc_eos_C_short( const real xrho, real *xtemp, const real xye,
                       const int nrho_mode, const int nmode, const int nye_mode,
                       const real *alltables, const real *alltables_mode,
                       const real *logrho, const real *logtoreps, const real *yes,
-                      const real *logrho_mode, const real *logepsort_mode, 
+                      const real *logrho_mode, const real *logepsort_mode,
                       const real *entr_mode, const real *logprss_mode, const real *yes_mode,
                       const int interpol_TL, const int interpol_other,
                       const int keymode, int *keyerr, const real rfeps )
@@ -226,13 +226,13 @@ void nuc_eos_C_short( const real xrho, real *xtemp, const real xye,
 
 #  if   ( NUC_TABLE_MODE == NUC_TABLE_MODE_TEMP )
    if ( keymode != NUC_MODE_TEMP ) {
-      if ( *keyerr == 0 ) 
+      if ( *keyerr == 0 )
       {
 // find temperature from energy, entorpy or pressure
          findtoreps( lr, var0, xye, &ltoreps, alltables_mode, nrho_mode, nmode, nye_mode, ntoreps,
                      logrho_mode, mode_arr, yes_mode, logtoreps, interpol_TL, keymode, keyerr );
       }
-      if ( *keyerr != 0 ) 
+      if ( *keyerr != 0 )
       {
 // find temperature by Netwon-Rapshon or bisection if above failed
          findtemp_NR_bisection( lr, lt0, xye, var0, &ltoreps, nrho, ntoreps, nye, alltables,
@@ -242,7 +242,7 @@ void nuc_eos_C_short( const real xrho, real *xtemp, const real xye,
    }
 #  elif ( NUC_TABLE_MODE == NUC_TABLE_MODE_ENGY )
    if ( *keyerr != 0 ) return;
-   if ( keymode != NUC_MODE_ENGY ) 
+   if ( keymode != NUC_MODE_ENGY )
    {
 // find energy from temperature, entorpy or pressure
       findtoreps( lr, var0, xye, &ltoreps, alltables_mode, nrho_mode, nmode, nye_mode, ntoreps,
