@@ -79,6 +79,11 @@
 #define EOS_USER        5
 
 
+// nuclear eos table default mode
+#define NUC_TABLE_MODE_TEMP 1
+#define NUC_TABLE_MODE_ENGY 2
+
+
 // neutrino updating schemes
 #define LIGHTBULB    1
 #define IDSA         2
@@ -1004,6 +1009,10 @@
 
 #  if ( FLU_SCHEME != MHM  &&  FLU_SCHEME != MHM_RP  &&  FLU_SCHEME != CTU )
 #  undef RSOLVER
+#  endif
+
+#  if ( EOS != EOS_NUCLEAR )
+#  undef NUC_TABLE_MODE
 #  endif
 #endif
 

@@ -271,7 +271,7 @@ void SetGridIC( real fluid[], const double x, const double y, const double z, co
 
    if ( CCSN_Eint_Mode == 0 )   // Temperature Mode
    {
-      real Out[3], In[3] = { Dens, Temp, Ye };
+      real Out[3], In[3] = { (real)Dens, (real)Temp, (real)Ye };
 
       EoS_General_CPUPtr( 1, Out, In, EoS_AuxArray_Flt, EoS_AuxArray_Int, h_EoS_Table );
       Eint = Out[0];

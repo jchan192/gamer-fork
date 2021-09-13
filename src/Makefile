@@ -90,6 +90,9 @@ SIMU_OPTION += -DEOS=EOS_GAMMA
 # --> mandatory for EOS_ISOTHERMAL; optional for EOS_TABULAR/EOS_USER
 #SIMU_OPTION += -DBAROTROPIC_EOS
 
+# nuclear EoS table default mode: NUC_TABLE_MODE_TEMP/NUC_TABLE_MODE_ENGY
+#SIMU_OPTION += -DNUC_TABLE_MODE=NUC_TABLE_MODE_TEMP
+
 # neutrino updating scheme: LIGHTBULB/IDSA/M1
 #SIMU_OPTION += -DNEUTRINO_SCHEME=LIGHTBULB
 
@@ -483,7 +486,7 @@ CPU_FILE    += CPU_FluidSolver_RTVD.cpp  CPU_FluidSolver_MHM.cpp  CPU_FluidSolve
 
 CPU_FILE    += CPU_EoS_Gamma.cpp  CPU_EoS_User_Template.cpp  CPU_EoS_Isothermal.cpp  CPU_EoS_Nuclear.cpp \
                EoS_Init.cpp  EoS_End.cpp  EoS_End_Nuclear.cpp  NuclearEoS.cpp  cubinterp_some.cpp  linterp_some.cpp \
-               findenergy.cpp  readtable.cpp
+               findtoreps.cpp findtemp_NR_bisection.cpp readtable.cpp
 
 CPU_FILE    += Hydro_Init_ByFunction_AssignData.cpp  Hydro_Aux_Check_Negative.cpp \
                Hydro_BoundaryCondition_Reflecting.cpp  Hydro_BoundaryCondition_Outflow.cpp

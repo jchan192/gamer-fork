@@ -5,8 +5,11 @@
 
 
 #ifdef __CUDACC__
-
-#include "linterp_some.cu"
+GPU_DEVICE static
+void nuc_eos_C_linterp_some( const real x, const real y, const real z,
+                             real *output_vars, const real *alltables,
+                             const int nx, const int ny, const int nz, const int nvars,
+                             const real *xt, const real *yt, const real *zt );
 
 GPU_DEVICE static
 void nuc_eos_C_cubinterp_some( const real x, const real y, const real z,
@@ -33,7 +36,7 @@ void nuc_eos_C_linterp_some( const real x, const real y, const real z,
 // Note        :  1. Invoked by nuc_eos_C_short()
 //
 // Parameter   :  x           : Input vector of first  variable (rho)
-//                y           : Input vector of second variable (eps)
+//                y           : Input vector of second variable (temp/eps)
 //                z           : Input vector of third  variable (Y_e)
 //                output_vars : Output variables of interpolated function values
 //                alltables   : 3D array of tabulated variables
@@ -90,13 +93,14 @@ void nuc_eos_C_cubinterp_some( const real x, const real y, const real z,
 
 
 // determine location in table
-   ix = (int)( ( x - xt[0] + (real)1.0e-10 )*dxi );
-   iy = (int)( ( y - yt[0] + (real)1.0e-10 )*dyi );
-   iz = (int)( ( z - zt[0] + (real)1.0e-10 )*dzi );
+   ix = (int)( ( x - xt[0] )*dxi );
+   iy = (int)( ( y - yt[0] )*dyi );
+   iz = (int)( ( z - zt[0] )*dzi );
+
 
 // linear interpolation at boundaries
    if ( ix == 0  ||  iy == 0  ||  iz == 0  ||
-        ix == nx-2  ||  iy == ny-2  ||  iz == nz-2 )
+        ix >= nx-2  ||  iy >= ny-2  ||  iz >= nz-2 )
    {
       nuc_eos_C_linterp_some( x, y, z, output_vars, alltables,
                               nx, ny, nz, nvars, xt, yt, zt );
