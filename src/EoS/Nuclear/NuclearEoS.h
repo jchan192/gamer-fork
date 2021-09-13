@@ -7,7 +7,7 @@
 
 
 #define NUC_TABLE_NVAR       16     // number of variables in the EoS table lookup
-#define NUC_TABLE_NPTR        8     // number of table pointers to be sent to GPU
+#define NUC_TABLE_NPTR       10     // number of table pointers to be sent to GPU
 
 
 // auxiliary array indices
@@ -19,22 +19,32 @@
 #define NUC_AUX_VSQR2CODE     5     // AuxArray_Flt: convert velocity^2 to code unit
 #define NUC_AUX_KELVIN2MEV    6     // AuxArray_Flt: convert kelvin     to MeV
 #define NUC_AUX_MEV2KELVIN    7     // AuxArray_Flt: convert MeV        to kelvin
+#define NUC_AUX_M_kB          8     // AuxArray_Flt: mean molecular weight*atomic mass unit/
+                                    //               Bolzmann constant*(UNIT_E/UNIT_M)
 
 #define NUC_AUX_NRHO          0     // AuxArray_Int: nrho
-#define NUC_AUX_NEPS          1     // AuxArray_Int: neps
+#define NUC_AUX_NTORE         1     // AuxArray_Int: ntemp/neps
 #define NUC_AUX_NYE           2     // AuxArray_Int: nye
-#define NUC_AUX_NMODE         3     // AuxArray_Int: nmode
+#define NUC_AUX_NRHO_MODE     3     // AuxArray_Int: nrho_mode
+#define NUC_AUX_NMODE         4     // AuxArray_Int: nmode
+#define NUC_AUX_NYE_MODE      5     // AuxArray_Int: nye_mode
+
+// Interpolation schemes
+#define NUC_AUX_INT_TL        6     // AuxArray_Int: interpolation scheme for table look-ups
+#define NUC_AUX_INT_OTHER     7     // AuxArray_Int: interpolation scheme for other thermodynamic variables
 
 
 // table indices
 #define NUC_TAB_ALL           0     // alltables
 #define NUC_TAB_ALL_MODE      1     // alltables_mode
 #define NUC_TAB_RHO           2     // logrho
-#define NUC_TAB_EPS           3     // logeps
+#define NUC_TAB_TORE          3     // logtemp/logenergy
 #define NUC_TAB_YE            4     // yes
-#define NUC_TAB_TEMP_MODE     5     // logtemp_mode
-#define NUC_TAB_ENTR_MODE     6     // entr_mode
-#define NUC_TAB_PRES_MODE     7     // logprss_mode
+#define NUC_TAB_RHO_MODE      5     // logrho_mode 
+#define NUC_TAB_EORT_MODE     6     // logenergy_mode/logtemp_mode
+#define NUC_TAB_ENTR_MODE     7     // entr_mode
+#define NUC_TAB_PRES_MODE     8     // logprss_mode
+#define NUC_TAB_YE_MODE       9     // yes_mode
 
 
 // EoS modes
@@ -43,6 +53,17 @@
 #define NUC_MODE_ENTR         2     // entropy mode
 #define NUC_MODE_PRES         3     // pressure mode
 
+
+
+
+
+
+// Tolerance for Newton-Raphson or bisection method in temperature driver
+#ifdef FLOAT8
+const real Tolerance = 1e-10;
+#else
+const real Tolerance = 1e-6;
+#endif
 
 
 #endif // __NUCLEAREOS_H__
