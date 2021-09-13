@@ -659,7 +659,7 @@ bool Flag_User_CCSN( const int i, const int j, const int k, const int lv, const 
    const real (*Rho )[PS1][PS1] = amr->patch[ amr->FluSg[lv] ][lv][PID]->fluid[DENS];  // density
    const real dens = Rho[k][j][i];
 
-   if (  ( r > Threshold[0] )  &&  ( r < Threshold[1])  &&  ( dens > Threshold[2] )  )
+   if (  ( r > Threshold[0] )  &&  ( r < Threshold[1] )  &&  ( dens > Threshold[2] )  )
       Flag = true;
 
    return Flag;
