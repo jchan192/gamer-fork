@@ -153,7 +153,7 @@ z = 0.5*(z[1:]+z[:-1])
 
 # Write the ICs to an HDF5 file
 
-f = h5py.File("../B_IC_opti2", "w")
+f = h5py.File("../B_IC", "w")
 
 # Write coordinate arrays
 
