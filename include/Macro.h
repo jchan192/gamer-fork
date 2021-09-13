@@ -80,8 +80,8 @@
 
 
 // nuclear eos table default mode
-#define NUC_TABLE_MODE_TEMP 0
-#define NUC_TABLE_MODE_ENGY 1
+#define NUC_TABLE_MODE_TEMP 1
+#define NUC_TABLE_MODE_ENGY 2
 
 
 // neutrino updating schemes

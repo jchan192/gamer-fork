@@ -406,8 +406,8 @@ const PatchType_t
 #if ( MODEL == HYDRO && EOS == EOS_NUCLEAR )
 typedef int NucEoSInterpol_t;
 const NucEoSInterpol_t
-   NUC_INTERPOL_LINEAR = 0,
-   NUC_INTERPOL_CUBIC  = 1;
+   NUC_INTERPOL_LINEAR = 1,
+   NUC_INTERPOL_CUBIC  = 2;
 #endif
 
 
