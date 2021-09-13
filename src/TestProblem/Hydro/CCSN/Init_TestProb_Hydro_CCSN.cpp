@@ -11,25 +11,33 @@ const CCSN_t
   ,Post_Bounce    = 1
   ;
 
-static CCSN_t  CCSN_Prob;                       // target CCSN problem
-static char    CCSN_Name[100];                  // name of the target CCSN problem
-static char    CCSN_Prof_File[MAX_STRING];      // filename of input profile
-static double *CCSN_Prof = NULL;                // radial profile of initial condition
-static int     CCSN_Prof_NBin;                  // number of radial bins in the input profile
-static int     CCSN_NCol;                       // number of columns read from the input profile
-static int    *CCSN_TargetCols = new int [7];   // index of columns read from the input profile
-static int     CCSN_ColIdx_Dens;                // column index of density in the input profile
-static int     CCSN_ColIdx_Pres;                // column index of pressure in the input profile
-static int     CCSN_ColIdx_Velr;                // column index of radial velocity in the input profile
+typedef int CCSN_Mag_t;
+const CCSN_Mag_t
+   Liu2008  = 0
+  ,Suwa2007 = 1
+  ;
+
+static CCSN_t     CCSN_Prob;                       // target CCSN problem
+static char       CCSN_Name[100];                  // name of the target CCSN problem
+static char       CCSN_Prof_File[MAX_STRING];      // filename of input profile
+static double    *CCSN_Prof = NULL;                // radial profile of initial condition
+static int        CCSN_Prof_NBin;                  // number of radial bins in the input profile
+static int        CCSN_NCol;                       // number of columns read from the input profile
+static int       *CCSN_TargetCols = new int [7];   // index of columns read from the input profile
+static int        CCSN_ColIdx_Dens;                // column index of density in the input profile
+static int        CCSN_ColIdx_Pres;                // column index of pressure in the input profile
+static int        CCSN_ColIdx_Velr;                // column index of radial velocity in the input profile
 
 #ifdef MHD
-static double  CCSN_Mag_Ab;                     // strength of B field
-static double  CCSN_Mag_np;                     // dependence of B field on the density
+static CCSN_Mag_t CCSN_Mag;                        // target magnetic field profile
+static double     CCSN_Mag_B0;                     // magnetic field strength
+static double     CCSN_Mag_np;                     // dependence of magnetic field on density
+static double     CCSN_Mag_R0;                     // characteristic radius of magnetic field
 #endif
 
-static int     CCSN_Eint_Mode;                  // Mode of obtaining internal energy in SetGridIC()
-                                                // ( 0=Temp Mode: Eint(dens, temp, [Ye])
-                                                //   1=Pres Mode: Eint(dens, pres, [Ye]) )
+static int        CCSN_Eint_Mode;                  // Mode of obtaining internal energy in SetGridIC()
+                                                   // ( 0=Temp Mode: Eint(dens, temp, [Ye])
+                                                   //   1=Pres Mode: Eint(dens, pres, [Ye]) )
 // =======================================================================================
 
 
@@ -104,8 +112,10 @@ void SetParameter()
    ReadPara->Add( "CCSN_Prob",         &CCSN_Prob,             -1,            0,                1                 );
    ReadPara->Add( "CCSN_Prof_File",     CCSN_Prof_File,        Useless_str,   Useless_str,      Useless_str       );
 #  ifdef MHD
-   ReadPara->Add( "CCSN_Mag_Ab",       &CCSN_Mag_Ab,           1.0e15,        0.0,              NoMax_double      );
+   ReadPara->Add( "CCSN_Mag",          &CCSN_Mag,              1,             0,                1                 );
+   ReadPara->Add( "CCSN_Mag_B0",       &CCSN_Mag_B0,           1.0e14,        0.0,              NoMax_double      );
    ReadPara->Add( "CCSN_Mag_np",       &CCSN_Mag_np,           0.0,           NoMin_double,     NoMax_double      );
+   ReadPara->Add( "CCSN_Mag_R0",       &CCSN_Mag_R0,           1.0e8,         0.0,              NoMax_double      );
 #  endif
    ReadPara->Add( "CCSN_Eint_Mode",    &CCSN_Eint_Mode,        1,             0,                1                 );
 
@@ -164,14 +174,16 @@ void SetParameter()
    if ( MPI_Rank == 0 )
    {
       Aux_Message( stdout, "=============================================================================\n" );
-      Aux_Message( stdout, "  test problem ID           = %d\n",      TESTPROB_ID    );
-      Aux_Message( stdout, "  target CCSN problem       = %s\n",      CCSN_Name      );
-      Aux_Message( stdout, "  CCSN_Prof_File            = %s\n",      CCSN_Prof_File );
+      Aux_Message( stdout, "  test problem ID                         = %d\n",      TESTPROB_ID    );
+      Aux_Message( stdout, "  target CCSN problem                     = %s\n",      CCSN_Name      );
+      Aux_Message( stdout, "  initial profile                         = %s\n",      CCSN_Prof_File );
 #     ifdef MHD
-      Aux_Message( stdout, "  CCSN_Mag_Ab               = %13.7e\n",  CCSN_Mag_Ab    );
-      Aux_Message( stdout, "  CCSN_Mag_np               = %13.7e\n",  CCSN_Mag_np    );
+      Aux_Message( stdout, "  magnetic field profile                  = %d\n",      CCSN_Mag       );
+      Aux_Message( stdout, "  magnetic field strength                 = %13.7e\n",  CCSN_Mag_B0    );
+      Aux_Message( stdout, "  dependence of magnetic field on density = %13.7e\n",  CCSN_Mag_np    );
+      Aux_Message( stdout, "  characteristic radius of magnetic field = %13.7e\n",  CCSN_Mag_R0    );
 #     endif
-      Aux_Message( stdout, "  CCSN_Eint_Mode            = %d\n",      CCSN_Eint_Mode );
+      Aux_Message( stdout, "  Mode for obtaining internal energy      = %d\n",      CCSN_Eint_Mode );
       Aux_Message( stdout, "=============================================================================\n" );
    }
 
@@ -214,7 +226,7 @@ void SetGridIC( real fluid[], const double x, const double y, const double z, co
    const double x0 = x - BoxCenter[0];
    const double y0 = y - BoxCenter[1];
    const double z0 = z - BoxCenter[2];
-   const double r  = SQRT( SQR( x0 ) + SQR( y0 ) + SQR( z0 ) );
+   const double r  = SQRT(  SQR( x0 ) + SQR( y0 ) + SQR( z0 )  );
 
    double Dens, Velr, Pres, Momx, Momy, Momz, Eint, Etot, Ye, Temp, Entr;
 
@@ -279,7 +291,7 @@ void SetGridIC( real fluid[], const double x, const double y, const double z, co
    fluid[MOMZ] = Momz;
    fluid[ENGY] = Etot;
 #  if ( EOS == EOS_NUCLEAR )
-   for (int v=0; v<NCOMP_PASSIVE; v++) fluid[ NCOMP_FLUID + v ] = Passive[v];
+   for (int v=0; v<NCOMP_PASSIVE; v++)   fluid[ NCOMP_FLUID + v ] = Passive[v];
 #  endif
 
 
@@ -291,20 +303,20 @@ void SetGridIC( real fluid[], const double x, const double y, const double z, co
 
 #ifdef MHD
 //-------------------------------------------------------------------------------------------------------
-// Function    :  SetBFieldIC
+// Function    :  SetBFieldIC_Liu2008
 // Description :  Set the problem-specific initial condition of magnetic field
 //
 // Note        :  1. This function will be invoked by multiple OpenMP threads when OPENMP is enabled
 //                   (unless OPT__INIT_GRID_WITH_OMP is disabled)
 //                   --> Please ensure that everything here is thread-safe
-//                2. Generate the poloidal B field from vector potential
-//                   in a similar form to Liu+ 2008, Phys. Rev. D78, 024012:
-//
-//                       A_phi = Ab * \bar\omega^2 * (1 - rho / rho_max)^np * (P / P_max)
+//                2. Generate the poloidal B field from a variant form of the vector potential in
+//                   Liu+ 2008, Phys. Rev. D78, 024012:
+//                       A_phi = B0 * varpi^2 * (1 - rho / rho_max)^np * (P / P_max)
+//                       A_r = A_theta = 0
 //                   where
-//                       \omega^2 =  (x - x_center)^2 + y^2
-//                       A_x      = -(y / \bar\omega^2) * A_phi
-//                       A_y      =  (x / \bar\omega^2) * A_phi
+//                       varpi^2 =  x^2 + y^2
+//                       A_x      = -(y / varpi^2) * A_phi
+//                       A_y      =  (x / varpi^2) * A_phi
 //                       A_z      =  0
 //
 // Parameter   :  magnetic : Array to store the output magnetic field
@@ -315,8 +327,8 @@ void SetGridIC( real fluid[], const double x, const double y, const double z, co
 //
 // Return      :  magnetic
 //-------------------------------------------------------------------------------------------------------
-void SetBFieldIC( real magnetic[], const double x, const double y, const double z, const double Time,
-                  const int lv, double AuxArray[] )
+void SetBFieldIC_Liu2008( real magnetic[], const double x, const double y, const double z, const double Time,
+                          const int lv, double AuxArray[] )
 {
 
    const double  BoxCenter[3] = { amr->BoxCenter[0], amr->BoxCenter[1], amr->BoxCenter[2] };
@@ -331,7 +343,7 @@ void SetBFieldIC( real magnetic[], const double x, const double y, const double 
 // approximate the central density and pressure by the data at the first row
    const double dens_c = Table_Dens[0];
    const double pres_c = Table_Pres[0];
-   const double Ab     = CCSN_Mag_Ab / UNIT_B;
+   const double B0     = CCSN_Mag_B0 / UNIT_B;
 
 // use finite difference to compute the B field
    double delta = amr->dh[MAX_LEVEL];
@@ -340,10 +352,10 @@ void SetBFieldIC( real magnetic[], const double x, const double y, const double 
    double r_yp, dens_yp, pres_yp;
    double r_zp, dens_zp, pres_zp;
 
-   r    = SQRT( SQR( x0         ) + SQR( y0         ) + SQR( z0         ) );
-   r_xp = SQRT( SQR( x0 + delta ) + SQR( y0         ) + SQR( z0         ) );
-   r_yp = SQRT( SQR( x0         ) + SQR( y0 + delta ) + SQR( z0         ) );
-   r_zp = SQRT( SQR( x0         ) + SQR( y0         ) + SQR( z0 + delta ) );
+   r    = SQRT(  SQR( x0         ) + SQR( y0         ) + SQR( z0         )  );
+   r_xp = SQRT(  SQR( x0 + delta ) + SQR( y0         ) + SQR( z0         )  );
+   r_yp = SQRT(  SQR( x0         ) + SQR( y0 + delta ) + SQR( z0         )  );
+   r_zp = SQRT(  SQR( x0         ) + SQR( y0         ) + SQR( z0 + delta )  );
 
    dens    = Mis_InterpolateFromTable( CCSN_Prof_NBin, Table_R, Table_Dens, r    );
    dens_xp = Mis_InterpolateFromTable( CCSN_Prof_NBin, Table_R, Table_Dens, r_xp );
@@ -386,11 +398,56 @@ void SetBFieldIC( real magnetic[], const double x, const double y, const double 
                      - POW( 1.0 - dens   /dens_c, CCSN_Mag_np )*( pres    / pres_c ) ) \
                    / delta;
 
-   magnetic[MAGX] = -x0 * Ab * dAphi_dz;
-   magnetic[MAGY] = -y0 * Ab * dAphi_dz;
-   magnetic[MAGZ] =       Ab * ( dAy_dx - dAx_dy );
+   magnetic[MAGX] = -x0 * B0 * dAphi_dz;
+   magnetic[MAGY] = -y0 * B0 * dAphi_dz;
+   magnetic[MAGZ] =       B0 * ( dAy_dx - dAx_dy );
 
-} // FUNCTION : SetBFieldIC
+} // FUNCTION : SetBFieldIC_Liu2008
+
+
+
+//-------------------------------------------------------------------------------------------------------
+// Function    :  SetBFieldIC_Suwa2007
+// Description :  Set the problem-specific initial condition of magnetic field
+//
+// Note        :  1. This function will be invoked by multiple OpenMP threads when OPENMP is enabled
+//                   (unless OPT__INIT_GRID_WITH_OMP is disabled)
+//                   --> Please ensure that everything here is thread-safe
+//                2. Generate the poloidal B field from the vector potential in
+//                   Suwa+ 2007, PASJ, 59, 771:
+//                       A_phi = 0.5 * B0 * ( R0^3 / (r^3 + R0^3) ) * r * sin(theta)
+//                       A_r = A_theta = 0
+//
+// Parameter   :  magnetic : Array to store the output magnetic field
+//                x/y/z    : Target physical coordinates
+//                Time     : Target physical time
+//                lv       : Target refinement level
+//                AuxArray : Auxiliary array
+//
+// Return      :  magnetic
+//-------------------------------------------------------------------------------------------------------
+void SetBFieldIC_Suwa2007( real magnetic[], const double x, const double y, const double z, const double Time,
+                           const int lv, double AuxArray[] )
+{
+
+   const double  BoxCenter[3] = { amr->BoxCenter[0], amr->BoxCenter[1], amr->BoxCenter[2] };
+
+   const double x0 = x - BoxCenter[0];
+   const double y0 = y - BoxCenter[1];
+   const double z0 = z - BoxCenter[2];
+   const double r  = SQRT(  SQR( x0 ) + SQR( y0 ) + SQR( z0 )  );
+
+   const double B0     = CCSN_Mag_B0 / UNIT_B;
+   const double R0     = CCSN_Mag_R0 / UNIT_L;
+   const double R0_cub = CUBE( R0 );
+   const double frac   = 1.0 / (  1.0 + CUBE( r / R0 )  );
+
+   magnetic[MAGX] = 1.5 * B0 * SQR( frac ) * ( r * x0 * z0               ) / R0_cub;
+   magnetic[MAGY] = 1.5 * B0 * SQR( frac ) * ( r * y0 * z0               ) / R0_cub;
+   magnetic[MAGZ] =       B0 *      frac
+                  - 1.5 * B0 * SQR( frac ) * ( r * x0 * x0 + r * y0 * y0 ) / R0_cub;
+
+} // FUNCTION : SetBFieldIC_Suwa2007
 #endif // #ifdef MHD
 #endif // #if ( MODEL == HYDRO )
 
@@ -472,11 +529,6 @@ void Record_CCSN_CentralDens()
             for (int j=0; j<PS1; j++)  {  const double y = amr->patch[0][lv][PID]->EdgeL[1] + (j+0.5)*dh;
             for (int i=0; i<PS1; i++)  {  const double x = amr->patch[0][lv][PID]->EdgeL[0] + (i+0.5)*dh;
 
-               const double dx = x - BoxCenter[0];
-               const double dy = y - BoxCenter[1];
-               const double dz = z - BoxCenter[2];
-               const double r2 = SQR(dx) + SQR(dy) + SQR(dz);
-
                const double dens = amr->patch[ amr->FluSg[lv] ][lv][PID]->fluid[DENS][k][j][i];
 
                if ( dens > OMP_DataCoord[TID][0] )
@@ -505,7 +557,7 @@ void Record_CCSN_CentralDens()
 
 
 // collect data from all ranks
-# ifndef SERIAL
+#  ifndef SERIAL
    {
       double DataCoord_All[4 * MPI_NRank];
 
@@ -517,7 +569,7 @@ void Record_CCSN_CentralDens()
             for (int b=0; b<4; b++)   DataCoord[b] = DataCoord_All[4 * i + b];
       }
    }
-# endif // ifndef SERIAL
+#  endif // ifndef SERIAL
 
 
 // output to file
@@ -607,7 +659,7 @@ bool Flag_User_CCSN( const int i, const int j, const int k, const int lv, const 
    const real (*Rho )[PS1][PS1] = amr->patch[ amr->FluSg[lv] ][lv][PID]->fluid[DENS];  // density
    const real dens = Rho[k][j][i];
 
-   if ( ( r > Threshold[0] )  &&  ( r < Threshold[1])  &&  ( dens > Threshold[2] ) )
+   if (  ( r > Threshold[0] )  &&  ( r < Threshold[1] )  &&  ( dens > Threshold[2] )  )
       Flag = true;
 
    return Flag;
@@ -664,7 +716,11 @@ void Init_TestProb_Hydro_CCSN()
 // set the function pointers of various problem-specific routines
    Init_Function_User_Ptr         = SetGridIC;
 #  ifdef MHD
-   Init_Function_BField_User_Ptr  = SetBFieldIC;
+   switch ( CCSN_Mag )
+   {
+      case Liu2008  : Init_Function_BField_User_Ptr  = SetBFieldIC_Liu2008;    break;
+      case Suwa2007 : Init_Function_BField_User_Ptr  = SetBFieldIC_Suwa2007;   break;
+   }
 #  endif
    Flag_User_Ptr                  = Flag_User_CCSN;
    Aux_Record_User_Ptr            = Record_CCSN;

@@ -5,8 +5,12 @@ CCSN_Prob        1                                 # target CCSN problem
 
 CCSN_Prof_File   IC/s20GREP_LS220_15ms_none        # filename of input profile
 
-CCSN_Mag_Ab      1.0e15                            # strength of B field (in gauss)        [1e15]
-CCSN_Mag_np      0.0                               # dependence of B field on the density  [0.0]
+CCSN_Mag         1                                 # target magnetic field profile                     [1]
+                                                   # ( 0: Ap = B0* varpi^2 * (1 - rho / rho_max)^np * (P / P_max)
+                                                   #   1: Ap = 0.5 * B0 * ( R0^3 / (r^3 + R0^3) ) * r * sin(theta) )
+CCSN_Mag_B0      1.0e14                            # magnetic field strength (in gauss)                [1.e14]
+CCSN_Mag_np      0.0                               # dependence of magnetic field on density           [0.0]
+CCSN_Mag_R0      1.0e8                             # characteristic radius of magnetic field (in cm)   [1.0e8]
 
 CCSN_Eint_Mode   1                                 # Mode of obtaining internal energy in SetGridIC()  [1]
                                                    # ( 0=Temp Mode: Eint(dens, temp, [Ye])

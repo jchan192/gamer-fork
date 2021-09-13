@@ -45,7 +45,7 @@ Note:
 
 3. Reference solutions are put at "ReferenceSolution"
 
-4. python scripts are put at "python_script":
+4. Python scripts are put at "python_script":
    --> gen_vec_pot.py             : read the runtime parameters in Input_Parameter and Input_TestProb
                                     and generate the vector potential of B field "B_IC"
    --> plot_profile.py            : compute and plot the spherically averaged profile
@@ -53,5 +53,22 @@ Note:
    --> plot_rhoc_postbounce.py    : plot the evolution of central density with FLASH data (for Post bounce)
    --> plot_slice.py              : slice plot for the specified quantity
 
-5. Additional Record files:
+5. For MHD simulations, there are 2 magnetic field profiles supported:
+   (1) CCSN_Mag = 0
+      A_r = A_theta = 0
+      A_p = B0 * varpi^2 * (1 - rho / rho_max)^np * (P / P_max)
+
+   (2) CCSN_Mag = 1
+      A_r = A_theta = 0
+      A_p = 0.5 * B0 * ( R0^3 / (r^3 + R0^3) ) * r * sin(theta)
+
+   It is recommended to initialize the magnetic field from B_IC to guarantee a divergence-free magnetic field.
+   The file B_IC can be generated using gen_vec_pot.py, which will adopt the runtime parameters
+   in Input__Parameters and Input__TestProb. The users can adjust the parameters in the script
+
+   --> NLEVEL    : control the number of grid in each dimension, which will be set to NX0_TOT * 2^NLEVEL
+   --> num_chunk : number of chunk for computing the vector potential sequentially
+                   runs with higher values have better performance, but consume more memory
+
+6. Additional Record files:
    --> Record__CentralDens : maximum density in the simulation box

@@ -24,14 +24,20 @@ path_HDF5 = ".."  # path to the HDF5 output (relative path here)
 quantity  = "density", "ye", "Entr"  # quantity to be plot
 direction = "x"                      # along the yz plane
 
-zoom       = 10                       # zoom factor
+zoom       = 10                      # zoom factor
 zlim       = {"density": (1.0e8, 5.0e14),
               "ye"     : (0.25, 0.5),
-              "Entr"   : (2, 9)           }  # range in colorbar for each quantity
+              "Entr"   : (2, 9),
+              "pressure": (None, None),
+              "magnetic_field_strength": (None, None),
+              "plasma_beta": (None, None)              }  # range in colorbar for each quantity
 zscale_log = {"density": True,
               "ye"     : False,
-              "Entr"   : False            }  # flag for zscale
-                                             # True: log scale, False: linear scale
+              "Entr"   : False,
+              "pressure": True,
+              "magnetic_field_strength": True,
+              "plasma_beta": True              }  # flag for zscale
+                                                  # True: log scale, False: linear scale
 
 fmt_fnout_fig = "{}_SlicePlot_" + direction + "_{}"  # format of name of output files
 

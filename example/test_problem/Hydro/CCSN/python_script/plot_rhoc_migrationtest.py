@@ -16,12 +16,12 @@ import matplotlib.pyplot as plt
 
 ### load data
 # FLASH
-fn = "../ReferenceSolution/MigrationTest/flash_1d.dat"
-t_flash, rhoc_flash = np.genfromtxt(fn, unpack = True)
+fn_flash = "../ReferenceSolution/MigrationTest/flash_1d.dat"
+t_flash, rhoc_flash = np.genfromtxt(fn_flash, unpack = True)
 
 # GAMER
-fn = "../Record__CentralDens"
-t_gamer, rhoc_gamer = np.genfromtxt(fn, usecols = [0, 2], unpack = True)
+fn_gamer = "../Record__CentralDens"
+t_gamer, rhoc_gamer = np.genfromtxt(fn_gamer, usecols = [0, 2], unpack = True)
 
 
 ### plot the evolution of central density

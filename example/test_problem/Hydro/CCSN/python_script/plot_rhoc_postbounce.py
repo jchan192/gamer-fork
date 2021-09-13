@@ -10,28 +10,42 @@
 import matplotlib
 matplotlib.use("Agg")
 
+import os
 import re
 import numpy as np
 import matplotlib.pyplot as plt
 
 
+# dictionary for the corresponding reference solution
+path_RefSol = "../ReferenceSolution/PostBounce"
+RefSol      = {"s20GREP_LS220_15ms_none": "flash_1d_s20GREP_LS220_none.dat"}
+
+# retrieve the filename of input profile in INput__TestProb
+par_testprob   = open("../Input__TestProb").read()
+CCSN_Prof_File = re.findall(r"CCSN_Prof_File\s*(\S*)\s", par_testprob)
+CCSN_Prof_File = os.path.basename(CCSN_Prof_File[0])
+
+
 ### load data
-# FLASH
-fn = "../ReferenceSolution/PostBounce/flash_1d_s20GREP_LS220_none.dat"  # for s20GREP_LS220_15ms_none
+## FLASH
+fn_flash = RefSol[CCSN_Prof_File]
+fn_flash = os.path.join(path_RefSol, fn_flash)
+print("Filename of initial profile: {}".format(CCSN_Prof_File))
+print("Adopted reference solution : {}".format(fn_flash))
 
 # retrieve bounce time
-with open(fn) as f:
+with open(fn_flash) as f:
     tb_flash = f.readline()
 
 tb_flash = re.findall(r"\d\.\d+", tb_flash)
 tb_flash = float(tb_flash[0])
 
-t_flash, rhoc_flash = np.genfromtxt(fn, usecols = [0, 16], unpack = True)
+t_flash, rhoc_flash = np.genfromtxt(fn_flash, usecols = [0, 16], unpack = True)
 t_flash -= tb_flash
 
-# GAMER
-fn = "../Record__CentralDens"
-t_gamer, rhoc_gamer = np.genfromtxt(fn, usecols = [0, 2], unpack = True)
+## GAMER
+fn_gamer = "../Record__CentralDens"
+t_gamer, rhoc_gamer = np.genfromtxt(fn_gamer, usecols = [0, 2], unpack = True)
 t_gamer += 0.015  # the IC is from the FLASH simulation at t_pb = 15 ms
 
 
