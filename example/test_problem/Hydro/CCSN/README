@@ -62,12 +62,12 @@ Note:
       A_r = A_theta = 0
       A_p = 0.5 * B0 * ( R0^3 / (r^3 + R0^3) ) * r * sin(theta)
 
-   It is recommended to initialize the magnetic field from B_IC for guarantee a divergence-free magnetic field.
+   It is recommended to initialize the magnetic field from B_IC to guarantee a divergence-free magnetic field.
    The file B_IC can be generated using gen_vec_pot.py, which will adopt the runtime parameters
    in Input__Parameters and Input__TestProb. The users can adjust the parameters in the script
 
    --> NLEVEL    : control the number of grid in each dimension, which will be set to NX0_TOT * 2^NLEVEL
-   --> num_chunk : number of chunk for copmuting the vector potential sequentially
+   --> num_chunk : number of chunk for computing the vector potential sequentially
                    runs with higher values have better performance, but consume more memory
 
 6. Additional Record files:

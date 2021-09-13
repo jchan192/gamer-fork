@@ -26,7 +26,7 @@ import numpy as np
 
 ## User-defined parameters.
 NLEVEL    = 2   # number of grid in each dimension will be NX0_TOT * 2^NLEVEL
-num_chunk = 64  # number of chunk for copmuting the vector potential sequentially
+num_chunk = 64  # number of chunk for computing the vector potential sequentially
 
 
 ## Setups
@@ -97,7 +97,7 @@ else:
     print("CCSN_Mag_R0 in Input__TestProb : {:13.7e}".format(CCSN_Mag_R0 * UNIT_L))
 
 
-### Load initial profiles of denisty and pressure
+### Load initial profiles of density and pressure
 if CCSN_Mag == 0:
     fn = os.path.join("..", CCSN_Prof_File)
     print("Loading intial profile in {}".format(fn))
