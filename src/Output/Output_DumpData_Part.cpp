@@ -333,8 +333,8 @@ void WriteFile( FILE *File, const int lv, const int PID, const int i, const int 
       real TmpOut[2], TmpEint, TmpPres;
 
       TmpEint = Hydro_Con2Eint( u[DENS], u[MOMX], u[MOMY], u[MOMZ], u[ENGY], CheckMinEint_No, NULL_REAL, Emag );
-      TmpPres = EoS_DensEint2Pres_CPUPtr( u[DENS], TmpEint, u+NCOMP_FLUID, EoS_AuxArray_Flt, EoS_AuxArray_Int, h_EoS_Table,
-                                          TmpOut );
+      TmpPres = EoS_DensEint2Pres_CPUPtr( u[DENS], TmpEint, u+NCOMP_FLUID, EoS_AuxArray_Flt, EoS_AuxArray_Int, h_EoS_Table
+                                          );
       Entr    = TmpOut[1];
 #     else
       Aux_Error( ERROR_INFO, "OPT__OUTPUT_ENTR is only supported by EOS_NUCLEAR !!\n" );
@@ -349,7 +349,7 @@ void WriteFile( FILE *File, const int lv, const int PID, const int i, const int 
                              CheckMinPres_No, NULL_REAL, Emag, EoS_DensEint2Pres_CPUPtr,
                              EoS_AuxArray_Flt, EoS_AuxArray_Int, h_EoS_Table, NULL );
       Cs   = SQRT(  EoS_DensPres2CSqr_CPUPtr( u[DENS], Pres, u+NCOMP_FLUID, EoS_AuxArray_Flt, EoS_AuxArray_Int,
-                                              h_EoS_Table, NULL )  );
+                                              h_EoS_Table )  );
       fprintf( File, " %13.6e", Cs );
    }
 

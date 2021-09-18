@@ -273,13 +273,13 @@ void SetGridIC( real fluid[], const double x, const double y, const double z, co
    {
       real Out[3], In[3] = { (real)Dens, (real)Temp, (real)Ye };
 
-      EoS_General_CPUPtr( 1, Out, In, EoS_AuxArray_Flt, EoS_AuxArray_Int, h_EoS_Table );
+      EoS_General_CPUPtr( 1, Out, In, EoS_AuxArray_Flt, EoS_AuxArray_Int, h_EoS_Table, NULL );
       Eint = Out[0];
    }
 
    else                         // Pressure Mode
    {
-      Eint = EoS_DensPres2Eint_CPUPtr( Dens, Pres, Passive, EoS_AuxArray_Flt, EoS_AuxArray_Int, h_EoS_Table, NULL );
+      Eint = EoS_DensPres2Eint_CPUPtr( Dens, Pres, Passive, EoS_AuxArray_Flt, EoS_AuxArray_Int, h_EoS_Table );
    }
 
 
