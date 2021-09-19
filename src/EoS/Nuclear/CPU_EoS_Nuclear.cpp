@@ -54,10 +54,10 @@ void nuc_eos_C_short( real *Out, const real *In,
                       const int NTarget, const int *TargetIdx,
                       const real energy_shift, real Temp_InitGuess,
                       const int nrho, const int ntoreps, const int nye,
-                      const int nrho_mode, const int nmode, const int nye_mode,
-                      const real *alltables, const real *alltables_mode,
-                      const real *logrho, const real *logtoreps, const real *yes, const real *logrho_mode,
-                      const real *logepsort_mode, const real *entr_mode, const real *logprss_mode, const real *yes_mode,
+                      const int nrho_LUT, const int nmode_LUT, const int nye_LUT,
+                      const real *alltables, const real *alltables_LUT,
+                      const real *logrho, const real *logtoreps, const real *yes,
+                      const real *logrho_LUT, const real *mode_LUT, const real *yes_LUT,
                       const int interpol_TL, const int interpol_other,
                       const int keymode, int *keyerr, const real rfeps );
 void nuc_eos_C_ReadTable( char *nuceos_table_name );
@@ -272,8 +272,8 @@ static real EoS_DensEint2Pres_Nuclear( const real Dens_Code, const real Eint_Cod
    nuc_eos_C_short( Out, In, NTarget, TargetIdx,
                     EnergyShift, Temp_IG, NRho, NTorE, NYe, NRho_Mode, NMode, NYe_Mode,
                     Table[NUC_TAB_ALL], Table[NUC_TAB_ALL_MODE], Table[NUC_TAB_RHO], Table[NUC_TAB_TORE], Table[NUC_TAB_YE],
-                    Table[NUC_TAB_RHO_MODE], Table[NUC_TAB_EORT_MODE], Table[NUC_TAB_ENTR_MODE], Table[NUC_TAB_PRES_MODE],
-                    Table[NUC_TAB_YE_MODE], INt_TL, INt_Other, Mode, &Err, Tolerance );
+                    Table[NUC_TAB_RHO_MODE], Table[NUC_TAB_EORT_MODE], Table[NUC_TAB_YE_MODE],
+                    INt_TL, INt_Other, Mode, &Err, Tolerance );
 
 // trigger a *hard failure* if the EoS driver fails
    if ( Err )   for (int i=0; i<NTarget+1; i++)   Out[i] = NAN;
@@ -425,8 +425,8 @@ static real EoS_DensPres2Eint_Nuclear( const real Dens_Code, const real Pres_Cod
    nuc_eos_C_short( Out, In, NTarget, TargetIdx,
                     EnergyShift, Temp_IG, NRho, NTorE, NYe, NRho_Mode, NMode, NYe_Mode,
                     Table[NUC_TAB_ALL], Table[NUC_TAB_ALL_MODE], Table[NUC_TAB_RHO], Table[NUC_TAB_TORE], Table[NUC_TAB_YE],
-                    Table[NUC_TAB_RHO_MODE], Table[NUC_TAB_EORT_MODE], Table[NUC_TAB_ENTR_MODE], Table[NUC_TAB_PRES_MODE],
-                    Table[NUC_TAB_YE_MODE], INt_TL, INt_Other, Mode, &Err, Tolerance );
+                    Table[NUC_TAB_RHO_MODE], Table[NUC_TAB_PRES_MODE], Table[NUC_TAB_YE_MODE],
+                    INt_TL, INt_Other, Mode, &Err, Tolerance );
 
 // trigger a *hard failure* if the EoS driver fails
    if ( Err )   for (int i=0; i<NTarget+1; i++)   Out[i] = NAN;
@@ -560,8 +560,8 @@ static real EoS_DensPres2CSqr_Nuclear( const real Dens_Code, const real Pres_Cod
    nuc_eos_C_short( Out, In, NTarget, TargetIdx,
                     EnergyShift, Temp_IG, NRho, NTorE, NYe, NRho_Mode, NMode, NYe_Mode,
                     Table[NUC_TAB_ALL], Table[NUC_TAB_ALL_MODE], Table[NUC_TAB_RHO], Table[NUC_TAB_TORE], Table[NUC_TAB_YE],
-                    Table[NUC_TAB_RHO_MODE], Table[NUC_TAB_EORT_MODE], Table[NUC_TAB_ENTR_MODE], Table[NUC_TAB_PRES_MODE],
-                    Table[NUC_TAB_YE_MODE], INt_TL, INt_Other, Mode, &Err, Tolerance );
+                    Table[NUC_TAB_RHO_MODE], Table[NUC_TAB_PRES_MODE], Table[NUC_TAB_YE_MODE],
+                    INt_TL, INt_Other, Mode, &Err, Tolerance );
 
 // trigger a *hard failure* if the EoS driver fails
    if ( Err )   for (int i=0; i<NTarget+1; i++)   Out[i] = NAN;
@@ -780,8 +780,8 @@ static void EoS_General_Nuclear( const int Mode, real Out[], const real In[], co
          nuc_eos_C_short( Out_tmp, In_tmp, NTarget, TargetIdx,
                           EnergyShift, Temp_IG, NRho, NTorE, NYe, NRho_Mode, NMode, NYe_Mode,
                           Table[NUC_TAB_ALL], Table[NUC_TAB_ALL_MODE], Table[NUC_TAB_RHO], Table[NUC_TAB_TORE], Table[NUC_TAB_YE],
-                          Table[NUC_TAB_RHO_MODE], Table[NUC_TAB_EORT_MODE], Table[NUC_TAB_ENTR_MODE], Table[NUC_TAB_PRES_MODE],
-                          Table[NUC_TAB_YE_MODE], INt_TL, INt_Other, Mode, &Err, Tolerance );
+                          Table[NUC_TAB_RHO_MODE], Table[NUC_TAB_EORT_MODE], Table[NUC_TAB_YE_MODE],
+                          INt_TL, INt_Other, Mode, &Err, Tolerance );
 
 //       trigger a *hard failure* if the EoS driver fails
          if ( Err )   for (int i=0; i<NTarget+1; i++)   Out[i] = NAN;
@@ -857,10 +857,10 @@ static void EoS_General_Nuclear( const int Mode, real Out[], const real In[], co
 
 //       invoke the nuclear EoS driver
          nuc_eos_C_short( Out_tmp, In_tmp, NTarget, TargetIdx,
-                          EnergyShift, NAN, NRho, NTorE, NYe, NRho_Mode, NMode, NYe_Mode,
+                          EnergyShift, NULL_REAL, NRho, NTorE, NYe, NRho_Mode, NMode, NYe_Mode,
                           Table[NUC_TAB_ALL], Table[NUC_TAB_ALL_MODE], Table[NUC_TAB_RHO], Table[NUC_TAB_TORE], Table[NUC_TAB_YE],
-                          Table[NUC_TAB_RHO_MODE], Table[NUC_TAB_EORT_MODE], Table[NUC_TAB_ENTR_MODE], Table[NUC_TAB_PRES_MODE],
-                          Table[NUC_TAB_YE_MODE], INt_TL, INt_Other, Mode, &Err, Tolerance );
+                          Table[NUC_TAB_RHO_MODE], Table[NUC_TAB_EORT_MODE], Table[NUC_TAB_YE_MODE],
+                          INt_TL, INt_Other, Mode, &Err, Tolerance );
 
 //       trigger a *hard failure* if the EoS driver fails
          if ( Err )   for (int i=0; i<NTarget+1; i++)   Out[i] = NAN;
@@ -933,8 +933,8 @@ static void EoS_General_Nuclear( const int Mode, real Out[], const real In[], co
          nuc_eos_C_short( Out_tmp, In_tmp, NTarget, TargetIdx,
                           EnergyShift, Temp_IG, NRho, NTorE, NYe, NRho_Mode, NMode, NYe_Mode,
                           Table[NUC_TAB_ALL], Table[NUC_TAB_ALL_MODE], Table[NUC_TAB_RHO], Table[NUC_TAB_TORE], Table[NUC_TAB_YE],
-                          Table[NUC_TAB_RHO_MODE], Table[NUC_TAB_EORT_MODE], Table[NUC_TAB_ENTR_MODE], Table[NUC_TAB_PRES_MODE],
-                          Table[NUC_TAB_YE_MODE], INt_TL, INt_Other, Mode, &Err, Tolerance );
+                          Table[NUC_TAB_RHO_MODE], Table[NUC_TAB_PRES_MODE], Table[NUC_TAB_YE_MODE],
+                          INt_TL, INt_Other, Mode, &Err, Tolerance );
 
 //       trigger a *hard failure* if the EoS driver fails
          if ( Err )   for (int i=0; i<NTarget+1; i++)   Out[i] = NAN;
@@ -1009,10 +1009,10 @@ static void EoS_General_Nuclear( const int Mode, real Out[], const real In[], co
 
 //       invoke the nuclear EoS driver
          nuc_eos_C_short( Out_tmp, In_tmp, NTarget, TargetIdx,
-                          EnergyShift, NAN, NRho, NTorE, NYe, NRho_Mode, NMode, NYe_Mode,
+                          EnergyShift, NULL_REAL, NRho, NTorE, NYe, NRho_Mode, NMode, NYe_Mode,
                           Table[NUC_TAB_ALL], Table[NUC_TAB_ALL_MODE], Table[NUC_TAB_RHO], Table[NUC_TAB_TORE], Table[NUC_TAB_YE],
-                          Table[NUC_TAB_RHO_MODE], Table[NUC_TAB_EORT_MODE], Table[NUC_TAB_ENTR_MODE], Table[NUC_TAB_PRES_MODE],
-                          Table[NUC_TAB_YE_MODE], INt_TL, INt_Other, Mode, &Err, Tolerance );
+                          Table[NUC_TAB_RHO_MODE], Table[NUC_TAB_ENTR_MODE], Table[NUC_TAB_YE_MODE],
+                          INt_TL, INt_Other, Mode, &Err, Tolerance );
 
 //       trigger a *hard failure* if the EoS driver fails
          if ( Err )   for (int i=0; i<NTarget+1; i++)   Out[i] = NAN;
