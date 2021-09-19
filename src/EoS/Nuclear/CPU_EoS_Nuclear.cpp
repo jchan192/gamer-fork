@@ -50,9 +50,9 @@ real  *g_logtemp_mode   = NULL;
 
 
 // prototypes
-void nuc_eos_C_short( const real xrho, real *xtemp, const real xye,
-                      real *xenr, real *xent, real *xprs,
-                      real *xcs2, real *xmunu, const real energy_shift,
+void nuc_eos_C_short( real *Out, const real *In,
+                      const int NTarget, const int *TargetIdx,
+                      const real energy_shift, real Temp_InitGuess,
                       const int nrho, const int ntoreps, const int nye,
                       const int nrho_mode, const int nmode, const int nye_mode,
                       const real *alltables, const real *alltables_mode,
@@ -201,6 +201,7 @@ static real EoS_DensEint2Pres_Nuclear( const real Dens_Code, const real Eint_Cod
                                        const real *const Table[EOS_NTABLE_MAX] )
 {
 
+#if 1
 // check
 #  ifdef GAMER_DEBUG
 #  if ( NCOMP_PASSIVE > 0 )
@@ -237,18 +238,19 @@ static real EoS_DensEint2Pres_Nuclear( const real Dens_Code, const real Eint_Cod
    const int  INt_Other   = AuxArray_Int[NUC_AUX_INT_OTHER ];
 
 
-
    int  Mode      = NUC_MODE_ENGY;
-/*
    real Dens_CGS  = Dens_Code * Dens2CGS;
    real sEint_CGS = ( Eint_Code / Dens_Code ) * sEint2CGS - EnergyShift;
    real Ye        = Passive_Code[ YE - NCOMP_FLUID ] / Dens_Code;
-   real Temp_MeV  = ( Eint_Code*(2.0/3.0) ) * m_kB / Dens_Code / MeV2Kelvin;
-   real Entr      = NULL_REAL;
-   real Pres_CGS  = NULL_REAL;
-   real Useless   = NULL_REAL;
+   real Temp_IG   = ( Eint_Code*(2.0/3.0) ) * m_kB / Dens_Code / MeV2Kelvin;
 
    int  Err       = NULL_INT;
+
+   const int NTarget = 1;
+   int TargetIdx[NTarget] = { NUC_TAB_IDX_PRES };
+   real Out[NTarget+1];
+   real In[3] = { Dens_CGS, sEint_CGS, Ye };
+
 
 // check floating-point overflow and Ye
 #  ifdef GAMER_DEBUG
@@ -265,39 +267,22 @@ static real EoS_DensEint2Pres_Nuclear( const real Dens_Code, const real Eint_Cod
               Ye, Table[NUC_TAB_YE][0], Table[NUC_TAB_YE][NYe-1], __FUNCTION__ );
 #  endif // GAMER_DEBUG
 
+
 // invoke the nuclear EoS driver
-   nuc_eos_C_short( Dens_CGS, &Temp_MeV, Ye, &sEint_CGS, &Entr, &Pres_CGS, &Useless, &Useless,
-                    EnergyShift, NRho, NTorE, NYe, NRho_Mode, NMode, NYe_Mode,
+   nuc_eos_C_short( Out, In, NTarget, TargetIdx,
+                    EnergyShift, Temp_IG, NRho, NTorE, NYe, NRho_Mode, NMode, NYe_Mode,
                     Table[NUC_TAB_ALL], Table[NUC_TAB_ALL_MODE], Table[NUC_TAB_RHO], Table[NUC_TAB_TORE], Table[NUC_TAB_YE],
                     Table[NUC_TAB_RHO_MODE], Table[NUC_TAB_EORT_MODE], Table[NUC_TAB_ENTR_MODE], Table[NUC_TAB_PRES_MODE],
                     Table[NUC_TAB_YE_MODE], INt_TL, INt_Other, Mode, &Err, Tolerance );
 
 // trigger a *hard failure* if the EoS driver fails
-   if ( Err )
-   {
-      Temp_MeV = NAN;
-      Entr     = NAN;
-      Pres_CGS = NAN;
-   }
+   if ( Err )   for (int i=0; i<NTarget+1; i++)   Out[i] = NAN;
 
-   const real Temp_Kelv = Temp_MeV * MeV2Kelvin;
+   const real Pres_CGS  = Out[0];
+//   const real Temp_Kelv = Temp_MeV * MeV2Kelvin;
    const real Pres_Code = Pres_CGS * Pres2Code;
-*/
-
-   real In[3], Out[3], Pres_Code;
-
-   In[0] = Dens_Code;
-   In[1] = Eint_Code;
-   In[2] = Passive_Code[ YE - NCOMP_FLUID ] / Dens_Code;
-
-   EoS_General_Nuclear( Mode, Out, In, AuxArray_Flt, AuxArray_Int, Table, NULL );
-
-   Pres_Code = Out[2];
-
-   return Pres_Code;
 
 
-/*
 // final check
 #  ifdef GAMER_DEBUG
    if ( Hydro_CheckNegative(Temp_Kelv) )
@@ -324,7 +309,24 @@ static real EoS_DensEint2Pres_Nuclear( const real Dens_Code, const real Eint_Cod
 
 
    return Pres_Code;
-*/
+#endif
+
+
+#if 0
+   int  Mode      = NUC_MODE_ENGY;
+
+   real In[3], Out[3], Pres_Code;
+
+   In[0] = Dens_Code;
+   In[1] = Eint_Code;
+   In[2] = Passive_Code[ YE - NCOMP_FLUID ] / Dens_Code;
+
+   EoS_General_Nuclear( Mode, Out, In, AuxArray_Flt, AuxArray_Int, Table, NULL );
+
+   Pres_Code = Out[2];
+
+   return Pres_Code;
+#endif
 
 } // FUNCTION : EoS_DensEint2Pres_Nuclear
 
@@ -350,6 +352,7 @@ static real EoS_DensPres2Eint_Nuclear( const real Dens_Code, const real Pres_Cod
                                        const real *const Table[EOS_NTABLE_MAX] )
 {
 
+#if 1
 // check
 #  ifdef GAMER_DEBUG
 #  if ( NCOMP_PASSIVE > 0 )
@@ -368,7 +371,6 @@ static real EoS_DensPres2Eint_Nuclear( const real Dens_Code, const real Pres_Cod
 #  endif // GAMER_DEBUG
 
 
-/*
    const real EnergyShift = AuxArray_Flt[NUC_AUX_ESHIFT    ];
    const real Dens2CGS    = AuxArray_Flt[NUC_AUX_DENS2CGS  ];
    const real Pres2CGS    = AuxArray_Flt[NUC_AUX_PRES2CGS  ];
@@ -384,17 +386,23 @@ static real EoS_DensPres2Eint_Nuclear( const real Dens_Code, const real Pres_Cod
    const int  NYe_Mode    = AuxArray_Int[NUC_AUX_NYE_MODE  ];
    const int  INt_TL      = AuxArray_Int[NUC_AUX_INT_TL    ];
    const int  INt_Other   = AuxArray_Int[NUC_AUX_INT_OTHER ];
-*/
 
    int  Mode      = NUC_MODE_PRES;
-/*
    real Dens_CGS  = Dens_Code * Dens2CGS;
    real Pres_CGS  = Pres_Code * Pres2CGS;
    real Ye        = Passive_Code[ YE - NCOMP_FLUID ] / Dens_Code;
-   real Temp_MeV  = m_kB * Pres_Code / Dens_Code / MeV2Kelvin;
-   real sEint_CGS = NULL_REAL;
-   real Useless   = NULL_REAL;
+   real Temp_IG   = m_kB * Pres_Code / Dens_Code / MeV2Kelvin;
    int  Err       = NULL_INT;
+
+#  if   ( NUC_TABLE_MODE == NUC_TABLE_MODE_TEMP )
+   const int NTarget = 1;
+   int TargetIdx[NTarget] = { NUC_TAB_IDX_EORT };
+#  else
+   const int NTarget = 0;
+   int *TargetIdx = NULL;
+#  endif
+   real Out[NTarget+1];
+   real In[3] = { Dens_CGS, Pres_CGS, Ye };
 
 
 // check floating-point overflow and Ye
@@ -414,18 +422,37 @@ static real EoS_DensPres2Eint_Nuclear( const real Dens_Code, const real Pres_Cod
 
 
 // invoke the nuclear EoS driver
-   nuc_eos_C_short( Dens_CGS, &Temp_MeV, Ye, &sEint_CGS, &Useless, &Pres_CGS, &Useless, &Useless,
-                    EnergyShift, NRho, NTorE, NYe, NRho_Mode, NMode, NYe_Mode,
+   nuc_eos_C_short( Out, In, NTarget, TargetIdx,
+                    EnergyShift, Temp_IG, NRho, NTorE, NYe, NRho_Mode, NMode, NYe_Mode,
                     Table[NUC_TAB_ALL], Table[NUC_TAB_ALL_MODE], Table[NUC_TAB_RHO], Table[NUC_TAB_TORE], Table[NUC_TAB_YE],
                     Table[NUC_TAB_RHO_MODE], Table[NUC_TAB_EORT_MODE], Table[NUC_TAB_ENTR_MODE], Table[NUC_TAB_PRES_MODE],
                     Table[NUC_TAB_YE_MODE], INt_TL, INt_Other, Mode, &Err, Tolerance );
 
 // trigger a *hard failure* if the EoS driver fails
-   if ( Err )  sEint_CGS = NAN;
+   if ( Err )   for (int i=0; i<NTarget+1; i++)   Out[i] = NAN;
 
+   const real sEint_CGS = Out[0];
    const real Eint_Code = (  ( sEint_CGS + EnergyShift ) * sEint2Code  ) * Dens_Code;
-*/
 
+
+// final check
+#  ifdef GAMER_DEBUG
+// still require Eint>0 for the nuclear EoS
+   if ( Hydro_CheckNegative(Eint_Code) )
+   {
+      printf( "ERROR : invalid output internal energy density (%13.7e code units) in %s() !!\n", Eint_Code, __FUNCTION__ );
+      printf( "        Dens=%13.7e code units, Pres=%13.7e code units, Ye=%13.7e, Mode %d\n", Dens_Code, Pres_Code, Ye, Mode );
+      printf( "        EoS error code: %d\n", Err );
+   }
+#  endif // GAMER_DEBUG
+
+
+   return Eint_Code;
+#endif
+
+
+#if 0
+   int  Mode      = NUC_MODE_PRES;
    real In[3], Out[3], Eint_Code;
 
    In[0] = Dens_Code;
@@ -437,24 +464,7 @@ static real EoS_DensPres2Eint_Nuclear( const real Dens_Code, const real Pres_Cod
    Eint_Code = Out[0];
 
    return Eint_Code;
-
-/*
-// final check
-#  ifdef GAMER_DEBUG
-// still require Eint>0 for the nuclear EoS
-   if ( Hydro_CheckNegative(Eint_Code) )
-   {
-      printf( "ERROR : invalid output internal energy density (%13.7e code units) in %s() !!\n", Eint_Code, __FUNCTION__ );
-      printf( "        Dens=%13.7e code units, Pres=%13.7e code units, Ye=%13.7e, Mode %d\n", Dens_Code, Pres_Code, Ye, Mode );
-      printf( "        EoS error code: %d\n", Err );
-   }
-#  endif // GAMER_DEBUG
-*/
-
-
-/*
-   return Eint_Code;
-*/
+#endif
 
 } // FUNCTION : EoS_DensPres2Eint_Nuclear
 
@@ -480,7 +490,7 @@ static real EoS_DensPres2CSqr_Nuclear( const real Dens_Code, const real Pres_Cod
                                        const real *const Table[EOS_NTABLE_MAX] )
 {
 
-/*
+#if 1
 // check
 #  ifdef GAMER_DEBUG
 #  if ( NCOMP_PASSIVE > 0 )
@@ -514,18 +524,20 @@ static real EoS_DensPres2CSqr_Nuclear( const real Dens_Code, const real Pres_Cod
    const int  NYe_Mode    = AuxArray_Int[NUC_AUX_NYE_MODE  ];
    const int  INt_TL      = AuxArray_Int[NUC_AUX_INT_TL    ];
    const int  INt_Other   = AuxArray_Int[NUC_AUX_INT_OTHER ];
-*/
+
 
    int  Mode     = NUC_MODE_PRES;
-
-/*
    real Dens_CGS = Dens_Code * Dens2CGS;
    real Pres_CGS = Pres_Code * Pres2CGS;
    real Ye       = Passive_Code[ YE - NCOMP_FLUID ] / Dens_Code;
-   real Temp_MeV = m_kB * Pres_Code / Dens_Code / MeV2Kelvin;
-   real Cs2_CGS  = NULL_REAL;
-   real Useless  = NULL_REAL;
+   real Temp_IG  = m_kB * Pres_Code / Dens_Code / MeV2Kelvin;
    int  Err      = NULL_INT;
+
+
+   const int NTarget = 1;
+   int TargetIdx[NTarget] = { NUC_TAB_IDX_CSQR };
+   real Out[NTarget+1];
+   real In[3] = { Dens_CGS, Pres_CGS, Ye };
 
 
 // check floating-point overflow and Ye
@@ -545,15 +557,16 @@ static real EoS_DensPres2CSqr_Nuclear( const real Dens_Code, const real Pres_Cod
 
 
 // invoke the nuclear EoS driver
-   nuc_eos_C_short( Dens_CGS, &Temp_MeV, Ye, &Useless, &Useless, &Pres_CGS, &Cs2_CGS, &Useless,
-                    EnergyShift, NRho, NTorE, NYe, NRho_Mode, NMode, NYe_Mode,
+   nuc_eos_C_short( Out, In, NTarget, TargetIdx,
+                    EnergyShift, Temp_IG, NRho, NTorE, NYe, NRho_Mode, NMode, NYe_Mode,
                     Table[NUC_TAB_ALL], Table[NUC_TAB_ALL_MODE], Table[NUC_TAB_RHO], Table[NUC_TAB_TORE], Table[NUC_TAB_YE],
                     Table[NUC_TAB_RHO_MODE], Table[NUC_TAB_EORT_MODE], Table[NUC_TAB_ENTR_MODE], Table[NUC_TAB_PRES_MODE],
                     Table[NUC_TAB_YE_MODE], INt_TL, INt_Other, Mode, &Err, Tolerance );
 
 // trigger a *hard failure* if the EoS driver fails
-   if ( Err )  Cs2_CGS = NAN;
+   if ( Err )   for (int i=0; i<NTarget+1; i++)   Out[i] = NAN;
 
+   const real Cs2_CGS = Out[0];
    const real Cs2_Code = Cs2_CGS * CsSqr2Code;
 
 
@@ -566,8 +579,14 @@ static real EoS_DensPres2CSqr_Nuclear( const real Dens_Code, const real Pres_Cod
       printf( "        EoS error code: %d\n", Err );
    }
 #  endif // GAMER_DEBUG
-*/
 
+
+   return Cs2_Code;
+#endif
+
+
+#if 0
+   int  Mode     = NUC_MODE_PRES;
    real In[3], Out[3], Cs2_Code;
 
    In[0] = Dens_Code;
@@ -579,10 +598,7 @@ static real EoS_DensPres2CSqr_Nuclear( const real Dens_Code, const real Pres_Cod
    Cs2_Code = Out[2];
 
    return Cs2_Code;
-
-/*
-   return Cs2_Code;
-*/
+#endif
 
 } // FUNCTION : EoS_DensPres2CSqr_Nuclear
 
@@ -752,29 +768,34 @@ static void EoS_General_Nuclear( const int Mode, real Out[], const real In[], co
 
          real Dens_CGS  = Dens_Code * Dens2CGS;
          real sEint_CGS = ( Eint_Code / Dens_Code ) * sEint2CGS - EnergyShift;
-         real Temp_MeV  = ( Eint_Code*(2.0/3.0) ) * m_kB / Dens_Code / MeV2Kelvin;
-         real Entr      = NULL_REAL;
-         real Pres_CGS  = NULL_REAL;
-         real Useless   = NULL_REAL;
+         real Temp_IG  = ( Eint_Code*(2.0/3.0) ) * m_kB / Dens_Code / MeV2Kelvin;
          int  Err       = NULL_INT;
 
+         const int NTarget = 3;
+         int TargetIdx[NTarget] = { NUC_TAB_IDX_EORT, NUC_TAB_IDX_PRES, NUC_TAB_IDX_ENTR };
+         real Out_tmp[NTarget+1];
+         real In_tmp[3] = { Dens_CGS, sEint_CGS, Ye };
+
 //       invoke the nuclear EoS driver
-         nuc_eos_C_short( Dens_CGS, &Temp_MeV, Ye, &sEint_CGS, &Entr, &Pres_CGS, &Useless, &Useless,
-                          EnergyShift, NRho, NTorE, NYe, NRho_Mode, NMode, NYe_Mode,
+         nuc_eos_C_short( Out_tmp, In_tmp, NTarget, TargetIdx,
+                          EnergyShift, Temp_IG, NRho, NTorE, NYe, NRho_Mode, NMode, NYe_Mode,
                           Table[NUC_TAB_ALL], Table[NUC_TAB_ALL_MODE], Table[NUC_TAB_RHO], Table[NUC_TAB_TORE], Table[NUC_TAB_YE],
                           Table[NUC_TAB_RHO_MODE], Table[NUC_TAB_EORT_MODE], Table[NUC_TAB_ENTR_MODE], Table[NUC_TAB_PRES_MODE],
                           Table[NUC_TAB_YE_MODE], INt_TL, INt_Other, Mode, &Err, Tolerance );
 
 //       trigger a *hard failure* if the EoS driver fails
-         if ( Err )
-         {
-            Temp_MeV  = NAN;
-            Entr      = NAN;
-            Pres_CGS  = NAN;
-         }
+         if ( Err )   for (int i=0; i<NTarget+1; i++)   Out[i] = NAN;
 
 
 //       store the output results
+#  if   ( NUC_TABLE_MODE == NUC_TABLE_MODE_TEMP )
+         const real Temp_MeV = Out[NTarget];
+#  else
+         const real Temp_MeV = Out[0];
+#  endif
+         const real Pres_CGS = Out[1];
+         const real Entr     = Out[2];
+
          const real Temp_Kelv = Temp_MeV * MeV2Kelvin;
          const real Pres_Code = Pres_CGS * Pres2Code;
          Out[0] = Temp_Kelv;  // temperature in Kelvin
@@ -810,11 +831,13 @@ static void EoS_General_Nuclear( const int Mode, real Out[], const real In[], co
 
          real Dens_CGS  = Dens_Code * Dens2CGS;
          real Temp_MeV  = Temp_Kelv * Kelvin2MeV;
-         real sEint_CGS = NULL_REAL;
-         real Entr      = NULL_REAL;
-         real Pres_CGS  = NULL_REAL;
-         real Useless   = NULL_REAL;
          int  Err       = NULL_INT;
+
+         const int NTarget = 3;
+         int TargetIdx[NTarget] = { NUC_TAB_IDX_EORT, NUC_TAB_IDX_ENTR, NUC_TAB_IDX_PRES };
+         real Out_tmp[NTarget+1];
+         real In_tmp[3] = { Dens_CGS, Temp_MeV, Ye };
+
 
 //       check floating-point overflow and Ye
 #        ifdef GAMER_DEBUG
@@ -833,22 +856,25 @@ static void EoS_General_Nuclear( const int Mode, real Out[], const real In[], co
 
 
 //       invoke the nuclear EoS driver
-         nuc_eos_C_short( Dens_CGS, &Temp_MeV, Ye, &sEint_CGS, &Entr, &Pres_CGS, &Useless, &Useless,
-                          EnergyShift, NRho, NTorE, NYe, NRho_Mode, NMode, NYe_Mode,
+         nuc_eos_C_short( Out_tmp, In_tmp, NTarget, TargetIdx,
+                          EnergyShift, NAN, NRho, NTorE, NYe, NRho_Mode, NMode, NYe_Mode,
                           Table[NUC_TAB_ALL], Table[NUC_TAB_ALL_MODE], Table[NUC_TAB_RHO], Table[NUC_TAB_TORE], Table[NUC_TAB_YE],
                           Table[NUC_TAB_RHO_MODE], Table[NUC_TAB_EORT_MODE], Table[NUC_TAB_ENTR_MODE], Table[NUC_TAB_PRES_MODE],
                           Table[NUC_TAB_YE_MODE], INt_TL, INt_Other, Mode, &Err, Tolerance );
 
 //       trigger a *hard failure* if the EoS driver fails
-         if ( Err )
-         {
-            sEint_CGS = NAN;
-            Entr      = NAN;
-            Pres_CGS  = NAN;
-         }
+         if ( Err )   for (int i=0; i<NTarget+1; i++)   Out[i] = NAN;
 
 
 //       store the output results
+#  if   ( NUC_TABLE_MODE == NUC_TABLE_MODE_TEMP )
+         const real sEint_CGS = Out[0];
+#  else
+         const real sEint_CGS = Out[NTarget];
+#  endif
+         const real Entr = Out[1];
+         const real Pres_CGS = Out[2];
+
          const real Eint_Code = (  ( sEint_CGS + EnergyShift ) * sEint2Code  ) * Dens_Code;
          const real Pres_Code = Pres_CGS * Pres2Code;
          Out[0] = Eint_Code;  // volume energy density in code units (with energy shift)
@@ -893,30 +919,39 @@ static void EoS_General_Nuclear( const int Mode, real Out[], const real In[], co
 
          real Dens_CGS  = Dens_Code * Dens2CGS;
          real Pres_CGS  = Pres_Code * Pres2CGS;
-         real Temp_MeV  = m_kB * Pres_Code / Dens_Code / MeV2Kelvin;
-         real sEint_CGS = NULL_REAL;
-         real Entr      = NULL_REAL;
-         real Cs2_CGS   = NULL_REAL;
+         real Temp_IG   = m_kB * Pres_Code / Dens_Code / MeV2Kelvin;
          real Useless   = NULL_REAL;
          int  Err       = NULL_INT;
 
+         // to update
+         const int NTarget = 3;
+         int TargetIdx[NTarget] = { NUC_TAB_IDX_EORT, NUC_TAB_IDX_ENTR, NUC_TAB_IDX_CSQR };
+         real Out_tmp[NTarget+1];
+         real In_tmp[3] = { Dens_CGS, Pres_CGS, Ye };
+
 //       invoke the nuclear EoS driver
-         nuc_eos_C_short( Dens_CGS, &Temp_MeV, Ye, &sEint_CGS, &Entr, &Pres_CGS, &Cs2_CGS, &Useless,
-                          EnergyShift, NRho, NTorE, NYe, NRho_Mode, NMode, NYe_Mode,
+         nuc_eos_C_short( Out_tmp, In_tmp, NTarget, TargetIdx,
+                          EnergyShift, Temp_IG, NRho, NTorE, NYe, NRho_Mode, NMode, NYe_Mode,
                           Table[NUC_TAB_ALL], Table[NUC_TAB_ALL_MODE], Table[NUC_TAB_RHO], Table[NUC_TAB_TORE], Table[NUC_TAB_YE],
                           Table[NUC_TAB_RHO_MODE], Table[NUC_TAB_EORT_MODE], Table[NUC_TAB_ENTR_MODE], Table[NUC_TAB_PRES_MODE],
                           Table[NUC_TAB_YE_MODE], INt_TL, INt_Other, Mode, &Err, Tolerance );
 
 //       trigger a *hard failure* if the EoS driver fails
-         if ( Err )
-         {
-            sEint_CGS = NAN;
-            Entr      = NAN;
-            Cs2_CGS   = NAN;
-         }
+         if ( Err )   for (int i=0; i<NTarget+1; i++)   Out[i] = NAN;
 
 
 //       store the output results
+#        if   ( NUC_TABLE_MODE == NUC_TABLE_MODE_TEMP )
+         const real sEint_CGS = Out[0];
+         const real Temp_MeV  = Out[NTarget];
+#        else
+         const real Temp_MeV  = Out[0];
+         const real sEint_CGS = Out[NTarget];
+#        endif
+
+         const real Entr = Out[1];
+         const real Cs2_CGS = Out[2];
+
          const real Eint_Code = (  ( sEint_CGS + EnergyShift ) * sEint2Code  ) * Dens_Code;
          const real Temp_Kelv = Temp_MeV * MeV2Kelvin;
          const real Cs2_Code = Cs2_CGS * CsSqr2Code;
@@ -952,9 +987,13 @@ static void EoS_General_Nuclear( const int Mode, real Out[], const real In[], co
 
 
          real Dens_CGS  = Dens_Code * Dens2CGS;
-         real sEint_CGS = NULL_REAL;
-         real Useless   = NULL_REAL;
          int  Err       = NULL_INT;
+
+         // to update
+         const int NTarget = 1;
+         int TargetIdx[NTarget] = { NUC_TAB_IDX_EORT };
+         real Out_tmp[NTarget+1];
+         real In_tmp[3] = { Dens_CGS, Entr, Ye };
 
 //       check floating-point overflow and Ye
 #        ifdef GAMER_DEBUG
@@ -969,17 +1008,23 @@ static void EoS_General_Nuclear( const int Mode, real Out[], const real In[], co
 
 
 //       invoke the nuclear EoS driver
-         nuc_eos_C_short( Dens_CGS, &Useless, Ye, &sEint_CGS, &Entr, &Useless, &Useless, &Useless,
-                          EnergyShift, NRho, NTorE, NYe, NRho_Mode, NMode, NYe_Mode,
+         nuc_eos_C_short( Out_tmp, In_tmp, NTarget, TargetIdx,
+                          EnergyShift, NAN, NRho, NTorE, NYe, NRho_Mode, NMode, NYe_Mode,
                           Table[NUC_TAB_ALL], Table[NUC_TAB_ALL_MODE], Table[NUC_TAB_RHO], Table[NUC_TAB_TORE], Table[NUC_TAB_YE],
                           Table[NUC_TAB_RHO_MODE], Table[NUC_TAB_EORT_MODE], Table[NUC_TAB_ENTR_MODE], Table[NUC_TAB_PRES_MODE],
                           Table[NUC_TAB_YE_MODE], INt_TL, INt_Other, Mode, &Err, Tolerance );
 
 //       trigger a *hard failure* if the EoS driver fails
-         if ( Err )  sEint_CGS = NAN;
+         if ( Err )   for (int i=0; i<NTarget+1; i++)   Out[i] = NAN;
 
 
 //       store the output results
+#        if   ( NUC_TABLE_MODE == NUC_TABLE_MODE_TEMP )
+         const real sEint_CGS = Out[0];
+#        else
+         const real sEint_CGS = Out[NTarget];
+#        endif
+
          const real Eint_Code = (  ( sEint_CGS + EnergyShift ) * sEint2Code  ) * Dens_Code;
          Out[0] = Eint_Code;  // volume energy density in code units (with energy shift)
 

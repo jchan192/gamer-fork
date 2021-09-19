@@ -7,19 +7,19 @@
 #ifdef __CUDACC__
 GPU_DEVICE static
 void nuc_eos_C_linterp_some( const real x, const real y, const real z,
-                             real *output_vars, const real *alltables,
+                             const int *TargetIdx, real *output_vars, const real *alltables,
                              const int nx, const int ny, const int nz, const int nvars,
                              const real *xt, const real *yt, const real *zt );
 
 GPU_DEVICE static
 void nuc_eos_C_cubinterp_some( const real x, const real y, const real z,
-                               real *output_vars, const real *alltables,
+                               const int *TargetIdx, real *output_vars, const real *alltables,
                                const int nx, const int ny, const int nz, const int nvars,
                                const real *xt, const real *yt, const real *zt );
 #else
 
 void nuc_eos_C_linterp_some( const real x, const real y, const real z,
-                             real *output_vars, const real *alltables,
+                             const int *TargetIdx, real *output_vars, const real *alltables,
                              const int nx, const int ny, const int nz, const int nvars,
                              const real *xt, const real *yt, const real *zt );
 
@@ -52,7 +52,7 @@ void nuc_eos_C_linterp_some( const real x, const real y, const real z,
 //-------------------------------------------------------------------------------------
 GPU_DEVICE
 void nuc_eos_C_cubinterp_some( const real x, const real y, const real z,
-                               real *output_vars, const real *alltables,
+                               const int *TargetIdx, real *output_vars, const real *alltables,
                                const int nx, const int ny, const int nz, const int nvars,
                                const real *xt, const real *yt, const real *zt )
 {
@@ -102,7 +102,7 @@ void nuc_eos_C_cubinterp_some( const real x, const real y, const real z,
    if ( ix == 0  ||  iy == 0  ||  iz == 0  ||
         ix >= nx-2  ||  iy >= ny-2  ||  iz >= nz-2 )
    {
-      nuc_eos_C_linterp_some( x, y, z, output_vars, alltables,
+      nuc_eos_C_linterp_some( x, y, z, TargetIdx, output_vars, alltables,
                               nx, ny, nz, nvars, xt, yt, zt );
       return;
    }
@@ -137,8 +137,10 @@ void nuc_eos_C_cubinterp_some( const real x, const real y, const real z,
    w[2] = (real)-1.5*delz3 + (real)2.0*delz2 + (real)0.5*delz;
    w[3] = (real) 0.5*delz3 - (real)0.5*delz2;
 
-   for (int iv=0; iv<nvars; iv++)
+   for (int idx=0; idx<nvars; idx++)
    {
+      int iv = TargetIdx[idx];
+
       vox = (real)0.0;
       pv  = alltables + iv + NUC_TABLE_NVAR*( (ix-1) + (iy-1)*nx + (iz-1)*nxy );
 
@@ -164,14 +166,14 @@ void nuc_eos_C_cubinterp_some( const real x, const real y, const real z,
          pv  += nxy*NUC_TABLE_NVAR - 4*NUC_TABLE_NVAR*nx;
       } // for (int k=0; k<4; k++)
 
-      output_vars[iv] = vox;
-   } // for (int iv=0; iv<nvars; iv++)
+      output_vars[idx] = vox;
+   } // for (int idx=0; idx<nvars; idx++)
 
 
 // linear interpolation at boundaries (where output_vars[0] will be NaN)
    if ( output_vars[0] != output_vars[0] )
    {
-      nuc_eos_C_linterp_some( x, y, z, output_vars, alltables,
+      nuc_eos_C_linterp_some( x, y, z, TargetIdx, output_vars, alltables,
                               nx, ny, nz, nvars, xt, yt, zt );
       return;
    }

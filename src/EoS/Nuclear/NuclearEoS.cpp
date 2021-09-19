@@ -14,11 +14,11 @@
 #else
 
 void nuc_eos_C_cubinterp_some( const real x, const real y, const real z,
-                               real *output_vars, const real *alltables,
+                               const int *TargetIdx, real *output_vars, const real *alltables,
                                const int nx, const int ny, const int nz, const int nvars,
                                const real *xt, const real *yt, const real *zt );
 void nuc_eos_C_linterp_some( const real x, const real y, const real z,
-                             real *output_vars, const real *alltables,
+                             const int *TargetIdx, real *output_vars, const real *alltables,
                              const int nx, const int ny, const int nz, const int nvars,
                              const real *xt, const real *yt, const real *zt );
 void findtoreps( const real x, const real y, const real z,
@@ -117,9 +117,9 @@ void findtemp_NR_bisection( const real lr, const real lt0, const real ye, const 
 //                rfeps           : Tolerence for interpolations
 //-----------------------------------------------------------------------------------------------
 GPU_DEVICE
-void nuc_eos_C_short( const real xrho, real *xtemp, const real xye,
-                      real *xenr, real *xent, real *xprs,
-                      real *xcs2, real *xmunu, const real energy_shift,
+void nuc_eos_C_short( real *Out, const real *In,
+                      const int NTarget, const int *TargetIdx,
+                      const real energy_shift, real Temp_InitGuess,
                       const int nrho, const int ntoreps, const int nye,
                       const int nrho_mode, const int nmode, const int nye_mode,
                       const real *alltables, const real *alltables_mode,
@@ -129,6 +129,13 @@ void nuc_eos_C_short( const real xrho, real *xtemp, const real xye,
                       const int interpol_TL, const int interpol_other,
                       const int keymode, int *keyerr, const real rfeps )
 {
+
+   const real xrho = In[0];
+   const real xye  = In[2];
+   real ltoreps, lt0;
+   real var0            = NULL_REAL;
+   const real *mode_arr = NULL;
+
 
 // check whether the input density and Ye are within the table
    const real lr = LOG10( xrho );
@@ -143,87 +150,97 @@ void nuc_eos_C_short( const real xrho, real *xtemp, const real xye,
    if ( xye <  yes  [     0] )  {  *keyerr = 102;  return;  }
    if ( xye != xye           )  {  *keyerr = 202;  return;  }
 
+
 // find temperature (temperature-based table)
 #  if   ( NUC_TABLE_MODE == NUC_TABLE_MODE_TEMP )
-   real ltoreps   = LOG10( *xtemp );
-   real lt0       = NULL_REAL;
-   if ( *xtemp == *xtemp )
+   if ( Temp_InitGuess == Temp_InitGuess )
    {
-      lt0 = ltoreps;
+      lt0 = LOG10( Temp_InitGuess );
       lt0 = MAX(  MIN( lt0, logtoreps[ntoreps-1] ), logtoreps[0]  );
    }
-   else if ( *xtemp != *xtemp )
+
+   else
    {
       lt0 = 1.0;
    }
-#  elif ( NUC_TABLE_MODE == NUC_TABLE_MODE_ENGY )
-   real ltoreps   = LOG10( *xenr + energy_shift );
 #  endif // #elif NUC_TABLE_MODE ... else ...
-   real var0            = NULL_REAL;
-   const real *mode_arr = NULL;
+
+
 
    switch ( keymode )
    {
       case NUC_MODE_ENGY :
       {
+         const real leps  = LOG10( MAX( In[1] + energy_shift, 1.0 ) );
+         const real leps0 = LOG10( In[1] + energy_shift );
+//         const real leps  = LOG10( MAX( xenr + energy_shift, 1.0 ) );
+//         const real leps0 = LOG10( xenr + energy_shift );
+
 #     if   ( NUC_TABLE_MODE == NUC_TABLE_MODE_TEMP )
-         const real leps = LOG10( MAX( *xenr + energy_shift, 1.0 ) );
          var0            = leps;
          mode_arr        = logepsort_mode;
          if ( leps > logepsort_mode[nmode-1]  )     {  *keyerr = 107;           }
          if ( leps < logepsort_mode[      0]  )     {  *keyerr = 108;           }
-         if ( *xenr != *xenr                  )     {  *keyerr = 203;           }
+         if ( leps != leps                    )     {  *keyerr = 203;           }
 #     elif ( NUC_TABLE_MODE == NUC_TABLE_MODE_ENGY )
-         real leps = LOG10( MAX( *xenr + energy_shift, 1.0 ) );
+         ltoreps = leps0;
          if ( leps > logtoreps[ntoreps-1] )         {  *keyerr = 107;  return;  }
          if ( leps < logtoreps[        0] )         {  *keyerr = 108;  return;  }
-         if ( *xenr != *xenr              )         {  *keyerr = 203;           }
+         if ( leps != leps                )         {  *keyerr = 203;           }
 #     endif // #elif NUC_TABLE_MODE ... else ...
       }
       break;
+
 
       case NUC_MODE_TEMP :
       {
+         const real lt  = LOG10( In[1] );
+//         const real lt  = LOG10( xtemp );
+
 #     if   ( NUC_TABLE_MODE == NUC_TABLE_MODE_TEMP )
-         real lt  = LOG10( *xtemp );
+         ltoreps = lt;
          if ( lt > logtoreps[ntoreps-1] )           {  *keyerr = 103;  return;  }
          if ( lt < logtoreps[        0] )           {  *keyerr = 104;  return;  }
-         if ( *xtemp != *xtemp          )           {  *keyerr = 204;  return;  }
+         if ( lt != lt                  )           {  *keyerr = 204;  return;  }
 #     elif ( NUC_TABLE_MODE == NUC_TABLE_MODE_ENGY )
-         const real lt  = LOG10( *xtemp );
-         mode_arr = logepsort_mode;
          var0     = lt;
+         mode_arr = logepsort_mode;
          if ( lt > logepsort_mode[nmode-1] )        {  *keyerr = 109;  return;  }
          if ( lt < logepsort_mode[      0] )        {  *keyerr = 110;  return;  }
-         if ( *xtemp != *xtemp             )        {  *keyerr = 204;  return;  }
+         if ( lt != lt                     )        {  *keyerr = 204;  return;  }
 #     endif // #elif NUC_TABLE_MODE ... else ...
       }
       break;
 
+
       case NUC_MODE_ENTR :
       {
-         const real entr = *xent;
+         const real entr =  In[1];
+//         const real entr =  xent;
          var0            =  entr;
          mode_arr        =  entr_mode;
          if ( entr > entr_mode[nmode-1] )           {  *keyerr = 111;           }
          if ( entr < entr_mode[      0] )           {  *keyerr = 112;           }
-         if ( *xent != *xent            )           {  *keyerr = 205;  return;  }
+         if ( entr != entr              )           {  *keyerr = 205;  return;  }
       }
       break;
 
+
       case NUC_MODE_PRES :
       {
-         const real lprs = LOG10( *xprs );
+         const real lprs = LOG10( In[1] );
+//         const real lprs = LOG10( xprs );
          var0            = lprs;
          mode_arr        = logprss_mode;
          if ( lprs > logprss_mode[nmode-1] )        {  *keyerr = 113;           }
          if ( lprs < logprss_mode[      0] )        {  *keyerr = 114;           }
-         if ( *xprs != *xprs               )        {  *keyerr = 206;  return;  }
+         if ( lprs != lprs                 )        {  *keyerr = 206;  return;  }
       }
       break;
    } // switch ( keymode )
 
 
+// check ltoreps = NULL istead
 #  if   ( NUC_TABLE_MODE == NUC_TABLE_MODE_TEMP )
    if ( keymode != NUC_MODE_TEMP ) {
       if ( *keyerr == 0 )
@@ -252,33 +269,41 @@ void nuc_eos_C_short( const real xrho, real *xtemp, const real xye,
 #  endif // #elif NUC_TABLE_MODE ... else ...
 
 
-   real res[5]; // result array
-
-// linear interolation for other variables
-   if      ( interpol_other == NUC_INTERPOL_LINEAR )
+   if ( NTarget > 0 )
    {
-      nuc_eos_C_linterp_some( lr, ltoreps, xye, res, alltables,
-                              nrho, ntoreps, nye, 5, logrho, logtoreps, yes );
-   }
-// cubic interpolation for other variables
-   else if ( interpol_other == NUC_INTERPOL_CUBIC  )
-   {
-      nuc_eos_C_cubinterp_some( lr, ltoreps, xye, res, alltables,
-                                nrho, ntoreps, nye, 5, logrho, logtoreps, yes );
+   // linear interolation for other variables
+      if      ( interpol_other == NUC_INTERPOL_LINEAR )
+      {
+         nuc_eos_C_linterp_some( lr, ltoreps, xye, TargetIdx, Out, alltables,
+                                 nrho, ntoreps, nye, NTarget, logrho, logtoreps, yes );
+      }
+   // cubic interpolation for other variables
+      else if ( interpol_other == NUC_INTERPOL_CUBIC  )
+      {
+         nuc_eos_C_cubinterp_some( lr, ltoreps, xye, TargetIdx, Out, alltables,
+                                   nrho, ntoreps, nye, NTarget, logrho, logtoreps, yes );
+      }
+
+
+   // convert scale and correct energy shift
+      for (int i=0; i<NTarget; i++)
+      {
+         if ( TargetIdx[i] == NUC_TAB_IDX_PRES )   Out[i] = POW( (real)10.0, Out[i] );
+
+#        if   ( NUC_TABLE_MODE == NUC_TABLE_MODE_TEMP )
+         if ( TargetIdx[i] == NUC_TAB_IDX_EORT )   Out[i] = POW( (real)10.0, Out[i] ) - energy_shift;
+#        else
+         if ( TargetIdx[i] == NUC_TAB_IDX_EORT )   Out[i] = POW( (real)10.0, Out[i] );
+#        endif
+      }
    }
 
-// assign results
+
 #  if   ( NUC_TABLE_MODE == NUC_TABLE_MODE_TEMP )
-   if ( keymode != NUC_MODE_TEMP ) *xtemp = POW( (real)10.0, ltoreps );
-   if ( keymode != NUC_MODE_ENGY ) *xenr  = POW( (real)10.0, res[1]  ) - energy_shift;
-#  elif ( NUC_TABLE_MODE == NUC_TABLE_MODE_ENGY )
-   if ( keymode != NUC_MODE_ENGY ) *xenr  = POW( (real)10.0, ltoreps ) - energy_shift;
-   if ( keymode != NUC_MODE_TEMP ) *xtemp = POW( (real)10.0, res[1] );
-#  endif // #elif NUC_TABLE_MODE ... else ...
-   if ( keymode != NUC_MODE_ENTR ) *xent  = res[2];
-   if ( keymode != NUC_MODE_PRES ) *xprs  = POW( (real)10.0, res[0] );
-   *xmunu = res[3];
-   *xcs2  = res[4];
+   Out[NTarget] = POW( (real)10.0, ltoreps );
+#  else
+   Out[NTarget] = POW( (real)10.0, ltoreps ) - energy_shift;
+#  endif
 
 
    return;

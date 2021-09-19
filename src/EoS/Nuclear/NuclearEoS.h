@@ -28,10 +28,8 @@
 #define NUC_AUX_NRHO_MODE     3     // AuxArray_Int: nrho_mode
 #define NUC_AUX_NMODE         4     // AuxArray_Int: nmode
 #define NUC_AUX_NYE_MODE      5     // AuxArray_Int: nye_mode
-
-// Interpolation schemes
-#define NUC_AUX_INT_TL        6     // AuxArray_Int: interpolation scheme for table look-ups
-#define NUC_AUX_INT_OTHER     7     // AuxArray_Int: interpolation scheme for other thermodynamic variables
+#define NUC_AUX_INT_TL        6     // AuxArray_Int: interpolation scheme for lookup        table
+#define NUC_AUX_INT_OTHER     7     // AuxArray_Int: interpolation scheme for thermodynamic table
 
 
 // table indices
@@ -48,17 +46,33 @@
 
 
 // EoS modes
-#define NUC_MODE_ENGY         0     // energy mode
+#define NUC_MODE_ENGY         0     // energy      mode
 #define NUC_MODE_TEMP         1     // temperature mode
-#define NUC_MODE_ENTR         2     // entropy mode
-#define NUC_MODE_PRES         3     // pressure mode
+#define NUC_MODE_ENTR         2     // entropy     mode
+#define NUC_MODE_PRES         3     // pressure    mode
 
 
+// thermodynamic/lookup table indices
+#define NUC_TAB_IDX_PRES      0     // pressure
+#define NUC_TAB_IDX_EORT      1     // internal energy (temperature-based table)
+                                    // temperature     (energy-based      table)
+#define NUC_TAB_IDX_ENTR      2     // entropy
+#define NUC_TAB_IDX_MUNU      3     // mu_e - mu_n + mu_p
+#define NUC_TAB_IDX_CSQR      4     // sound speed squared
+#define NUC_TAB_IDX_MUHAT     5     // mu_n - mu_p
+#define NUC_TAB_IDX_MUE       6     // electron chemical potential (includes rest mass)
+#define NUC_TAB_IDX_MUP       7     // proton   chemical potential
+#define NUC_TAB_IDX_MUN       8     // neutron  chemical potential
+#define NUC_TAB_IDX_XA        9     // alpha particle        mass fraction
+#define NUC_TAB_IDX_XH       10     // average heavy nucleus mass fraction
+#define NUC_TAB_IDX_XN       11     // neutron               mass fraction
+#define NUC_TAB_IDX_XP       12     // proton                mass fraction
+#define NUC_TAB_IDX_ABAR     13     // average heavy nucleus mass number
+#define NUC_TAB_IDX_ZBAR     14     // average heavy nucleus atomic number
+#define NUC_TAB_IDX_GAMMA    15     // adiabatic index
 
 
-
-
-// Tolerance for Newton-Raphson or bisection method in temperature driver
+// Tolerance for Newton-Raphson or bisection methods in temperature driver
 #ifdef FLOAT8
 const real Tolerance = 1e-10;
 #else
