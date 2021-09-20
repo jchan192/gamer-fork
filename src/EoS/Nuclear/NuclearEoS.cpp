@@ -22,7 +22,7 @@ void nuc_eos_C_linterp_some( const real x, const real y, const real z,
                              const int nx, const int ny, const int nz, const int nvars,
                              const real *xt, const real *yt, const real *zt );
 void findtoreps( const real x, const real y, const real z,
-                 real *found_lt, const real *alltables_LUT,
+                 real *found_lt, const real *alltables_Aux,
                  const int nx, const int ny, const int nz, const int ntemp,
                  const real *xt, const real *yt, const real *zt, const real *logtoreps,
                  const int interpol_TL, const int keymode, int *keyerr );
@@ -38,93 +38,89 @@ void findtemp_NR_bisection( const real lr, const real lt_IG, const real ye, cons
 
 //-----------------------------------------------------------------------------------------------
 // Function    :  nuc_eos_C_short
-// Description :  Function to find thermodynamic varibles by searching
+// Description :  Function to find thermodynamic variables by searching
 //                a pre-calculated nuclear equation of state table
 //
 // Note        :  1. It will strictly return values in cgs or MeV
 //                2. Four modes are supported
-//                3. The defalut mode is temperature (1) mode
-//                4. In case, three other modes are available for finding temperature
-//                   energy      (0) mode
-//                   temperature (1) mode
-//                   entropy     (2) mode
-//                   pressure    (3) mode
+//                   --> Energy      mode (0)
+//                       Temperature mode (1)
+//                       Entropy     mode (2)
+//                       Pressure    mode (3)
 //
-// Parameter   :  xrho            : Input density (rho (g/cm^3))
-//                xtemp           : Input (temperature mode)
-//                                  or ouput temperature in MeV
-//                xye             : Electron fraction (Y_e)
-//                xenr            : Input specific internal energy (energy mode)
-//                                  or output specific internal energy
-//                xent            : Input (entropy mode)
-//                                  or output specific entropy (e)
-//                xprs            : Input (pressure mode)
-//                                  or output pressure
-//                xcs2            : Output sound speed
-//                xmunu           : Output chemcial potential
-//                energy_shift    : energy_shift
-//                nrho            : Size of density array in the Nuclear EoS table
-//                ntoreps         : Size of (temperature/energy) array in the Nuclear EoS table (temp/energy-based table)
-//                nye             : Size of Y_e array in the Nuclear EoS table
-//                nrho_LUT       : Size of density array of look-up tables (logtemp_energy.../logenergy_temp...)
-//                nmode_LUT           : Size of log(eps/temp) arrays of look-up tables
-//                                          entropy
-//                                          log(P)        array in the Nuclear EoS table
-//                                                        for each mode
-//                nye_LUT        : Size of Y_e array of lookup tables
-//                alltables       : Nuclear EoS table
-//                alltables_LUT  : Auxiliary log(T/eps) arrays for energy/temperature mode
-//                                                                  entropy mode
-//                                                                  pressure mode
-//                logrho          : log(rho) array in the table
-//                logtoreps       : log(T) or log(eps) array for (T/eps) mode (temp/energy-based table)
-//                yes             : Y_e      array in the table
-//                logepsort_mode  : log(eps) or log(T) array for (eps/T) mode (temp/energy-based table)
-//                entropy_mode    : entropy  array for entropy mode
-//                logpress_mode   : log(P)   array for pressure mode
-//                interpol_TL     : interpolation schemes for table look-ups (linear/cubic)
-//                interpol_other  : interpolation schemes for other thermodynamic variables (linear/cubic)
-//                keymode         : Which mode we will use
-//                                  0 : energy mode      (coming in with eps)
-//                                  1 : temperature mode (coming in with T)
-//                                  2 : entropy mode     (coming in with entropy)
-//                                  3 : pressure mode    (coming in with P)
-//                keyerr          : Output error
-//                                  669 : bisection failed (only in tempearture-based table)
-//                                  668 : bisection failed (only in tempearture-based table)
-//                                  665 : fail in finding T/e
-//                                  101 : Y_e too high
-//                                  102 : Y_e too low
-//                                  103 : temp too high
-//                                  104 : temp too low
-//                                  105 : rho too high
-//                                  106 : rho too low
-//                                  107 : eps too high     (energy-based table)
-//                                  108 : eps too low      (energy-based table)
-//                                  109 : temp too high    (energy-based table)
-//                                  110 : temp too low     (energy-based table)
-//                                  111 : entropy too high (energy-based table)
-//                                  112 : entropy too low  (energy-based table)
-//                                  113 : log(P) too high  (energy-based table)
-//                                  114 : log(P) too low   (energy-based table)
-//                                  201 : lr  has NaN value
-//                                  202 : xye has NaN value
-//                                  203 : xenr has NaN value
-//                                  204 : xtemp has NaN value
-//                                  205 : xent has NaN value
-//                                  206 : xprs has NaN value
-
-//                rfeps           : Tolerence for interpolations
+// Parameter   :  Out            : Output array
+//                In             : Input array
+//                                 --> In[0] = mass density    ( rho)  in g/cm^3
+//                                     In[1] = internal energy ( eps)  in cm^2/s^2   (0)
+//                                           = temperature     (temp) in MeV        (1)
+//                                           = entropy         (entr) in kB/baryon  (2)
+//                                           = pressure        (pres) in dyne/cm^2  (3)
+//                                     In[2] = Ye              (  Ye) dimensionless
+//                NTarget        : Number of thermodynamic variables retrieved from the nuclear EoS table
+//                TargetIdx      : Indices of thermodynamic variables to be returned
+//                energy_shift   : Energy shift
+//                Temp_InitGuess : Initial guess of temperature (for temperature-based table)
+//                nrho           : Size of density         array in the Nuclear EoS table
+//                ntoreps        : Size of internal energy array in the Nuclear EoS table (     energy-based)
+//                                         temperature                                    (temperature-based)
+//                nye            : Size of Ye              array in the Nuclear EoS table
+//                nrho_Aux       : Size of density                     array in the auxiliary table
+//                nmode_Aux      : Size of internal energy/temperature array in the auxiliary table
+//                                         entropy
+//                                         pressure
+//                nye_Aux        : Size of Ye                          array in the auxiliary table
+//                alltables      : Nuclear EoS table
+//                alltables_mode : Auxiliary arrays for finding internal energy/temperature in different modes
+//                logrho         : density                     index array in the Nuclear EoS table (log scale)
+//                logtoreps      : internal energy/temperature index array in the Nuclear EoS table (log scale)
+//                yes            : Ye                          index array in the Nuclear EoS table
+//                logrho_Aux     : density                     index array in the auxiliary table (log scale)
+//                mode_Aux       : internal energy/temperature index array in the auxiliary table (log scale)
+//                                 entropy
+//                                 pressure                                                       (log scale)
+//                yes_Aux        : Ye                          index array in the auxiliary table
+//                interpol_TL    : Interpolation schemes for the auxiliary table
+//                interpol_other : Interpolation schemes for the Nuclear EoS table
+//                keymode        : Which mode we will use
+//                                 --> 0 : Energy mode
+//                                     1 : Temperature mode
+//                                     2 : Entropy mode
+//                                     3 : Pressure mode
+//                keyerr         : Output error
+//                                 --> 100 : rho  too high
+//                                     101 : rho  too low
+//                                     102 : rho  NaN
+//                                     110 : eps  too high
+//                                     111 : eps  too low
+//                                     112 : eps  NaN
+//                                     120 : temp too high
+//                                     121 : temp too low
+//                                     122 : temp NaN
+//                                     130 : entr too high
+//                                     131 : entr too low
+//                                     132 : entr NaN
+//                                     140 : pres too high
+//                                     141 : pres too low
+//                                     142 : pres NaN
+//                                     150 : Ye   too high
+//                                     151 : Ye   too low
+//                                     152 : Ye   NaN
+//                                     665 : fail in finding internal energy or temperature
+//                                     668 : bisection failed (temperature-based table only) (WIP)
+//                                     669 : bisection failed (temperature-based table only) (WIP)
+//                rfeps          : Tolerance for Newton-Raphson and bisection methods
+//
+// Return      :  Out[]
 //-----------------------------------------------------------------------------------------------
 GPU_DEVICE
 void nuc_eos_C_short( real *Out, const real *In,
                       const int NTarget, const int *TargetIdx,
                       const real energy_shift, real Temp_InitGuess,
                       const int nrho, const int ntoreps, const int nye,
-                      const int nrho_LUT, const int nmode_LUT, const int nye_LUT,
-                      const real *alltables, const real *alltables_LUT,
+                      const int nrho_Aux, const int nmode_Aux, const int nye_Aux,
+                      const real *alltables, const real *alltables_Aux,
                       const real *logrho, const real *logtoreps, const real *yes,
-                      const real *logrho_LUT, const real *mode_LUT, const real *yes_LUT,
+                      const real *logrho_Aux, const real *mode_Aux, const real *yes_Aux,
                       const int interpol_TL, const int interpol_other,
                       const int keymode, int *keyerr, const real rfeps )
 {
@@ -136,14 +132,9 @@ void nuc_eos_C_short( real *Out, const real *In,
               *keyerr   = 0;
 
 #  if ( NUC_TABLE_MODE == NUC_TABLE_MODE_TEMP )
-   real lt_IG;
+   real lt_IG = 1.0;
 
-   if ( Temp_InitGuess != Temp_InitGuess )
-   {
-      lt_IG = 1.0;
-   }
-
-   else
+   if ( Temp_InitGuess != NULL_REAL )
    {
       lt_IG = LOG10( Temp_InitGuess );
       lt_IG = MAX(  MIN( lt_IG, logtoreps[ntoreps-1] ), logtoreps[0]  );
@@ -152,13 +143,13 @@ void nuc_eos_C_short( real *Out, const real *In,
 
 
 // check whether the input density and Ye are within the table
-   if ( lr >  logrho[nrho-1] )  {  *keyerr = 105;  return;  }
-   if ( lr <  logrho[     0] )  {  *keyerr = 106;  return;  }
-   if ( lr != lr             )  {  *keyerr = 201;  return;  }
+   if ( lr >  logrho[nrho-1] )  {  *keyerr = 100;  return;  }
+   if ( lr <  logrho[     0] )  {  *keyerr = 101;  return;  }
+   if ( lr != lr             )  {  *keyerr = 102;  return;  }
 
-   if ( xye >  yes  [nye -1] )  {  *keyerr = 101;  return;  }
-   if ( xye <  yes  [     0] )  {  *keyerr = 102;  return;  }
-   if ( xye != xye           )  {  *keyerr = 202;  return;  }
+   if ( xye >  yes  [nye -1] )  {  *keyerr = 150;  return;  }
+   if ( xye <  yes  [     0] )  {  *keyerr = 151;  return;  }
+   if ( xye != xye           )  {  *keyerr = 152;  return;  }
 
 
    switch ( keymode )
@@ -168,78 +159,77 @@ void nuc_eos_C_short( real *Out, const real *In,
          const real leps = LOG10( In[1] + energy_shift );
 
 #        if ( NUC_TABLE_MODE == NUC_TABLE_MODE_TEMP )
-         var_mode = leps;
-
-         if ( leps >  mode_LUT[nmode_LUT-1] )     {  *keyerr = 107;  return;  }
-         if ( leps <  mode_LUT[          0] )     {  *keyerr = 108;  return;  }
-         if ( leps != leps                  )     {  *keyerr = 203;  return;  }
+         const int   npt_chk   = nmode_Aux;
+         const real *table_chk = mode_Aux;
+                     var_mode  = leps;
 #        else
-         ltoreps  = leps;
+         const int   npt_chk   = ntoreps;
+         const real *table_chk = logtoreps;
+                     ltoreps   = leps;
+#        endif // if ( NUC_TABLE_MODE == NUC_TABLE_MODE_TEMP )
 
-         if ( leps >  logtoreps[ntoreps-1]  )     {  *keyerr = 107;  return;  }
-         if ( leps <  logtoreps[        0]  )     {  *keyerr = 108;  return;  }
-         if ( leps != leps                  )     {  *keyerr = 203;  return;  }
-#        endif
+         if ( leps >  table_chk[npt_chk-1]  )  {  *keyerr = 110;  return;  }
+         if ( leps <  table_chk[        0]  )  {  *keyerr = 111;  return;  }
+         if ( leps != leps                  )  {  *keyerr = 112;  return;  }
       }
       break;
 
 
       case NUC_MODE_TEMP :
       {
-         const real lt  = LOG10( In[1] );
+         const real lt = LOG10( In[1] );
 
 #        if ( NUC_TABLE_MODE == NUC_TABLE_MODE_TEMP )
-         ltoreps  = lt;
-
-         if ( lt >  logtoreps[ntoreps-1]  )       {  *keyerr = 103;  return;  }
-         if ( lt <  logtoreps[        0]  )       {  *keyerr = 104;  return;  }
-         if ( lt != lt                    )       {  *keyerr = 204;  return;  }
+         const int   npt_chk   = ntoreps;
+         const real *table_chk = logtoreps;
+                     ltoreps   = lt;
 #        else
-         var_mode = lt;
+         const int   npt_chk   = nmode_Aux;
+         const real *table_chk = mode_Aux;
+                     var_mode  = lt;
+#        endif // if ( NUC_TABLE_MODE == NUC_TABLE_MODE_TEMP )
 
-         if ( lt >  mode_LUT[nmode_LUT-1] )       {  *keyerr = 109;  return;  }
-         if ( lt <  mode_LUT[          0] )       {  *keyerr = 110;  return;  }
-         if ( lt != lt                    )       {  *keyerr = 204;  return;  }
-#        endif
+         if ( lt   >  table_chk[npt_chk-1]  )  {  *keyerr = 120;  return;  }
+         if ( lt   <  table_chk[        0]  )  {  *keyerr = 121;  return;  }
+         if ( lt   != lt                    )  {  *keyerr = 122;  return;  }
       }
       break;
 
 
       case NUC_MODE_ENTR :
       {
-         const real entr =  In[1];
-         var_mode =  entr;
+         const real entr     = In[1];
+                    var_mode = entr;
 
-         if ( entr >  mode_LUT[nmode_LUT-1] )     {  *keyerr = 111;  return;  }
-         if ( entr <  mode_LUT[          0] )     {  *keyerr = 112;  return;  }
-         if ( entr != entr                  )     {  *keyerr = 205;  return;  }
+         if ( entr >  mode_Aux[nmode_Aux-1] )  {  *keyerr = 130;  return;  }
+         if ( entr <  mode_Aux[          0] )  {  *keyerr = 131;  return;  }
+         if ( entr != entr                  )  {  *keyerr = 132;  return;  }
       }
       break;
 
 
       case NUC_MODE_PRES :
       {
-         const real lprs = LOG10( In[1] );
-         var_mode = lprs;
+         const real lprs     = LOG10( In[1] );
+                    var_mode = lprs;
 
-         if ( lprs >  mode_LUT[nmode_LUT-1] )     {  *keyerr = 113;  return;  }
-         if ( lprs <  mode_LUT[          0] )     {  *keyerr = 114;  return;  }
-         if ( lprs != lprs                  )     {  *keyerr = 206;  return;  }
+         if ( lprs >  mode_Aux[nmode_Aux-1] )  {  *keyerr = 140;  return;  }
+         if ( lprs <  mode_Aux[          0] )  {  *keyerr = 141;  return;  }
+         if ( lprs != lprs                  )  {  *keyerr = 142;  return;  }
       }
       break;
    } // switch ( keymode )
 
 
-
 // find corresponding temperature or internal energy
    if ( ltoreps == NULL_REAL )
    {
-//    (a) Look-up table
-      findtoreps( lr, var_mode, xye, &ltoreps, alltables_LUT, nrho_LUT, nmode_LUT, nye_LUT, ntoreps,
-                  logrho_LUT, mode_LUT, yes_LUT, logtoreps, interpol_TL, keymode, keyerr );
+//    (a) Auxiliary table
+      findtoreps( lr, var_mode, xye, &ltoreps, alltables_Aux, nrho_Aux, nmode_Aux, nye_Aux, ntoreps,
+                  logrho_Aux, mode_Aux, yes_Aux, logtoreps, interpol_TL, keymode, keyerr );
 
 
-//    (b) Netwon-Rapshon and bisection methods (for temperature-based table)
+//    (b) Newton-Raphson and bisection methods (for temperature-based table)
 #     if ( NUC_TABLE_MODE == NUC_TABLE_MODE_TEMP )
       if ( *keyerr != 0 )
          findtemp_NR_bisection( lr, lt_IG, xye, var_mode, &ltoreps, nrho, ntoreps, nye, alltables,
@@ -247,21 +237,23 @@ void nuc_eos_C_short( real *Out, const real *In,
 #     endif
    }
 
-
    if ( *keyerr != 0 ) return;
-
 
 
 // find other thermodynamic variables
    if ( NTarget > 0 )
    {
       if ( interpol_other == NUC_INTERPOL_LINEAR )
+      {
          nuc_eos_C_linterp_some( lr, ltoreps, xye, TargetIdx, Out, alltables,
                                  nrho, ntoreps, nye, NTarget, logrho, logtoreps, yes );
+      }
 
       else
+      {
          nuc_eos_C_cubinterp_some( lr, ltoreps, xye, TargetIdx, Out, alltables,
                                    nrho, ntoreps, nye, NTarget, logrho, logtoreps, yes );
+      }
 
 
 //    convert scale and correct energy shift
@@ -277,15 +269,11 @@ void nuc_eos_C_short( real *Out, const real *In,
       }
    }
 
-
 #  if ( NUC_TABLE_MODE == NUC_TABLE_MODE_TEMP )
    Out[NTarget] = POW( (real)10.0, ltoreps );
 #  else
    Out[NTarget] = POW( (real)10.0, ltoreps ) - energy_shift;
 #  endif
-
-
-   return;
 
 } // FUNCTION : nuc_eos_C_short
 
