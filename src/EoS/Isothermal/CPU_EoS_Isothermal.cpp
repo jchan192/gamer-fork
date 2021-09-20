@@ -279,11 +279,12 @@ static real EoS_DensTemp2Pres_Isothermal( const real Dens, const real Temp, cons
 //                2. In[] and Out[] must NOT overlap
 //                3. Useless for this EoS
 //
-// Parameter   :  Mode       : To support multiple modes in this general converter
-//                Out        : Output array
-//                In         : Input array
-//                AuxArray_* : Auxiliary arrays (see the Note above)
-//                Table      : EoS tables
+// Parameter   :  Mode        : To support multiple modes in this general converter
+//                Out         : Output array
+//                In          : Input array
+//                AuxArray_*  : Auxiliary arrays (see the Note above)
+//                Table       : EoS tables
+//                ExtraIn_Int : Useless for this EoS
 //
 // Return      :  Out[]
 //-------------------------------------------------------------------------------------------------------

@@ -586,9 +586,9 @@ static real EoS_DensEint2Temp_Nuclear( const real Dens_Code, const real Eint_Cod
 {
 
 #  if ( NUC_TABLE_MODE == NUC_TABLE_MODE_TEMP )
-   const int NTarget = 0;
+   const int  NTarget = 0;
 #  else
-   const int NTarget = 1;
+   const int  NTarget = 1;
 #  endif
          int  ExtraIn_Int[NTarget+1];
          real In[3], Out[NTarget+1], Temp_Kelv;
@@ -1132,7 +1132,7 @@ void EoS_Init_Nuclear()
 
 // must enable units
    if ( ! OPT__UNIT )
-      Aux_Error( ERROR_INFO, "must enable OPT__UNIT for EOS_NUCLEAR !!\n " );
+      Aux_Error( ERROR_INFO, "must enable OPT__UNIT for EOS_NUCLEAR !!\n" );
 
 
    nuc_eos_C_ReadTable( NUC_TABLE );

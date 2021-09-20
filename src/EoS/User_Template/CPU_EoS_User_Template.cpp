@@ -410,11 +410,12 @@ static real EoS_DensTemp2Pres_User_Template( const real Dens, const real Temp, c
 // Note        :  1. See EoS_DensEint2Pres_User_Template()
 //                2. In[] and Out[] must NOT overlap
 //
-// Parameter   :  Mode       : To support multiple modes in this general converter
-//                Out        : Output array
-//                In         : Input array
-//                AuxArray_* : Auxiliary arrays (see the Note above)
-//                Table      : EoS tables
+// Parameter   :  Mode        : To support multiple modes in this general converter
+//                Out         : Output array
+//                In          : Input array
+//                AuxArray_*  : Auxiliary arrays (see the Note above)
+//                Table       : EoS tables
+//                ExtraIn_Int : Useless for this EoS
 //
 // Return      :  Out[]
 //-------------------------------------------------------------------------------------------------------
