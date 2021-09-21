@@ -598,7 +598,7 @@ static real EoS_DensEint2Temp_Nuclear( const real Dens_Code, const real Eint_Cod
    In[2] = Passive_Code[ YE - NCOMP_FLUID ] / Dens_Code;
 
    ExtraIn_Int[0] = NTarget;
-#  if ( NUC_TABLE_MODE != NUC_TABLE_MODE_TEMP )
+#  if ( NUC_TABLE_MODE == NUC_TABLE_MODE_ENGY )
    ExtraIn_Int[1] = NUC_TAB_IDX_EORT;
 #  endif
 
@@ -670,8 +670,8 @@ static real EoS_DensTemp2Pres_Nuclear( const real Dens_Code, const real Temp_Kel
 //                       In[2] = Ye                      dimensionless
 //                4. The thermodynamic variables returned in Out[] are specified in ExtraIn_Int[]:
 //                   --> ExtraIn_Int[ 0] = number of thermodynamic variables retrieved from the nuclear EoS table
-//                       ExtraIn_Int[>1] = indices of thermodynamic variables in the nuclear EoS table
-//                                         (defined in NuclearEoS.h)
+//                       ExtraIn_Int[>0] = indices of thermodynamic variables in the nuclear EoS table
+//                                         (NUC_TAB_IDX_* defined in NuclearEoS.h)
 //                5. The size of Out[] must at least be ExtraIn_Int[0] + 1:
 //                   --> The last item in Out[] stores the internal energy or temperature from
 //                       either the input value or the value found in the auxiliary nuclear EoS table
@@ -679,7 +679,10 @@ static real EoS_DensTemp2Pres_Nuclear( const real Dens_Code, const real Temp_Kel
 //                   temperature, pressure, and sound speed squared
 //
 // Parameter   :  Mode        : Which mode we will use
-//                              --> Supported modes: NUC_MODE_ENGY, NUC_MODE_TEMP, NUC_MODE_ENTR, NUC_MODE_PRES
+//                              --> Supported modes: NUC_MODE_ENGY (0)
+//                                                   NUC_MODE_TEMP (1)
+//                                                   NUC_MODE_ENTR (2)
+//                                                   NUC_MODE_PRES (3)
 //                Out         : Output array     (see the Note above)
 //                In          : Input array      (see the Note above)
 //                AuxArray_*  : Auxiliary arrays (see the Note above)

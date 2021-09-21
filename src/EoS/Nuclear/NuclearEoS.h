@@ -6,7 +6,7 @@
 #include "CUFLU.h"
 
 
-#define NUC_TABLE_NVAR       16     // number of variables in the EoS table lookup
+#define NUC_TABLE_NVAR       16     // number of variables in the Nuclear EoS table
 #define NUC_TABLE_NPTR       10     // number of table pointers to be sent to GPU
 
 
@@ -28,8 +28,8 @@
 #define NUC_AUX_NRHO_MODE     3     // AuxArray_Int: nrho_mode
 #define NUC_AUX_NMODE         4     // AuxArray_Int: nmode
 #define NUC_AUX_NYE_MODE      5     // AuxArray_Int: nye_mode
-#define NUC_AUX_INT_TL        6     // AuxArray_Int: interpolation scheme for lookup        table
-#define NUC_AUX_INT_OTHER     7     // AuxArray_Int: interpolation scheme for thermodynamic table
+#define NUC_AUX_INT_TL        6     // AuxArray_Int: interpolation scheme for auxiliary   table
+#define NUC_AUX_INT_OTHER     7     // AuxArray_Int: interpolation scheme for Nuclear EoS table
 
 
 // table indices
@@ -52,7 +52,7 @@
 #define NUC_MODE_PRES         3     // pressure    mode
 
 
-// thermodynamic/lookup table indices
+// variable indices in the Nuclear EoS table and auxiliary table
 #define NUC_TAB_IDX_PRES      0     // pressure
 #define NUC_TAB_IDX_EORT      1     // internal energy (temperature-based table)
                                     // temperature     (energy-based      table)

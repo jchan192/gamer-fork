@@ -272,9 +272,9 @@ void SetGridIC( real fluid[], const double x, const double y, const double z, co
    if ( CCSN_Eint_Mode == 0 )   // Temperature Mode
    {
 #     if ( NUC_TABLE_MODE == NUC_TABLE_MODE_TEMP )
-      const int NTarget = 1;
+      const int  NTarget = 1;
 #     else
-      const int NTarget = 0;
+      const int  NTarget = 0;
 #     endif
             int  ExtraIn_Int[NTarget+1];
             real In[3], Out[NTarget+1];

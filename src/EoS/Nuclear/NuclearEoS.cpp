@@ -50,8 +50,8 @@ void findtemp_NR_bisection( const real lr, const real lt_IG, const real ye, cons
 //
 // Parameter   :  Out            : Output array
 //                In             : Input array
-//                                 --> In[0] = mass density    ( rho)  in g/cm^3
-//                                     In[1] = internal energy ( eps)  in cm^2/s^2   (0)
+//                                 --> In[0] = mass density    ( rho) in g/cm^3
+//                                     In[1] = internal energy ( eps) in cm^2/s^2   (0)
 //                                           = temperature     (temp) in MeV        (1)
 //                                           = entropy         (entr) in kB/baryon  (2)
 //                                           = pressure        (pres) in dyne/cm^2  (3)
@@ -166,7 +166,7 @@ void nuc_eos_C_short( real *Out, const real *In,
          const int   npt_chk   = ntoreps;
          const real *table_chk = logtoreps;
                      ltoreps   = leps;
-#        endif // if ( NUC_TABLE_MODE == NUC_TABLE_MODE_TEMP )
+#        endif
 
          if ( leps >  table_chk[npt_chk-1]  )  {  *keyerr = 110;  return;  }
          if ( leps <  table_chk[        0]  )  {  *keyerr = 111;  return;  }
@@ -187,7 +187,7 @@ void nuc_eos_C_short( real *Out, const real *In,
          const int   npt_chk   = nmode_Aux;
          const real *table_chk = mode_Aux;
                      var_mode  = lt;
-#        endif // if ( NUC_TABLE_MODE == NUC_TABLE_MODE_TEMP )
+#        endif
 
          if ( lt   >  table_chk[npt_chk-1]  )  {  *keyerr = 120;  return;  }
          if ( lt   <  table_chk[        0]  )  {  *keyerr = 121;  return;  }
@@ -229,7 +229,7 @@ void nuc_eos_C_short( real *Out, const real *In,
                   logrho_Aux, mode_Aux, yes_Aux, logtoreps, interpol_TL, keymode, keyerr );
 
 
-//    (b) Newton-Raphson and bisection methods (for temperature-based table)
+//    (b) Newton-Raphson and bisection methods (for temperature-based table only)
 #     if ( NUC_TABLE_MODE == NUC_TABLE_MODE_TEMP )
       if ( *keyerr != 0 )
          findtemp_NR_bisection( lr, lt_IG, xye, var_mode, &ltoreps, nrho, ntoreps, nye, alltables,
@@ -268,6 +268,7 @@ void nuc_eos_C_short( real *Out, const real *In,
 #        endif
       }
    }
+
 
 #  if ( NUC_TABLE_MODE == NUC_TABLE_MODE_TEMP )
    Out[NTarget] = POW( (real)10.0, ltoreps );
