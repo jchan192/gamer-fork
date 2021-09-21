@@ -259,12 +259,12 @@ void nuc_eos_C_short( real *Out, const real *In,
 //    convert scale and correct energy shift
       for (int i=0; i<NTarget; i++)
       {
-         if ( TargetIdx[i] == NUC_TAB_IDX_PRES )   Out[i] = POW( (real)10.0, Out[i] );
+         if ( TargetIdx[i] == NUC_VAR_IDX_PRES )   Out[i] = POW( (real)10.0, Out[i] );
 
 #        if ( NUC_TABLE_MODE == NUC_TABLE_MODE_TEMP )
-         if ( TargetIdx[i] == NUC_TAB_IDX_EORT )   Out[i] = POW( (real)10.0, Out[i] ) - energy_shift;
+         if ( TargetIdx[i] == NUC_VAR_IDX_EORT )   Out[i] = POW( (real)10.0, Out[i] ) - energy_shift;
 #        else
-         if ( TargetIdx[i] == NUC_TAB_IDX_EORT )   Out[i] = POW( (real)10.0, Out[i] );
+         if ( TargetIdx[i] == NUC_VAR_IDX_EORT )   Out[i] = POW( (real)10.0, Out[i] );
 #        endif
       }
    }

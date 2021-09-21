@@ -53,23 +53,23 @@
 
 
 // variable indices in the Nuclear EoS table and auxiliary table
-#define NUC_TAB_IDX_PRES      0     // pressure
-#define NUC_TAB_IDX_EORT      1     // internal energy (temperature-based table)
+#define NUC_VAR_IDX_PRES      0     // pressure
+#define NUC_VAR_IDX_EORT      1     // internal energy (temperature-based table)
                                     // temperature     (energy-based      table)
-#define NUC_TAB_IDX_ENTR      2     // entropy
-#define NUC_TAB_IDX_MUNU      3     // mu_e - mu_n + mu_p
-#define NUC_TAB_IDX_CSQR      4     // sound speed squared
-#define NUC_TAB_IDX_MUHAT     5     // mu_n - mu_p
-#define NUC_TAB_IDX_MUE       6     // electron chemical potential (includes rest mass)
-#define NUC_TAB_IDX_MUP       7     // proton   chemical potential
-#define NUC_TAB_IDX_MUN       8     // neutron  chemical potential
-#define NUC_TAB_IDX_XA        9     // alpha particle        mass fraction
-#define NUC_TAB_IDX_XH       10     // average heavy nucleus mass fraction
-#define NUC_TAB_IDX_XN       11     // neutron               mass fraction
-#define NUC_TAB_IDX_XP       12     // proton                mass fraction
-#define NUC_TAB_IDX_ABAR     13     // average heavy nucleus mass number
-#define NUC_TAB_IDX_ZBAR     14     // average heavy nucleus atomic number
-#define NUC_TAB_IDX_GAMMA    15     // adiabatic index
+#define NUC_VAR_IDX_ENTR      2     // entropy
+#define NUC_VAR_IDX_MUNU      3     // mu_e - mu_n + mu_p
+#define NUC_VAR_IDX_CSQR      4     // sound speed squared
+#define NUC_VAR_IDX_MUHAT     5     // mu_n - mu_p
+#define NUC_VAR_IDX_MUE       6     // electron chemical potential (includes rest mass)
+#define NUC_VAR_IDX_MUP       7     // proton   chemical potential
+#define NUC_VAR_IDX_MUN       8     // neutron  chemical potential
+#define NUC_VAR_IDX_XA        9     // alpha particle        mass fraction
+#define NUC_VAR_IDX_XH       10     // average heavy nucleus mass fraction
+#define NUC_VAR_IDX_XN       11     // neutron               mass fraction
+#define NUC_VAR_IDX_XP       12     // proton                mass fraction
+#define NUC_VAR_IDX_ABAR     13     // average heavy nucleus mass number
+#define NUC_VAR_IDX_ZBAR     14     // average heavy nucleus atomic number
+#define NUC_VAR_IDX_GAMMA    15     // adiabatic index
 
 
 // Tolerance for Newton-Raphson or bisection methods in temperature driver

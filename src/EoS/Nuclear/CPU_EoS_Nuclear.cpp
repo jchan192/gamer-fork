@@ -269,7 +269,7 @@ static real EoS_DensEint2Pres_Nuclear( const real Dens_Code, const real Eint_Cod
 
 
    const int  NTarget = 1;
-         int  TargetIdx[NTarget] = { NUC_TAB_IDX_PRES };
+         int  TargetIdx[NTarget] = { NUC_VAR_IDX_PRES };
          real In[3], Out[NTarget+1];
 
    In[0] = Dens_CGS;
@@ -394,7 +394,7 @@ static real EoS_DensPres2Eint_Nuclear( const real Dens_Code, const real Pres_Cod
 
 #  if   ( NUC_TABLE_MODE == NUC_TABLE_MODE_TEMP )
    const int  NTarget = 1;
-         int  TargetIdx[NTarget] = { NUC_TAB_IDX_EORT };
+         int  TargetIdx[NTarget] = { NUC_VAR_IDX_EORT };
 #  else
    const int  NTarget = 0;
          int *TargetIdx = NULL;
@@ -524,7 +524,7 @@ static real EoS_DensPres2CSqr_Nuclear( const real Dens_Code, const real Pres_Cod
 
 
    const int  NTarget = 1;
-         int  TargetIdx[NTarget] = { NUC_TAB_IDX_CSQR };
+         int  TargetIdx[NTarget] = { NUC_VAR_IDX_CSQR };
          real In[3], Out[NTarget+1];
 
    In[0] = Dens_CGS;
@@ -599,7 +599,7 @@ static real EoS_DensEint2Temp_Nuclear( const real Dens_Code, const real Eint_Cod
 
    ExtraIn_Int[0] = NTarget;
 #  if ( NUC_TABLE_MODE == NUC_TABLE_MODE_ENGY )
-   ExtraIn_Int[1] = NUC_TAB_IDX_EORT;
+   ExtraIn_Int[1] = NUC_VAR_IDX_EORT;
 #  endif
 
    EoS_General_Nuclear( NUC_MODE_ENGY, Out, In, AuxArray_Flt, AuxArray_Int, Table, ExtraIn_Int );
@@ -643,7 +643,7 @@ static real EoS_DensTemp2Pres_Nuclear( const real Dens_Code, const real Temp_Kel
    In[2] = Passive_Code[ YE - NCOMP_FLUID ] / Dens_Code;
 
    ExtraIn_Int[0] = NTarget;
-   ExtraIn_Int[1] = NUC_TAB_IDX_PRES;
+   ExtraIn_Int[1] = NUC_VAR_IDX_PRES;
 
    EoS_General_Nuclear( NUC_MODE_TEMP, Out, In, AuxArray_Flt, AuxArray_Int, Table, ExtraIn_Int );
 
@@ -671,7 +671,7 @@ static real EoS_DensTemp2Pres_Nuclear( const real Dens_Code, const real Temp_Kel
 //                4. The thermodynamic variables returned in Out[] are specified in ExtraIn_Int[]:
 //                   --> ExtraIn_Int[ 0] = number of thermodynamic variables retrieved from the nuclear EoS table
 //                       ExtraIn_Int[>0] = indices of thermodynamic variables in the nuclear EoS table
-//                                         (NUC_TAB_IDX_* defined in NuclearEoS.h)
+//                                         (NUC_VAR_IDX_* defined in NuclearEoS.h)
 //                5. The size of Out[] must at least be ExtraIn_Int[0] + 1:
 //                   --> The last item in Out[] stores the internal energy or temperature from
 //                       either the input value or the value found in the auxiliary nuclear EoS table
@@ -921,7 +921,7 @@ static void EoS_General_Nuclear( const int Mode, real Out[], const real In[], co
    {
       switch ( TargetIdx[i] )
       {
-         case NUC_TAB_IDX_PRES :
+         case NUC_VAR_IDX_PRES :
          {
             Out[i] *= Pres2Code;
 
@@ -937,7 +937,7 @@ static void EoS_General_Nuclear( const int Mode, real Out[], const real In[], co
          break;
 
 
-         case NUC_TAB_IDX_CSQR :
+         case NUC_VAR_IDX_CSQR :
          {
             Out[i] *= CsSqr2Code;
 
@@ -953,7 +953,7 @@ static void EoS_General_Nuclear( const int Mode, real Out[], const real In[], co
          break;
 
 
-         case NUC_TAB_IDX_EORT :
+         case NUC_VAR_IDX_EORT :
          {
 #           if ( NUC_TABLE_MODE == NUC_TABLE_MODE_TEMP )
 

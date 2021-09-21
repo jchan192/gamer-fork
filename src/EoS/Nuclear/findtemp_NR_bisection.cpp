@@ -441,9 +441,9 @@ void bisection( const real lr, const real lt0, const real ye, const real var0,
 //   if      ( keymode == NUC_MODE_ENGY ) iv = 1;
 //   else if ( keymode == NUC_MODE_ENTR ) iv = 2;
 //   else if ( keymode == NUC_MODE_PRES ) iv = 0;
-   if ( keymode == NUC_MODE_ENGY )   TargetIdx[0] = NUC_TAB_IDX_EORT;
-   if ( keymode == NUC_MODE_ENTR )   TargetIdx[0] = NUC_TAB_IDX_ENTR;
-   if ( keymode == NUC_MODE_PRES )   TargetIdx[0] = NUC_TAB_IDX_PRES;
+   if ( keymode == NUC_MODE_ENGY )   TargetIdx[0] = NUC_VAR_IDX_EORT;
+   if ( keymode == NUC_MODE_ENTR )   TargetIdx[0] = NUC_VAR_IDX_ENTR;
+   if ( keymode == NUC_MODE_PRES )   TargetIdx[0] = NUC_VAR_IDX_PRES;
 
 
 // prepare
