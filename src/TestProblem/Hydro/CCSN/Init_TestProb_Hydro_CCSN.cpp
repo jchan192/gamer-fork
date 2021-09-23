@@ -276,19 +276,19 @@ void SetGridIC( real fluid[], const double x, const double y, const double z, co
 #     else
       const int  NTarget = 0;
 #     endif
-            int  ExtraIn_Int[NTarget+1];
-            real In[3], Out[NTarget+1];
+            int  TmpIn_Int[NTarget+1];
+            real TmpIn_Flt[3], Out[NTarget+1];
 
-      In[0] = (real)Dens;
-      In[1] = (real)Temp;
-      In[2] = (real)Ye;
+      TmpIn_Flt[0] = (real)Dens;
+      TmpIn_Flt[1] = (real)Temp;
+      TmpIn_Flt[2] = (real)Ye;
 
-      ExtraIn_Int[0] = NTarget;
+      TmpIn_Int[0] = NTarget;
 #     if ( NUC_TABLE_MODE == NUC_TABLE_MODE_TEMP )
-      ExtraIn_Int[1] = 1;
+      TmpIn_Int[1] = 1;
 #     endif
 
-      EoS_General_CPUPtr( 1, Out, In, EoS_AuxArray_Flt, EoS_AuxArray_Int, h_EoS_Table, ExtraIn_Int );
+      EoS_General_CPUPtr( 1, Out, TmpIn_Flt, TmpIn_Int, EoS_AuxArray_Flt, EoS_AuxArray_Int, h_EoS_Table );
       Eint = Out[0];
    }
 
