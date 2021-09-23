@@ -110,7 +110,7 @@ static real EoS_DensEint2Pres_User_Template( const real Dens, const real Eint, c
 
 // note that some EoS may support Eint<0
    if ( Hydro_CheckNegative(Eint) )
-      printf( "ERROR : invalid input internal energy (%14.7e) at file <%s>, line <%d>, function <%s>\n",
+      printf( "ERROR : invalid input internal energy density (%14.7e) at file <%s>, line <%d>, function <%s>\n",
               Eint, __FILE__, __LINE__, __FUNCTION__ );
 #  endif // GAMER_DEBUG
 
@@ -222,7 +222,7 @@ static real EoS_DensPres2Eint_User_Template( const real Dens, const real Pres, c
 //                AuxArray_* : Auxiliary arrays (see the Note above)
 //                Table      : EoS tables
 //
-// Return      :  Sound speed square
+// Return      :  Sound speed squared
 //-------------------------------------------------------------------------------------------------------
 GPU_DEVICE_NOINLINE
 static real EoS_DensPres2CSqr_User_Template( const real Dens, const real Pres, const real Passive[],
@@ -307,7 +307,7 @@ static real EoS_DensEint2Temp_User_Template( const real Dens, const real Eint, c
               Dens, __FILE__, __LINE__, __FUNCTION__ );
 
    if ( Hydro_CheckNegative(Eint) )
-      printf( "ERROR : invalid input internal energy (%14.7e) at file <%s>, line <%d>, function <%s>\n",
+      printf( "ERROR : invalid input internal energy density (%14.7e) at file <%s>, line <%d>, function <%s>\n",
               Eint, __FILE__, __LINE__, __FUNCTION__ );
 #  endif // GAMER_DEBUG
 
@@ -405,30 +405,29 @@ static real EoS_DensTemp2Pres_User_Template( const real Dens, const real Temp, c
 
 //-------------------------------------------------------------------------------------------------------
 // Function    :  EoS_General_User_Template
-// Description :  General EoS converter: In[] -> Out[]
+// Description :  General EoS converter: In_*[] -> Out[]
 //
 // Note        :  1. See EoS_DensEint2Pres_User_Template()
-//                2. In[] and Out[] must NOT overlap
+//                2. In_*[] and Out[] must NOT overlap
 //
-// Parameter   :  Mode        : To support multiple modes in this general converter
-//                Out         : Output array
-//                In          : Input array
-//                AuxArray_*  : Auxiliary arrays (see the Note above)
-//                Table       : EoS tables
-//                ExtraIn_Int : Useless for this EoS
+// Parameter   :  Mode       : To support multiple modes in this general converter
+//                Out        : Output array
+//                In_*       : Input array
+//                AuxArray_* : Auxiliary arrays (see the Note above)
+//                Table      : EoS tables
 //
 // Return      :  Out[]
 //-------------------------------------------------------------------------------------------------------
 GPU_DEVICE_NOINLINE
-static void EoS_General_User_Template( const int Mode, real Out[], const real In[], const double AuxArray_Flt[],
-                                       const int AuxArray_Int[], const real *const Table[EOS_NTABLE_MAX],
-                                       const int ExtraIn_Int[] )
+static void EoS_General_User_Template( const int Mode, real Out[], const real In_Flt[], const int In_Int[],
+                                       const double AuxArray_Flt[], const int AuxArray_Int[],
+                                       const real *const Table[EOS_NTABLE_MAX] )
 {
 
 // check
 #  ifdef GAMER_DEBUG
    if ( Out          == NULL )   printf( "ERROR : Out == NULL in %s !!\n", __FUNCTION__ );
-   if ( In           == NULL )   printf( "ERROR : In == NULL in %s !!\n", __FUNCTION__ );
+   if ( In_Flt       == NULL )   printf( "ERROR : In_Flt == NULL in %s !!\n", __FUNCTION__ );
    if ( AuxArray_Flt == NULL )   printf( "ERROR : AuxArray_Flt == NULL in %s !!\n", __FUNCTION__ );
    if ( AuxArray_Int == NULL )   printf( "ERROR : AuxArray_Int == NULL in %s !!\n", __FUNCTION__ );
 #  endif // GAMER_DEBUG

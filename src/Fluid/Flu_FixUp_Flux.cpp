@@ -204,8 +204,7 @@ void Flu_FixUp_Flux( const int lv )
                   real Pres;
                   Pres = Hydro_DensEntropy2Pres( ForEint[DENS], ForEint[ENPY], EoS_AuxArray_Flt[1], CheckMinPres_No, NULL_REAL );
 //                DE_ENPY only supports EOS_GAMMA, which does not involve passive scalars
-                  Eint = EoS_DensPres2Eint_CPUPtr( ForEint[DENS], Pres, NULL, EoS_AuxArray_Flt, EoS_AuxArray_Int,
-                                                   h_EoS_Table );
+                  Eint = EoS_DensPres2Eint_CPUPtr( ForEint[DENS], Pres, NULL, EoS_AuxArray_Flt, EoS_AuxArray_Int, h_EoS_Table );
                }
 #              endif
 
