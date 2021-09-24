@@ -164,7 +164,7 @@ void findtoreps( const real x, const real y, const real z,
 
       vox = (real)0.0;
 
-      pv = alltables_mode + iv + 3*( (ix-1) + (iy-1)*nx + (iz-1)*nxy );
+      pv = alltables_mode + (ix-1) + (iy-1)*nx + (iz-1)*nxy + iv*nxy*nz;
 
       for (int k=0; k<4; k++)
       {
@@ -177,15 +177,15 @@ void findtoreps( const real x, const real y, const real z,
             for (int i=0; i<4; i++)
             {
                r[j] += u[i]* *pv;
-               pv   += 3;
+               pv   += 1;
             }
 
             q[k] += v[j]*r[j];
-            pv   += 3*nx - 4*3;
+            pv   += nx - 4;
          }
 
          vox += w[k]*q[k];
-         pv  += nxy*3 - 4*3*nx;
+         pv  += nxy - 4*nx;
       } // for (int k=0; k<4; k++)
 
       *found_ltoreps = vox;
@@ -305,14 +305,14 @@ void findtoreps_bdry( const real x, const real y, const real z,
    delz = zt[iz] - z;
 
    int idx[8];
-   idx[0] = 3*(  (ix  ) + nx*( (iy  ) + ny*(iz  ) )  );
-   idx[1] = 3*(  (ix-1) + nx*( (iy  ) + ny*(iz  ) )  );
-   idx[2] = 3*(  (ix  ) + nx*( (iy-1) + ny*(iz  ) )  );
-   idx[3] = 3*(  (ix  ) + nx*( (iy  ) + ny*(iz-1) )  );
-   idx[4] = 3*(  (ix-1) + nx*( (iy-1) + ny*(iz  ) )  );
-   idx[5] = 3*(  (ix-1) + nx*( (iy  ) + ny*(iz-1) )  );
-   idx[6] = 3*(  (ix  ) + nx*( (iy-1) + ny*(iz-1) )  );
-   idx[7] = 3*(  (ix-1) + nx*( (iy-1) + ny*(iz-1) )  );
+   idx[0] = (ix  ) + nx*(  (iy  ) + ny*(iz  )  );
+   idx[1] = (ix-1) + nx*(  (iy  ) + ny*(iz  )  );
+   idx[2] = (ix  ) + nx*(  (iy-1) + ny*(iz  )  );
+   idx[3] = (ix  ) + nx*(  (iy  ) + ny*(iz-1)  );
+   idx[4] = (ix-1) + nx*(  (iy-1) + ny*(iz  )  );
+   idx[5] = (ix-1) + nx*(  (iy  ) + ny*(iz-1)  );
+   idx[6] = (ix  ) + nx*(  (iy-1) + ny*(iz-1)  );
+   idx[7] = (ix-1) + nx*(  (iy-1) + ny*(iz-1)  );
 
    int iv;
 #  if   ( NUC_TABLE_MODE == NUC_TABLE_MODE_TEMP )
@@ -322,6 +322,8 @@ void findtoreps_bdry( const real x, const real y, const real z,
 #  endif
    else if ( keymode == NUC_MODE_ENTR ) iv = 1; // temperature/energy table for the entropy mode
    else if ( keymode == NUC_MODE_PRES ) iv = 2; // temperature/energy table for the pressure mode
+
+   iv *= nx*ny*nz;
 
 
 // set up aux vars for interpolation assuming array ordering (iv, ix, iy, iz)

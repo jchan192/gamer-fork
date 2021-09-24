@@ -89,6 +89,8 @@ void findtemp_NR_bisection( const real lr, const real lt0, const real ye, const 
    real dtemp, drho, dye;
    real dtempi, drhoi, dyei;
 
+   int nxyz = nrho*ntemp*nye;
+
 
 // determine spacing parameters of equidistant (!!!) table
 #  if 1
@@ -140,16 +142,16 @@ void findtemp_NR_bisection( const real lr, const real lt0, const real ye, const 
          real fs[4];
          // point 0
          int ifs;
-         ifs = iv + NUC_TABLE_NVAR*(  (irho-1) + nrho*( (itemp-1) + ntemp*(iye-1) )  );
+         ifs = iv*nxyz + (irho-1) + nrho*(  (itemp-1) + ntemp*(iye-1)  );
          fs[0] = alltables[ifs];
          // point 1
-         ifs = iv + NUC_TABLE_NVAR*(  (irho  ) + nrho*( (itemp-1) + ntemp*(iye-1) )  );
+         ifs = iv*nxyz + (irho  ) + nrho*(  (itemp-1) + ntemp*(iye-1)  );
          fs[1] = alltables[ifs];
          // point 2
-         ifs = iv + NUC_TABLE_NVAR*(  (irho-1) + nrho*( (itemp-1) + ntemp*(iye  ) )  );
+         ifs = iv*nxyz + (irho-1) + nrho*(  (itemp-1) + ntemp*(iye  )  );
          fs[2] = alltables[ifs];
          // point 3
-         ifs = iv + NUC_TABLE_NVAR*(  (irho  ) + nrho*( (itemp-1) + ntemp*(iye  ) )  );
+         ifs = iv*nxyz + (irho  ) + nrho*(  (itemp-1) + ntemp*(iye  )  );
          fs[3] = alltables[ifs];
 
          vart1 = linterp2D( &logrho[irho-1], &yes[iye-1], fs, lr, ye );
@@ -160,16 +162,16 @@ void findtemp_NR_bisection( const real lr, const real lt0, const real ye, const 
          real fs[4];
          // point 0
          int ifs;
-         ifs = iv + NUC_TABLE_NVAR*(  (irho-1) + nrho*( (itemp) + ntemp*(iye-1) )  );
+         ifs = iv*nxyz + (irho-1) + nrho*(  (itemp) + ntemp*(iye-1)  );
          fs[0] = alltables[ifs];
          // point 1
-         ifs = iv + NUC_TABLE_NVAR*(  (irho  ) + nrho*( (itemp) + ntemp*(iye-1) )  );
+         ifs = iv*nxyz + (irho  ) + nrho*(  (itemp) + ntemp*(iye-1)  );
          fs[1] = alltables[ifs];
          // point 2
-         ifs = iv + NUC_TABLE_NVAR*(  (irho-1) + nrho*( (itemp) + ntemp*(iye  ) )  );
+         ifs = iv*nxyz + (irho-1) + nrho*(  (itemp) + ntemp*(iye  )  );
          fs[2] = alltables[ifs];
          // point 3
-         ifs = iv + NUC_TABLE_NVAR*(  (irho  ) + nrho*( (itemp) + ntemp*(iye  ) )  );
+         ifs = iv*nxyz + (irho  ) + nrho*(  (itemp) + ntemp*(iye  )  );
          fs[3] = alltables[ifs];
 
          vart2 = linterp2D( &logrho[irho-1], &yes[iye-1], fs, lr, ye );
@@ -333,19 +335,22 @@ void nuc_eos_C_linterp_for_temp( const real x, const real y, const real z,
 
    int idx[8];
 
-   idx[0] = NUC_TABLE_NVAR*(  (ix  ) + nx*( (iy  ) + ny*(iz  ) )  );
-   idx[1] = NUC_TABLE_NVAR*(  (ix-1) + nx*( (iy  ) + ny*(iz  ) )  );
-   idx[2] = NUC_TABLE_NVAR*(  (ix  ) + nx*( (iy-1) + ny*(iz  ) )  );
-   idx[3] = NUC_TABLE_NVAR*(  (ix  ) + nx*( (iy  ) + ny*(iz-1) )  );
-   idx[4] = NUC_TABLE_NVAR*(  (ix-1) + nx*( (iy-1) + ny*(iz  ) )  );
-   idx[5] = NUC_TABLE_NVAR*(  (ix-1) + nx*( (iy  ) + ny*(iz-1) )  );
-   idx[6] = NUC_TABLE_NVAR*(  (ix  ) + nx*( (iy-1) + ny*(iz-1) )  );
-   idx[7] = NUC_TABLE_NVAR*(  (ix-1) + nx*( (iy-1) + ny*(iz-1) )  );
+   idx[0] = (ix  ) + nx*(  (iy  ) + ny*(iz  )  );
+   idx[1] = (ix-1) + nx*(  (iy  ) + ny*(iz  )  );
+   idx[2] = (ix  ) + nx*(  (iy-1) + ny*(iz  )  );
+   idx[3] = (ix  ) + nx*(  (iy  ) + ny*(iz-1)  );
+   idx[4] = (ix-1) + nx*(  (iy-1) + ny*(iz  )  );
+   idx[5] = (ix-1) + nx*(  (iy  ) + ny*(iz-1)  );
+   idx[6] = (ix  ) + nx*(  (iy-1) + ny*(iz-1)  );
+   idx[7] = (ix-1) + nx*(  (iy-1) + ny*(iz-1)  );
 
    int iv;
    if ( keymode == NUC_MODE_ENGY ) iv = 1; // energy mode
    if ( keymode == NUC_MODE_ENTR ) iv = 2; // entropy mode
    if ( keymode == NUC_MODE_PRES ) iv = 0; // pressure mode
+
+   iv *= nx*ny*nz;
+
 
 // set up aux vars for interpolation
 // assuming array ordering (iv, ix, iy, iz)

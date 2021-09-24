@@ -48,6 +48,7 @@ void nuc_eos_C_linterp_some( const real x, const real y, const real z,
    real fh[8], delx, dely, delz, a[8];
    real dx, dy, dz, dxi, dyi, dzi, dxyi, dxzi, dyzi, dxyzi;
    int  ix, iy, iz;
+   int  nxyz = nx*ny*nz;
 
 
 // determine spacing parameters of equidistant (!!!) table
@@ -94,19 +95,19 @@ void nuc_eos_C_linterp_some( const real x, const real y, const real z,
 
    int idx[8];
 
-   idx[0] = NUC_TABLE_NVAR*(  (ix  ) + nx*( (iy  ) + ny*(iz  ) )  );
-   idx[1] = NUC_TABLE_NVAR*(  (ix-1) + nx*( (iy  ) + ny*(iz  ) )  );
-   idx[2] = NUC_TABLE_NVAR*(  (ix  ) + nx*( (iy-1) + ny*(iz  ) )  );
-   idx[3] = NUC_TABLE_NVAR*(  (ix  ) + nx*( (iy  ) + ny*(iz-1) )  );
-   idx[4] = NUC_TABLE_NVAR*(  (ix-1) + nx*( (iy-1) + ny*(iz  ) )  );
-   idx[5] = NUC_TABLE_NVAR*(  (ix-1) + nx*( (iy  ) + ny*(iz-1) )  );
-   idx[6] = NUC_TABLE_NVAR*(  (ix  ) + nx*( (iy-1) + ny*(iz-1) )  );
-   idx[7] = NUC_TABLE_NVAR*(  (ix-1) + nx*( (iy-1) + ny*(iz-1) )  );
+   idx[0] = (ix  ) + nx*(  (iy  ) + ny*(iz  )  );
+   idx[1] = (ix-1) + nx*(  (iy  ) + ny*(iz  )  );
+   idx[2] = (ix  ) + nx*(  (iy-1) + ny*(iz  )  );
+   idx[3] = (ix  ) + nx*(  (iy  ) + ny*(iz-1)  );
+   idx[4] = (ix-1) + nx*(  (iy-1) + ny*(iz  )  );
+   idx[5] = (ix-1) + nx*(  (iy  ) + ny*(iz-1)  );
+   idx[6] = (ix  ) + nx*(  (iy-1) + ny*(iz-1)  );
+   idx[7] = (ix-1) + nx*(  (iy-1) + ny*(iz-1)  );
 
 
    for (int i=0; i<nvars; i++)
    {
-      int iv = TargetIdx[i];
+      int iv = TargetIdx[i] * nxyz;
 
 //    set up aux vars for interpolation assuming array ordering (iv, ix, iy, iz)
       fh[0] = alltables[ iv + idx[0] ];
