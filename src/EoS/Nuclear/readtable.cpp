@@ -194,44 +194,44 @@ void nuc_eos_C_ReadTable( char *nuceos_table_name )
 
 
 // read g_alltables[]
-   READ_EOSTABLE_HDF5( "logpress",  0 );
+   READ_EOSTABLE_HDF5( "logpress",  NUC_VAR_IDX_PRES  );
 #  if   ( NUC_TABLE_MODE == NUC_TABLE_MODE_TEMP )
-   READ_EOSTABLE_HDF5( "logenergy", 1 );
+   READ_EOSTABLE_HDF5( "logenergy", NUC_VAR_IDX_EORT  );
 #  elif ( NUC_TABLE_MODE == NUC_TABLE_MODE_ENGY )
-   READ_EOSTABLE_HDF5( "logtemp",   1 );
+   READ_EOSTABLE_HDF5( "logtemp",   NUC_VAR_IDX_EORT  );
 #  endif
-   READ_EOSTABLE_HDF5( "entropy",   2 );
-   READ_EOSTABLE_HDF5( "munu",      3 );
-   READ_EOSTABLE_HDF5( "cs2",       4 );
+   READ_EOSTABLE_HDF5( "entropy",   NUC_VAR_IDX_ENTR  );
+   READ_EOSTABLE_HDF5( "munu",      NUC_VAR_IDX_MUNU  );
+   READ_EOSTABLE_HDF5( "cs2",       NUC_VAR_IDX_CSQR  );
 
 // chemical potentials
-   READ_EOSTABLE_HDF5( "muhat",     5 );
-   READ_EOSTABLE_HDF5( "mu_e",      6 );
-   READ_EOSTABLE_HDF5( "mu_p",      7 );
-   READ_EOSTABLE_HDF5( "mu_n",      8 );
+   READ_EOSTABLE_HDF5( "muhat",     NUC_VAR_IDX_MUHAT );
+   READ_EOSTABLE_HDF5( "mu_e",      NUC_VAR_IDX_MUE   );
+   READ_EOSTABLE_HDF5( "mu_p",      NUC_VAR_IDX_MUP   );
+   READ_EOSTABLE_HDF5( "mu_n",      NUC_VAR_IDX_MUN   );
 
 // compositions
-   READ_EOSTABLE_HDF5( "Xa",        9 );
-   READ_EOSTABLE_HDF5( "Xh",       10 );
-   READ_EOSTABLE_HDF5( "Xn",       11 );
-   READ_EOSTABLE_HDF5( "Xp",       12 );
+   READ_EOSTABLE_HDF5( "Xa",        NUC_VAR_IDX_XA    );
+   READ_EOSTABLE_HDF5( "Xh",        NUC_VAR_IDX_XH    );
+   READ_EOSTABLE_HDF5( "Xn",        NUC_VAR_IDX_XN    );
+   READ_EOSTABLE_HDF5( "Xp",        NUC_VAR_IDX_XP    );
 
 // average nucleus
-   READ_EOSTABLE_HDF5( "Abar",     13 );
-   READ_EOSTABLE_HDF5( "Zbar",     14 );
+   READ_EOSTABLE_HDF5( "Abar",      NUC_VAR_IDX_ABAR  );
+   READ_EOSTABLE_HDF5( "Zbar",      NUC_VAR_IDX_ZBAR  );
 
 // Gamma
-   READ_EOSTABLE_HDF5( "gamma",    15 );
+   READ_EOSTABLE_HDF5( "gamma",     NUC_VAR_IDX_GAMMA );
 
 // energy for temp, entr modes
 #  if   ( NUC_TABLE_MODE == NUC_TABLE_MODE_TEMP )
-   READ_EOSTABLE_MODE_HDF5( "logtemp_ener",   0 );
-   READ_EOSTABLE_MODE_HDF5( "logtemp_entr",   1 );
-   READ_EOSTABLE_MODE_HDF5( "logtemp_prss",   2 );
+   READ_EOSTABLE_MODE_HDF5( "logtemp_ener",   NUC_VAR_IDX_EORT );
+   READ_EOSTABLE_MODE_HDF5( "logtemp_entr",   NUC_VAR_IDX_ENTR );
+   READ_EOSTABLE_MODE_HDF5( "logtemp_prss",   NUC_VAR_IDX_PRES );
 #  elif ( NUC_TABLE_MODE == NUC_TABLE_MODE_ENGY )
-   READ_EOSTABLE_MODE_HDF5( "logenergy_temp", 0 );
-   READ_EOSTABLE_MODE_HDF5( "logenergy_entr", 1 );
-   READ_EOSTABLE_MODE_HDF5( "logenergy_prss", 2 );
+   READ_EOSTABLE_MODE_HDF5( "logenergy_temp", NUC_VAR_IDX_EORT );
+   READ_EOSTABLE_MODE_HDF5( "logenergy_entr", NUC_VAR_IDX_ENTR );
+   READ_EOSTABLE_MODE_HDF5( "logenergy_prss", NUC_VAR_IDX_PRES );
 #  endif
 
 // read additional tables and variables

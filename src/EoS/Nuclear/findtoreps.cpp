@@ -155,12 +155,12 @@ void findtoreps( const real x, const real y, const real z,
 
       int iv;
 #     if   ( NUC_TABLE_MODE == NUC_TABLE_MODE_TEMP )
-      if      ( keymode == NUC_MODE_ENGY ) iv = 0; // temperature table for the energy mode
+      if      ( keymode == NUC_MODE_ENGY ) iv = NUC_VAR_IDX_EORT; // temperature table for the energy mode
 #     elif ( NUC_TABLE_MODE == NUC_TABLE_MODE_ENGY )
-      if      ( keymode == NUC_MODE_TEMP ) iv = 0; // energy table for the temperautre mode
+      if      ( keymode == NUC_MODE_TEMP ) iv = NUC_VAR_IDX_EORT; // energy table for the temperautre mode
 #     endif // #elif NUC_TABLE_MODE ... else ...
-      else if ( keymode == NUC_MODE_ENTR ) iv = 1; // temperature/energy table for the entropy mode
-      else if ( keymode == NUC_MODE_PRES ) iv = 2; // temperature/energy table for the pressure mode
+      else if ( keymode == NUC_MODE_ENTR ) iv = NUC_VAR_IDX_ENTR; // temperature/energy table for the entropy mode
+      else if ( keymode == NUC_MODE_PRES ) iv = NUC_VAR_IDX_PRES; // temperature/energy table for the pressure mode
 
       vox = (real)0.0;
 
@@ -316,12 +316,12 @@ void findtoreps_bdry( const real x, const real y, const real z,
 
    int iv;
 #  if   ( NUC_TABLE_MODE == NUC_TABLE_MODE_TEMP )
-   if      ( keymode == NUC_MODE_ENGY ) iv = 0; // temperature table for the energy mode
+   if      ( keymode == NUC_MODE_ENGY ) iv = NUC_VAR_IDX_EORT; // temperature table for the energy mode
 #  elif ( NUC_TABLE_MODE == NUC_TABLE_MODE_ENGY )
-   if      ( keymode == NUC_MODE_TEMP ) iv = 0; // energy table for the temperautre mode
+   if      ( keymode == NUC_MODE_TEMP ) iv = NUC_VAR_IDX_EORT; // energy table for the temperautre mode
 #  endif
-   else if ( keymode == NUC_MODE_ENTR ) iv = 1; // temperature/energy table for the entropy mode
-   else if ( keymode == NUC_MODE_PRES ) iv = 2; // temperature/energy table for the pressure mode
+   else if ( keymode == NUC_MODE_ENTR ) iv = NUC_VAR_IDX_ENTR; // temperature/energy table for the entropy mode
+   else if ( keymode == NUC_MODE_PRES ) iv = NUC_VAR_IDX_PRES; // temperature/energy table for the pressure mode
 
    iv *= nx*ny*nz;
 

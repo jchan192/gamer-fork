@@ -131,9 +131,9 @@ void findtemp_NR_bisection( const real lr, const real lt0, const real ye, const 
       int iye   = MIN( MAX( 1 + (int)( ( ye -     yes[0] )*dyei   ), 1), nye-1   );
 
       int iv;
-      if      ( keymode == NUC_MODE_ENGY ) iv = 1; // energy mode
-      else if ( keymode == NUC_MODE_ENTR ) iv = 2; // entropy mode
-      else if ( keymode == NUC_MODE_PRES ) iv = 0; // pressure mode
+      if      ( keymode == NUC_MODE_ENGY ) iv = NUC_VAR_IDX_EORT; // energy mode
+      else if ( keymode == NUC_MODE_ENTR ) iv = NUC_VAR_IDX_ENTR; // entropy mode
+      else if ( keymode == NUC_MODE_PRES ) iv = NUC_VAR_IDX_PRES; // pressure mode
 
       real vart1, vart2;
 // lower vars
@@ -345,9 +345,9 @@ void nuc_eos_C_linterp_for_temp( const real x, const real y, const real z,
    idx[7] = (ix-1) + nx*(  (iy-1) + ny*(iz-1)  );
 
    int iv;
-   if ( keymode == NUC_MODE_ENGY ) iv = 1; // energy mode
-   if ( keymode == NUC_MODE_ENTR ) iv = 2; // entropy mode
-   if ( keymode == NUC_MODE_PRES ) iv = 0; // pressure mode
+   if ( keymode == NUC_MODE_ENGY ) iv = NUC_VAR_IDX_EORT; // energy mode
+   if ( keymode == NUC_MODE_ENTR ) iv = NUC_VAR_IDX_ENTR; // entropy mode
+   if ( keymode == NUC_MODE_PRES ) iv = NUC_VAR_IDX_PRES; // pressure mode
 
    iv *= nx*ny*nz;
 
@@ -443,9 +443,6 @@ void bisection( const real lr, const real lt0, const real ye, const real var0,
    int iv = 0;
    int TargetIdx[1];
 
-//   if      ( keymode == NUC_MODE_ENGY ) iv = 1;
-//   else if ( keymode == NUC_MODE_ENTR ) iv = 2;
-//   else if ( keymode == NUC_MODE_PRES ) iv = 0;
    if ( keymode == NUC_MODE_ENGY )   TargetIdx[0] = NUC_VAR_IDX_EORT;
    if ( keymode == NUC_MODE_ENTR )   TargetIdx[0] = NUC_VAR_IDX_ENTR;
    if ( keymode == NUC_MODE_PRES )   TargetIdx[0] = NUC_VAR_IDX_PRES;
