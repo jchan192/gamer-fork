@@ -28,8 +28,8 @@
 #define NUC_AUX_NRHO_MODE     3     // AuxArray_Int: nrho_mode
 #define NUC_AUX_NMODE         4     // AuxArray_Int: nmode
 #define NUC_AUX_NYE_MODE      5     // AuxArray_Int: nye_mode
-#define NUC_AUX_INT_TL        6     // AuxArray_Int: interpolation scheme for auxiliary   table
-#define NUC_AUX_INT_OTHER     7     // AuxArray_Int: interpolation scheme for Nuclear EoS table
+#define NUC_AUX_INT_AUX       6     // AuxArray_Int: interpolation scheme for auxiliary   table
+#define NUC_AUX_INT_MAIN      7     // AuxArray_Int: interpolation scheme for Nuclear EoS table
 
 
 // table indices

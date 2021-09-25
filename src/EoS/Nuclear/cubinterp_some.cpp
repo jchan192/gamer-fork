@@ -5,6 +5,7 @@
 
 
 #ifdef __CUDACC__
+
 GPU_DEVICE static
 void nuc_eos_C_linterp_some( const real x, const real y, const real z,
                              const int *TargetIdx, real *output_vars, const real *alltables,
@@ -16,6 +17,7 @@ void nuc_eos_C_cubinterp_some( const real x, const real y, const real z,
                                const int *TargetIdx, real *output_vars, const real *alltables,
                                const int nx, const int ny, const int nz, const int nvars,
                                const real *xt, const real *yt, const real *zt );
+
 #else
 
 void nuc_eos_C_linterp_some( const real x, const real y, const real z,

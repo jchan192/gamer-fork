@@ -25,7 +25,7 @@ void findtoreps( const real x, const real y, const real z,
                  real *found_lt, const real *alltables_Aux,
                  const int nx, const int ny, const int nz, const int ntemp,
                  const real *xt, const real *yt, const real *zt, const real *logtoreps,
-                 const int interpol_TL, const int keymode, int *keyerr );
+                 const int IntScheme_Aux, const int keymode, int *keyerr );
 void findtemp_NR_bisection( const real lr, const real lt_IG, const real ye, const real varin, real *ltout,
                             const int nrho, const int ntemp, const int nye, const real *alltables,
                             const real *logrho, const real *logtemp, const real *yes,
@@ -79,8 +79,8 @@ void findtemp_NR_bisection( const real lr, const real lt_IG, const real ye, cons
 //                                 entropy
 //                                 pressure                                                       (log scale)
 //                yes_Aux        : Ye                          index array in the auxiliary table
-//                interpol_TL    : Interpolation schemes for the auxiliary table
-//                interpol_other : Interpolation schemes for the Nuclear EoS table
+//                IntScheme_Aux  : Interpolation scheme for the auxiliary table
+//                IntScheme_Main : Interpolation scheme for the Nuclear EoS table
 //                keymode        : Which mode we will use
 //                                 --> 0 : Energy mode
 //                                     1 : Temperature mode
@@ -121,7 +121,7 @@ void nuc_eos_C_short( real *Out, const real *In,
                       const real *alltables, const real *alltables_Aux,
                       const real *logrho, const real *logtoreps, const real *yes,
                       const real *logrho_Aux, const real *mode_Aux, const real *yes_Aux,
-                      const int interpol_TL, const int interpol_other,
+                      const int IntScheme_Aux, const int IntScheme_Main,
                       const int keymode, int *keyerr, const real rfeps )
 {
 
@@ -226,7 +226,7 @@ void nuc_eos_C_short( real *Out, const real *In,
    {
 //    (a) Auxiliary table
       findtoreps( lr, var_mode, xye, &ltoreps, alltables_Aux, nrho_Aux, nmode_Aux, nye_Aux, ntoreps,
-                  logrho_Aux, mode_Aux, yes_Aux, logtoreps, interpol_TL, keymode, keyerr );
+                  logrho_Aux, mode_Aux, yes_Aux, logtoreps, IntScheme_Aux, keymode, keyerr );
 
 
 //    (b) Newton-Raphson and bisection methods (for temperature-based table only)
@@ -243,7 +243,7 @@ void nuc_eos_C_short( real *Out, const real *In,
 // find other thermodynamic variables
    if ( NTarget > 0 )
    {
-      if ( interpol_other == NUC_INTERPOL_LINEAR )
+      if ( IntScheme_Main == NUC_INT_LINEAR )
       {
          nuc_eos_C_linterp_some( lr, ltoreps, xye, TargetIdx, Out, alltables,
                                  nrho, ntoreps, nye, NTarget, logrho, logtoreps, yes );

@@ -11,7 +11,7 @@ void findtoreps( const real x, const real y, const real z,
                  real *found_lt, const real *alltables_mode,
                  const int nx, const int ny, const int nz, const int ntemp,
                  const real *xt, const real *yt, const real *zt, const real *logtoreps,
-                 const int interpol_TL, const int keymode, int *keyerr );
+                 const int IntScheme_Aux, const int keymode, int *keyerr );
 
 GPU_DEVICE static
 void nuc_eos_C_linterp_some( const real x, const real y, const real z,
@@ -67,7 +67,7 @@ void nuc_eos_C_cubinterp_some( const real x, const real y, const real z,
 //                yt             : Vector of y-coordinates of table
 //                zt             : Vector of z-coordinates of table
 //                logtoreps      : log(T)/log(energy) array in the table
-//                interpol_TL    : interpolation schemes for table look-ups (linear/cubic)
+//                IntScheme_Aux  : interpolation schemes for table look-ups (linear/cubic)
 //                keymode        : Which mode we will use
 //                                 --> 1: Energy mode   (coming in with internal energy)
 //                                     2: Entropy mode  (coming in with entropy)
@@ -81,7 +81,7 @@ void findtoreps( const real x, const real y, const real z,
                  real *found_ltoreps, const real *alltables_mode,
                  const int nx, const int ny, const int nz, const int ntoreps,
                  const real *xt, const real *yt, const real *zt, const real *logtoreps,
-                 const int interpol_TL, const int keymode, int *keyerr )
+                 const int IntScheme_Aux, const int keymode, int *keyerr )
 {
 
    int  TargetIdx[1];
@@ -101,7 +101,7 @@ void findtoreps( const real x, const real y, const real z,
    }
 
 
-   if ( interpol_TL == NUC_INTERPOL_LINEAR )
+   if ( IntScheme_Aux == NUC_INT_LINEAR )
    {
       nuc_eos_C_linterp_some(x, y, z, TargetIdx, output_vars, alltables_mode,
                              nx, ny, nz, 1, xt, yt, zt);
