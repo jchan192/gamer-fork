@@ -106,8 +106,8 @@ void findtemp_NR_bisection( const real lr, const real lt_IG, const real ye, cons
 //                                     151 : Ye   too low
 //                                     152 : Ye   NaN
 //                                     665 : fail in finding internal energy or temperature
-//                                     668 : bisection failed (temperature-based table only) (WIP)
-//                                     669 : bisection failed (temperature-based table only) (WIP)
+//                                     668 : fail in bracketing the target value in the bisection method
+//                                     669 : fail in finding termperature        in the bisection method
 //                rfeps          : Tolerance for Newton-Raphson and bisection methods
 //
 // Return      :  Out[]

@@ -44,34 +44,35 @@ void nuc_eos_C_cubinterp_some( const real x, const real y, const real z,
 
 //-------------------------------------------------------------------------------------
 // Function    :  findtoreps
-// Description :  Finding temperature from different modes
-//                -->                 energy mode   (0)
-//                                    entropy mode  (2)
-//                                    pressure mode (3)
+// Description :  Finding temperature of internal energy from different modes
+//                --> Energy      mode (0)
+//                    Temperature mode (1)
+//                    Entropy     mode (2)
+//                    Pressure    mode (3)
 //
-// Note        :  1. Use 3D Catmull-Rom cubic interpolation formula
-//                   to search the corresponding temperature/energy given
-//                   (rho, (eps, T, entropy, P), Y_e)
+// Note        :  1. Use 3D Lagrange linear interpolation or Catmull-Rom cubic interpolation formulae
+//                   to search the corresponding temperature/energy given (rho, eps/temp/entr/pres, Ye)
 //                2. Invoked by nuc_eos_C_short()
 //
 // Parameter   :  x              : Input vector of first  variable (rho)
-//                y              : Input vector of second variable (eps, T, entropy, P)
-//                z              : Input vector of third  variable (Y_e)
-//                found_ltoreps  : Output log(temp)/log(energy) of interpolated function values
-//                alltables_mode : 3d array of tabulated logtemp
+//                y              : Input vector of second variable (eps/temp/entr/pres)
+//                z              : Input vector of third  variable (Ye)
+//                found_ltoreps  : Output log(temp)/log(eps) of interpolated function values
+//                alltables_mode : 3D array of tabulated logtemp/logenergy
 //                nx             : X-dimension of table
 //                ny             : Y-dimension of table
 //                nz             : Z-dimension of table
-//                ntoreps        : Size of (temperature/energy) array in the Nuclear Eos table
+//                ntoreps        : Size of temperature/energy array in the Nuclear Eos table
 //                xt             : Vector of x-coordinates of table
 //                yt             : Vector of y-coordinates of table
 //                zt             : Vector of z-coordinates of table
-//                logtoreps      : log(T)/log(energy) array in the table
-//                IntScheme_Aux  : interpolation schemes for table look-ups (linear/cubic)
+//                logtoreps      : log(temp)/log(eps) array in the table
+//                IntScheme_Aux  : Interpolation scheme for the auxiliary table
 //                keymode        : Which mode we will use
-//                                 --> 1: Energy mode   (coming in with internal energy)
-//                                     2: Entropy mode  (coming in with entropy)
-//                                     3: Pressure mode (coming in with P)
+//                                 --> 0: Energy      mode (coming in with eps)
+//                                     1: Temperature mode (coming in with temp)
+//                                     2: Entropy     mode (coming in with entr)
+//                                     3: Pressure    mode (coming in with pres)
 //                keyerr         : Output error
 //
 // Return      :  found_ltoreps
@@ -95,7 +96,7 @@ void findtoreps( const real x, const real y, const real z,
       case NUC_MODE_ENGY :   TargetIdx[0] = NUC_VAR_IDX_EORT;   break;
 #     else
       case NUC_MODE_TEMP :   TargetIdx[0] = NUC_VAR_IDX_EORT;   break;
-#     endif // if ( NUC_TABLE_MODE == NUC_TABLE_MODE_TEMP )
+#     endif
 
       case NUC_MODE_ENTR :   TargetIdx[0] = NUC_VAR_IDX_ENTR;   break;
    }

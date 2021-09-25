@@ -38,11 +38,11 @@ real  *g_logprss_mode   = NULL;
 real  *g_yes_mode       = NULL;
 
 
-#if   ( NUC_TABLE_MODE == NUC_TABLE_MODE_TEMP )
+#if ( NUC_TABLE_MODE == NUC_TABLE_MODE_TEMP )
 int    g_ntemp;
 real  *g_logtemp        = NULL;
 real  *g_logeps_mode    = NULL;
-#elif ( NUC_TABLE_MODE == NUC_TABLE_MODE_ENGY )
+#else
 int    g_neps;
 real  *g_logeps         = NULL;
 real  *g_logtemp_mode   = NULL;
@@ -966,7 +966,7 @@ static void EoS_General_Nuclear( const int Mode, real Out[], const real In_Flt[]
                printf( "        Dens=%13.7e code units, Var_mode=%13.7e code units, Ye=%13.7e, Mode %d\n", Dens_Code, In_Flt[1], Ye, Mode );
                printf( "        EoS error code: %d\n", Err );
             }
-#           endif // ifdef GAMER_DEBUG
+#           endif // GAMER_DEBUG
 
 #           else
 
@@ -979,7 +979,7 @@ static void EoS_General_Nuclear( const int Mode, real Out[], const real In_Flt[]
                printf( "        Dens=%13.7e code units, Var_mode=%13.7e code units, Ye=%13.7e, Mode %d\n", Dens_Code, In_Flt[1], Ye, Mode );
                printf( "        EoS error code: %d\n", Err );
             }
-#           endif // ifdef GAMER_DEBUG
+#           endif // GAMER_DEBUG
 
 #           endif // if ( NUC_TABLE_MODE == NUC_TABLE_MODE_TEMP ) ... else ...
          }
@@ -1000,7 +1000,7 @@ static void EoS_General_Nuclear( const int Mode, real Out[], const real In_Flt[]
       printf( "        Dens=%13.7e code units, Var_mode=%13.7e code units, Ye=%13.7e, Mode %d\n", Dens_Code, In_Flt[1], Ye, Mode );
       printf( "        EoS error code: %d\n", Err );
    }
-#  endif // ifdef GAMER_DEBUG
+#  endif // GAMER_DEBUG
 
 #  else
 
@@ -1013,7 +1013,7 @@ static void EoS_General_Nuclear( const int Mode, real Out[], const real In_Flt[]
       printf( "        Dens=%13.7e code units, Var_mode=%13.7e code units, Ye=%13.7e, Mode %d\n", Dens_Code, In_Flt[1], Ye, Mode );
       printf( "        EoS error code: %d\n", Err );
    }
-#  endif // ifdef GAMER_DEBUG
+#  endif // GAMER_DEBUG
 
 #  endif // if ( NUC_TABLE_MODE == NUC_TABLE_MODE_TEMP ) ... else ...
 

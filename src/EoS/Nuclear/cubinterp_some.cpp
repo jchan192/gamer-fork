@@ -38,9 +38,9 @@ void nuc_eos_C_linterp_some( const real x, const real y, const real z,
 // Note        :  1. Invoked by nuc_eos_C_short()
 //
 // Parameter   :  x           : Input vector of first  variable (rho)
-//                y           : Input vector of second variable (temp/eps)
+//                y           : Input vector of second variable (eps/temp/entr/pres)
 //                z           : Input vector of third  variable (Ye)
-//                TargetIdx   : Indices of thermodynamic variables to be returned
+//                TargetIdx   : Indices of thermodynamic variables to be found
 //                output_vars : Output variables of interpolated function values
 //                alltables   : 3D array of tabulated variables
 //                nx          : X-dimension of table
