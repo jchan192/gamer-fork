@@ -6,17 +6,19 @@
 
 GPU_DEVICE static
 void nuc_eos_C_linterp_for_temp( const real x, const real y, const real z,
-                                 real* f, const real* ft,
+                                 real *f, const real *ft,
                                  const int nx, const int ny, const int nz,
-                                 const real* xt, const real* yt, const real* zt,
-                                 real* dvardlt, const int keymode );
+                                 const real *xt, const real *yt, const real *zt,
+                                 real *dvardlt, const int keymode );
+
 GPU_DEVICE static
-void bisection( const real lr, const real lt0, const real ye, const real var0, real* ltout,
+void bisection( const real lr, const real lt0, const real ye, const real var0, real *ltout,
                 const int nrho, const int ntemp, const int nye, const real *alltables,
                 const real *logrho, const real *logtemp, const real *yes,
-                const int keymode, int* keyerr, const real prec );
+                const int keymode, int *keyerr, const real prec );
+
 GPU_DEVICE static
-real linterp2D( const real* xs, const real* ys, const real* fs, const real x, const real y );
+real linterp2D( const real *xs, const real *ys, const real *fs, const real x, const real y );
 
 
 #ifdef __CUDACC__
@@ -114,7 +116,7 @@ void findtemp_NR_bisection( const real lr, const real lt0, const real ye, const 
    nuc_eos_C_linterp_for_temp( lr, lt, ye, &var, alltables, nrho, ntemp, nye,
                                logrho, logtemp, yes, &dvardlt, keymode );
 
-   if( FABS( var-var0 ) < prec*FABS( var0 ) )
+   if ( FABS( var-var0 ) < prec*FABS( var0 ) )
    {
       *ltout = lt0;
       return;
@@ -124,8 +126,8 @@ void findtemp_NR_bisection( const real lr, const real lt0, const real ye, const 
    var1 = var;
 
    int it = 0;
-   while( it < itmax ) {
-
+   while ( it < itmax )
+   {
 //    step 2: check if the two bounding values of the temperature
 //            give values that enclose the new values.
       int itemp = MIN( MAX( 1 + (int)( ( lt - logtemp[0] )*dtempi ), 1), ntemp-1 );
@@ -147,16 +149,16 @@ void findtemp_NR_bisection( const real lr, const real lt0, const real ye, const 
          real fs[4];
          // point 0
          int ifs;
-         ifs = iv + (irho-1) + nrho*(  (itemp-1) + ntemp*(iye-1)  );
+         ifs   = iv + (irho-1) + nrho*(  (itemp-1) + ntemp*(iye-1)  );
          fs[0] = alltables[ifs];
          // point 1
-         ifs = iv + (irho  ) + nrho*(  (itemp-1) + ntemp*(iye-1)  );
+         ifs   = iv + (irho  ) + nrho*(  (itemp-1) + ntemp*(iye-1)  );
          fs[1] = alltables[ifs];
          // point 2
-         ifs = iv + (irho-1) + nrho*(  (itemp-1) + ntemp*(iye  )  );
+         ifs   = iv + (irho-1) + nrho*(  (itemp-1) + ntemp*(iye  )  );
          fs[2] = alltables[ifs];
          // point 3
-         ifs = iv + (irho  ) + nrho*(  (itemp-1) + ntemp*(iye  )  );
+         ifs   = iv + (irho  ) + nrho*(  (itemp-1) + ntemp*(iye  )  );
          fs[3] = alltables[ifs];
 
          vart1 = linterp2D( &logrho[irho-1], &yes[iye-1], fs, lr, ye );
@@ -168,16 +170,16 @@ void findtemp_NR_bisection( const real lr, const real lt0, const real ye, const 
          real fs[4];
          // point 0
          int ifs;
-         ifs = iv + (irho-1) + nrho*(  (itemp) + ntemp*(iye-1)  );
+         ifs   = iv + (irho-1) + nrho*(  (itemp) + ntemp*(iye-1)  );
          fs[0] = alltables[ifs];
          // point 1
-         ifs = iv + (irho  ) + nrho*(  (itemp) + ntemp*(iye-1)  );
+         ifs   = iv + (irho  ) + nrho*(  (itemp) + ntemp*(iye-1)  );
          fs[1] = alltables[ifs];
          // point 2
-         ifs = iv + (irho-1) + nrho*(  (itemp) + ntemp*(iye  )  );
+         ifs   = iv + (irho-1) + nrho*(  (itemp) + ntemp*(iye  )  );
          fs[2] = alltables[ifs];
          // point 3
-         ifs = iv + (irho  ) + nrho*(  (itemp) + ntemp*(iye  )  );
+         ifs   = iv + (irho  ) + nrho*(  (itemp) + ntemp*(iye  )  );
          fs[3] = alltables[ifs];
 
          vart2 = linterp2D( &logrho[irho-1], &yes[iye-1], fs, lr, ye );
@@ -251,7 +253,7 @@ void findtemp_NR_bisection( const real lr, const real lt0, const real ye, const 
 // Return      :  Interpolated value
 //-------------------------------------------------------------------------------------
 GPU_DEVICE
-real linterp2D( const real* xs, const real* ys, const real* fs, const real x, const real y )
+real linterp2D( const real *xs, const real *ys, const real *fs, const real x, const real y )
 {
 
 //  2     3
@@ -297,10 +299,10 @@ real linterp2D( const real* xs, const real* ys, const real* fs, const real x, co
 //-------------------------------------------------------------------------------------
 GPU_DEVICE
 void nuc_eos_C_linterp_for_temp( const real x, const real y, const real z,
-                                 real* f, const real* ft,
+                                 real *f, const real *ft,
                                  const int nx, const int ny, const int nz,
-                                 const real* xt, const real* yt, const real* zt,
-                                 real* dvardlt, const int keymode )
+                                 const real *xt, const real *yt, const real *zt,
+                                 real *dvardlt, const int keymode )
 {
 
 // helper variables
@@ -424,12 +426,11 @@ void nuc_eos_C_linterp_for_temp( const real x, const real y, const real z,
 //-------------------------------------------------------------------------------------
 GPU_DEVICE
 void bisection( const real lr, const real lt0, const real ye, const real var0,
-                real* ltout, const int nrho, const int ntemp, const int nye,
+                real *ltout, const int nrho, const int ntemp, const int nye,
                 const real *alltables, const real *logrho, const real *logtemp, const real *yes,
-                const int keymode, int* keyerr, const real prec )
+                const int keymode, int *keyerr, const real prec )
 {
 
-// iv is the index of the table variable we do the bisection on
    int bcount    = 0;
    int maxbcount = 30;
    int itmax     = 50;
@@ -439,10 +440,11 @@ void bisection( const real lr, const real lt0, const real ye, const real var0,
    real ltmin = logtemp[0];
    real ltmax = logtemp[ntemp-1];
    double f1, f2, fmid, dlt, ltmid;
-   real f1a[3] = {0.0};
-   real f2a[3] = {0.0};
+   real f1a[1] = { 0.0 };
+   real f2a[1] = { 0.0 };
 
-   int iv = 0;
+// iv is the index of the table variable we do the bisection on
+   int iv    = 0;
    int nvars = 1;
    int TargetIdx[1];
 
@@ -452,7 +454,7 @@ void bisection( const real lr, const real lt0, const real ye, const real var0,
 
 
 // prepare
-   lt = lt0;
+   lt  = lt0;
    lt1 = LOG10( MIN ( POW( (real)10.0, ltmax ), ( 1.2 ) * ( POW( (real)10.0, lt0 ) ) ) );
    lt2 = LOG10( MAX ( POW( (real)10.0, ltmin ), ( 0.8 ) * ( POW( (real)10.0, lt0 ) ) ) );
 
@@ -496,7 +498,7 @@ void bisection( const real lr, const real lt0, const real ye, const real var0,
 
       bcount++;
 
-      if( bcount >= maxbcount )
+      if ( bcount >= maxbcount )
       {
          *keyerr = 668;
          return;
@@ -504,15 +506,15 @@ void bisection( const real lr, const real lt0, const real ye, const real var0,
    } // while ( f1*f2 >= 0.0 )
 
 
-   if( f1 < 0.0 )
+   if ( f1 < 0.0 )
    {
-      lt = lt1;
+      lt  = lt1;
       dlt = LOG10( POW( (real)10.0, lt2 ) - POW( (real)10.0, lt1 ) );
    }
 
    else
    {
-      lt = lt2;
+      lt  = lt2;
       dlt = LOG10( POW( (real)10.0, lt1 ) - POW( (real)10.0, lt2 ) );
    }
 
