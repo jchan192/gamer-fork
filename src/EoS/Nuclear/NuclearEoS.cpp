@@ -22,10 +22,10 @@ void nuc_eos_C_linterp_some( const real x, const real y, const real z,
                              const int nx, const int ny, const int nz, const int nvars,
                              const real *xt, const real *yt, const real *zt );
 void findtoreps( const real x, const real y, const real z,
-                 real *found_lt, const real *alltables_Aux,
+                 real *found_lt, const real *table_Aux,
                  const int nx, const int ny, const int nz, const int ntemp,
                  const real *xt, const real *yt, const real *zt, const real *logtoreps,
-                 const int IntScheme_Aux, const int keymode, int *keyerr );
+                 const int IntScheme_Aux, int *keyerr );
 void findtemp_NR_bisection( const real lr, const real lt_IG, const real ye, const real varin, real *ltout,
                             const int nrho, const int ntemp, const int nye, const real *alltables,
                             const real *logrho, const real *logtemp, const real *yes,
@@ -129,6 +129,7 @@ void nuc_eos_C_short( real *Out, const real *In,
    const real  xye      = In[2];
          real  ltoreps  = NULL_REAL;
          real  var_mode = NULL_REAL;
+         int   var_idx;
               *keyerr   = 0;
 
 #  if ( NUC_TABLE_MODE == NUC_TABLE_MODE_TEMP )
@@ -162,6 +163,7 @@ void nuc_eos_C_short( real *Out, const real *In,
          const int   npt_chk   = nmode_Aux;
          const real *table_chk = mode_Aux;
                      var_mode  = leps;
+                     var_idx   = NUC_VAR_IDX_EORT;
 #        else
          const int   npt_chk   = ntoreps;
          const real *table_chk = logtoreps;
@@ -187,6 +189,7 @@ void nuc_eos_C_short( real *Out, const real *In,
          const int   npt_chk   = nmode_Aux;
          const real *table_chk = mode_Aux;
                      var_mode  = lt;
+                     var_idx   = NUC_VAR_IDX_EORT;
 #        endif
 
          if ( lt   >  table_chk[npt_chk-1]  )  {  *keyerr = 120;  return;  }
@@ -200,6 +203,7 @@ void nuc_eos_C_short( real *Out, const real *In,
       {
          const real entr     = In[1];
                     var_mode = entr;
+                    var_idx  = NUC_VAR_IDX_ENTR;
 
          if ( entr >  mode_Aux[nmode_Aux-1] )  {  *keyerr = 130;  return;  }
          if ( entr <  mode_Aux[          0] )  {  *keyerr = 131;  return;  }
@@ -212,6 +216,7 @@ void nuc_eos_C_short( real *Out, const real *In,
       {
          const real lprs     = LOG10( In[1] );
                     var_mode = lprs;
+                    var_idx  = NUC_VAR_IDX_PRES;
 
          if ( lprs >  mode_Aux[nmode_Aux-1] )  {  *keyerr = 140;  return;  }
          if ( lprs <  mode_Aux[          0] )  {  *keyerr = 141;  return;  }
@@ -225,8 +230,10 @@ void nuc_eos_C_short( real *Out, const real *In,
    if ( ltoreps == NULL_REAL )
    {
 //    (a) Auxiliary table
-      findtoreps( lr, var_mode, xye, &ltoreps, alltables_Aux, nrho_Aux, nmode_Aux, nye_Aux, ntoreps,
-                  logrho_Aux, mode_Aux, yes_Aux, logtoreps, IntScheme_Aux, keymode, keyerr );
+      const real *table_Aux = alltables_Aux + var_idx*nrho_Aux*nmode_Aux*nye_Aux;
+
+      findtoreps( lr, var_mode, xye, &ltoreps, table_Aux, nrho_Aux, nmode_Aux, nye_Aux, ntoreps,
+                  logrho_Aux, mode_Aux, yes_Aux, logtoreps, IntScheme_Aux, keyerr );
 
 
 //    (b) Newton-Raphson and bisection methods (for temperature-based table only)
