@@ -62,7 +62,7 @@ void nuc_eos_C_cubinterp_some( const real x, const real y, const real z,
 //                nx            : X-dimension of table
 //                ny            : Y-dimension of table
 //                nz            : Z-dimension of table
-//                ntoreps       : Size of temperature/energy array in the Nuclear Eos table
+//                ntoreps       : Size of temperature/energy array in the Nuclear EoS table
 //                xt            : Vector of x-coordinates of table
 //                yt            : Vector of y-coordinates of table
 //                zt            : Vector of z-coordinates of table

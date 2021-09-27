@@ -50,9 +50,9 @@ void nuc_eos_C_linterp_some( const real x, const real y, const real z,
 //-------------------------------------------------------------------------------------
 // Function    :  findtemp_NR_bisection
 // Description :  Finding temperature from different modes
-//                ---> energy   mode (0)
-//                     entropy  mode (2)
-//                     pressure mode (3)
+//                ---> Energy   mode (0)
+//                     Entropy  mode (2)
+//                     Pressure mode (3)
 //                by Newton-Raphson and bisection methods
 //
 // Note        :  1. Invoked by nuc_eos_C_short()
@@ -66,9 +66,9 @@ void nuc_eos_C_linterp_some( const real x, const real y, const real z,
 //                logtemp : logtemp array in the table
 //                yes     : Ye array in the table
 //                keymode : Which mode we will use
-//                          0: energy mode      (coming in with eps)
-//                          2: entropy mode     (coming in with entropy)
-//                          3: pressure mode    (coming in with P)
+//                          --> 0 : Energy   mode (coming in with eps    )
+//                              2 : Entropy  mode (coming in with entropy)
+//                              3 : Pressure mode (coming in with P      )
 //                keyerr  : Output error
 //                prec    : Tolerance
 //

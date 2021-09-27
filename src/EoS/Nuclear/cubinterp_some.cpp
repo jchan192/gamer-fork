@@ -160,7 +160,7 @@ void nuc_eos_C_cubinterp_some( const real x, const real y, const real z,
    } // for (int idx=0; idx<nvars; idx++)
 
 
-// linear interpolation if cubic interpolation fails
+// try linear interpolation if cubic interpolation fails
    if ( output_vars[0] != output_vars[0] )
       nuc_eos_C_linterp_some( x, y, z, TargetIdx, output_vars, alltables,
                               nx, ny, nz, nvars, xt, yt, zt );
