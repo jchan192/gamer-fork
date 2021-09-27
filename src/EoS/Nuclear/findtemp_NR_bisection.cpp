@@ -21,7 +21,7 @@ real linterp2D( const real* xs, const real* ys, const real* fs, const real x, co
 
 GPU_DEVICE static
 void nuc_eos_C_linterp_some( const real x, const real y, const real z,
-                             real *output_vars, const real *alltables,
+                             const int *TargetIdx, real *output_vars, const real *alltables,
                              const int nx, const int ny, const int nz, const int nvars,
                              const real *xt, const real *yt, const real *zt );
 
@@ -34,7 +34,7 @@ void findtemp_NR_bisection( const real lr, const real lt0, const real ye, const 
 #else
 
 void nuc_eos_C_linterp_some( const real x, const real y, const real z,
-                             real *output_vars, const real *alltables,
+                             const int *TargetIdx, real *output_vars, const real *alltables,
                              const int nx, const int ny, const int nz, const int nvars,
                              const real *xt, const real *yt, const real *zt );
 
@@ -434,11 +434,16 @@ void bisection( const real lr, const real lt0, const real ye, const real var0,
    real f1a[3] = {0.0};
    real f2a[3] = {0.0};
 
-   int iv;
+//   int iv;
+   int iv = 0;
+   int TargetIdx[1];
 
-   if      ( keymode == NUC_MODE_ENGY ) iv = 1;
-   else if ( keymode == NUC_MODE_ENTR ) iv = 2;
-   else if ( keymode == NUC_MODE_PRES ) iv = 0;
+//   if      ( keymode == NUC_MODE_ENGY ) iv = 1;
+//   else if ( keymode == NUC_MODE_ENTR ) iv = 2;
+//   else if ( keymode == NUC_MODE_PRES ) iv = 0;
+   if ( keymode == NUC_MODE_ENGY )   TargetIdx[0] = NUC_VAR_IDX_EORT;
+   if ( keymode == NUC_MODE_ENTR )   TargetIdx[0] = NUC_VAR_IDX_ENTR;
+   if ( keymode == NUC_MODE_PRES )   TargetIdx[0] = NUC_VAR_IDX_PRES;
 
 
 // prepare
@@ -446,11 +451,12 @@ void bisection( const real lr, const real lt0, const real ye, const real var0,
    lt1 = LOG10( MIN ( POW( (real)10.0, ltmax ), ( 1.2 ) * ( POW( (real)10.0, lt0 ) ) ) );
    lt2 = LOG10( MAX ( POW( (real)10.0, ltmin ), ( 0.8 ) * ( POW( (real)10.0, lt0 ) ) ) );
 
-   int nvars = 3;
-   nuc_eos_C_linterp_some( lr, lt1, ye, f1a, alltables,
+//   int nvars = 3;
+   int nvars = 1;
+   nuc_eos_C_linterp_some( lr, lt1, ye, TargetIdx, f1a, alltables,
                            nrho, ntemp, nye, nvars, logrho, logtemp, yes );
 
-   nuc_eos_C_linterp_some( lr, lt2, ye, f2a, alltables,
+   nuc_eos_C_linterp_some( lr, lt2, ye, TargetIdx, f2a, alltables,
                            nrho, ntemp, nye, nvars, logrho, logtemp, yes );
 
    f1 = f1a[iv] - var0;
@@ -467,16 +473,16 @@ void bisection( const real lr, const real lt0, const real ye, const real var0,
 
       lt1 = LOG10( MIN( POW( (real)10.0, ltmax ), ( 1.2 )*( POW( (real)10.0, lt1 ) ) ) );
       lt2 = LOG10( MAX( POW( (real)10.0, ltmin ), ( 0.8 )*( POW( (real)10.0, lt2 ) ) ) );
-      nuc_eos_C_linterp_some( lr, lt1, ye, f1a, alltables,
+      nuc_eos_C_linterp_some( lr, lt1, ye, TargetIdx, f1a, alltables,
                               nrho, ntemp, nye, nvars, logrho, logtemp, yes );
-      nuc_eos_C_linterp_some( lr, lt2, ye, f2a, alltables,
+      nuc_eos_C_linterp_some( lr, lt2, ye, TargetIdx, f2a, alltables,
                               nrho, ntemp, nye, nvars, logrho, logtemp, yes );
 
 #  if 0
    // special enforcement of eps(lt1)>eps(lt2)
    while( f1a < f2a && ifixdeg < ifixdeg_max ) {
       lt1 = LOG10( MIN ( POW ( (real)10.0, ltmax ), 1.2*( POW( (real)10.0, lt1 ) ) ) );
-      nuc_eos_C_linterp_some( lr, lt1, ye, f1a, alltables,
+      nuc_eos_C_linterp_some( lr, lt1, ye, TargetIdx, f1a, alltables,
                               nrho, ntemp, nye, nvars, logrho, logtemp, yes );
       ifixdeg++;
    }
@@ -505,7 +511,7 @@ void bisection( const real lr, const real lt0, const real ye, const real var0,
    for ( it=0; it<itmax; it++ ) {
       dlt   = LOG10( POW( (real)10.0, dlt )*(real)0.5 );
       ltmid = LOG10( POW( (real)10.0, lt ) + POW( (real)10.0, dlt ) );
-      nuc_eos_C_linterp_some( lr, ltmid, ye, f2a, alltables,
+      nuc_eos_C_linterp_some( lr, ltmid, ye, TargetIdx, f2a, alltables,
                                 nrho, ntemp, nye, nvars, logrho, logtemp, yes );
       fmid = f2a[iv] - var0;
       if ( fmid <= 0.0 ) lt=ltmid;

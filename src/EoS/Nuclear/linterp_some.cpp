@@ -7,7 +7,7 @@
 #ifdef __CUDACC__
 GPU_DEVICE static
 void nuc_eos_C_linterp_some( const real x, const real y, const real z,
-                             real *output_vars, const real *alltables,
+                             const int *TargetIdx, real *output_vars, const real *alltables,
                              const int nx, const int ny, const int nz, const int nvars,
                              const real *xt, const real *yt, const real *zt );
 #endif
@@ -39,7 +39,7 @@ void nuc_eos_C_linterp_some( const real x, const real y, const real z,
 //-------------------------------------------------------------------------------------
 GPU_DEVICE
 void nuc_eos_C_linterp_some( const real x, const real y, const real z,
-                             real *output_vars, const real *alltables,
+                             const int *TargetIdx, real *output_vars, const real *alltables,
                              const int nx, const int ny, const int nz, const int nvars,
                              const real *xt, const real *yt, const real *zt )
 {
@@ -104,8 +104,10 @@ void nuc_eos_C_linterp_some( const real x, const real y, const real z,
    idx[7] = NUC_TABLE_NVAR*(  (ix-1) + nx*( (iy-1) + ny*(iz-1) )  );
 
 
-   for (int iv=0; iv<nvars; iv++)
+   for (int i=0; i<nvars; i++)
    {
+      int iv = TargetIdx[i];
+
 //    set up aux vars for interpolation assuming array ordering (iv, ix, iy, iz)
       fh[0] = alltables[ iv + idx[0] ];
       fh[1] = alltables[ iv + idx[1] ];
@@ -127,15 +129,15 @@ void nuc_eos_C_linterp_some( const real x, const real y, const real z,
       a[7] = dxyzi*( fh[7] - fh[0] + fh[1] + fh[2] +
                      fh[3] - fh[4] - fh[5] - fh[6] );
 
-      output_vars[iv] = a[0]
-                      + a[1]*delx
-                      + a[2]*dely
-                      + a[3]*delz
-                      + a[4]*delx*dely
-                      + a[5]*delx*delz
-                      + a[6]*dely*delz
-                      + a[7]*delx*dely*delz;
-   } // for (int iv=0; iv<nvars; iv++)
+      output_vars[i] = a[0]
+                     + a[1]*delx
+                     + a[2]*dely
+                     + a[3]*delz
+                     + a[4]*delx*dely
+                     + a[5]*delx*delz
+                     + a[6]*dely*delz
+                     + a[7]*delx*dely*delz;
+   } // for (int i=0; i<nvars; i++)
 
 
    return;
