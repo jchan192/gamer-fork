@@ -126,7 +126,7 @@ void EoS_SetAuxArray_Nuclear( double AuxArray_Flt[], int AuxArray_Int[] )
    AuxArray_Flt[NUC_AUX_VSQR2CODE ] = 1.0 / SQR(UNIT_V);
    AuxArray_Flt[NUC_AUX_KELVIN2MEV] = Const_kB_eV*1.0e-6;
    AuxArray_Flt[NUC_AUX_MEV2KELVIN] = 1.0 / AuxArray_Flt[NUC_AUX_KELVIN2MEV];
-   AuxArray_Flt[NUC_AUX_M_kB      ] = 0.5*Const_amu/Const_kB*(UNIT_E/UNIT_M);
+   AuxArray_Flt[NUC_AUX_M_kB      ] = 0.5*Const_amu/Const_kB*(UNIT_E/UNIT_M); // assume the mean molecular weight is 0.5
 
    AuxArray_Int[NUC_AUX_NRHO      ] = g_nrho;
 #  if ( NUC_TABLE_MODE == NUC_TABLE_MODE_TEMP )
@@ -674,7 +674,7 @@ static real EoS_DensTemp2Pres_Nuclear( const real Dens_Code, const real Temp_Kel
 //                       In_Int[>0] = indices of thermodynamic variables in the nuclear EoS table
 //                                    (NUC_VAR_IDX_* defined in NuclearEoS.h)
 //                5. The size of Out[] must at least be In_Int[0] + 1:
-//                   --> The last item in Out[] stores the internal energy density or temperature either
+//                   --> Out[NTarget] stores the internal energy density or temperature either
 //                       from the input value or the value found in the auxiliary nuclear EoS table
 //                6. Unit conversion is applied to the returned thermodynamic variables:
 //                   --> internal energy density (in code unit)

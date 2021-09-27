@@ -48,7 +48,7 @@ void findtemp_NR_bisection( const real lr, const real lt_IG, const real ye, cons
 //                       Entropy     mode (2)
 //                       Pressure    mode (3)
 //                3. Out[] must have the size of at least NTarget+1:
-//                   --> The last item in Out[] stores the internal energy or temperature either
+//                   --> Out[NTarget] stores the internal energy or temperature either
 //                       from the input value or the value found in the auxiliary nuclear EoS table
 //
 // Parameter   :  Out            : Output array
@@ -274,7 +274,7 @@ void nuc_eos_C_short( real *Out, const real *In,
 
 
 // store the temperature or internal energy, from either the input value or the auxiliary table,
-// in the last item of Out[], with scale conversion and energy shift correction
+// in Out[NTarget], with scale conversion and energy shift correction
 #  if ( NUC_TABLE_MODE == NUC_TABLE_MODE_TEMP )
    Out[NTarget] = POW( (real)10.0, ltoreps );
 #  else
