@@ -67,10 +67,8 @@ void nuc_eos_C_cubinterp_some( const real x, const real y, const real z,
    real u[4], v[4], w[4];
    real r, q, vox;
    int  ix, iy, iz, iv;
-   int  nxy, nxyz;
-
-   nxy  = nx*ny;
-   nxyz = nxy*nz;
+   int  nxy  = nx*ny;
+   int  nxyz = nxy*nz;
 
 
 // determine spacing parameters of equidistant (!!!) table
@@ -129,10 +127,11 @@ void nuc_eos_C_cubinterp_some( const real x, const real y, const real z,
    w[3] = (real) 0.5*delz3 - (real)0.5*delz2;
 
 
+   iv = (ix-1) + (iy-1)*nx + (iz-1)*nxy;
+
    for (int idx=0; idx<nvars; idx++)
    {
-      iv  = TargetIdx[idx] * nxyz;
-      pv  = alltables + iv + (ix-1) + (iy-1)*nx + (iz-1)*nxy;
+      pv  = alltables + iv + nxyz*TargetIdx[idx];
       vox = (real)0.0;
 
       for (int k=0; k<4; k++)
