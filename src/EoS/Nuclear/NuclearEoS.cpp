@@ -76,7 +76,7 @@ void findtemp_NR_bisection( const real lr, const real lt_IG, const real ye, cons
 //                                         pressure
 //                nye_Aux        : Size of Ye                          array in the auxiliary table
 //                alltables      : Nuclear EoS table
-//                alltables_mode : Auxiliary arrays for finding internal energy/temperature in different modes
+//                alltables_Aux  : Auxiliary arrays for finding internal energy/temperature in different modes
 //                logrho         : density                     index array in the Nuclear EoS table (log    scale)
 //                logtoreps      : internal energy/temperature index array in the Nuclear EoS table (log    scale)
 //                yes            : Ye                          index array in the Nuclear EoS table (linear scale)

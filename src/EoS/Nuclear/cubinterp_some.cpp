@@ -60,31 +60,27 @@ void nuc_eos_C_cubinterp_some( const real x, const real y, const real z,
                                const real *xt, const real *yt, const real *zt )
 {
 
-   const real *pv = NULL;
-
-   real dx, dy, dz, dxi, dyi, dzi;
-   real delx, dely, delz;
-   real u[4], v[4], w[4];
-   real r, q, vox;
-   int  ix, iy, iz, iv;
-   int  nxy  = nx*ny;
-   int  nxyz = nxy*nz;
+   const int   nxy  = nx*ny;
+   const int   nxyz = nxy*nz;
+   const real *pv   = NULL;
+         real  r, q, vox;
+         real  u[4], v[4], w[4];
 
 
 // determine spacing parameters of equidistant (!!!) table
-   dx  = ( xt[nx-1] - xt[0] ) / (real)(nx-1);
-   dy  = ( yt[ny-1] - yt[0] ) / (real)(ny-1);
-   dz  = ( zt[nz-1] - zt[0] ) / (real)(nz-1);
+   const real dx  = ( xt[nx-1] - xt[0] ) / (real)(nx-1);
+   const real dy  = ( yt[ny-1] - yt[0] ) / (real)(ny-1);
+   const real dz  = ( zt[nz-1] - zt[0] ) / (real)(nz-1);
 
-   dxi = (real)1.0 / dx;
-   dyi = (real)1.0 / dy;
-   dzi = (real)1.0 / dz;
+   const real dxi = (real)1.0 / dx;
+   const real dyi = (real)1.0 / dy;
+   const real dzi = (real)1.0 / dz;
 
 
 // determine location in table
-   ix = (int)( ( x - xt[0] )*dxi );
-   iy = (int)( ( y - yt[0] )*dyi );
-   iz = (int)( ( z - zt[0] )*dzi );
+   const int ix = (int)( ( x - xt[0] )*dxi );
+   const int iy = (int)( ( y - yt[0] )*dyi );
+   const int iz = (int)( ( z - zt[0] )*dzi );
 
 
 // linear interpolation at boundaries
@@ -98,9 +94,9 @@ void nuc_eos_C_cubinterp_some( const real x, const real y, const real z,
 
 
 // difference
-   delx = ( x - xt[ix] )*dxi;
-   dely = ( y - yt[iy] )*dyi;
-   delz = ( z - zt[iz] )*dzi;
+   const real delx = ( x - xt[ix] )*dxi;
+   const real dely = ( y - yt[iy] )*dyi;
+   const real delz = ( z - zt[iz] )*dzi;
 
 
 // factors for Catmull-Rom interpolation
@@ -127,7 +123,7 @@ void nuc_eos_C_cubinterp_some( const real x, const real y, const real z,
    w[3] = (real) 0.5*delz3 - (real)0.5*delz2;
 
 
-   iv = (ix-1) + (iy-1)*nx + (iz-1)*nxy;
+   const int iv = (ix-1) + (iy-1)*nx + (iz-1)*nxy;
 
    for (int idx=0; idx<nvars; idx++)
    {

@@ -46,26 +46,23 @@ void nuc_eos_C_linterp_some( const real x, const real y, const real z,
 {
 
 // helper variables
-   real delx, dely, delz, a[8], fh[8];
-   real dx, dy, dz, dxi, dyi, dzi, dxyi, dxzi, dyzi, dxyzi;
-   int  ix, iy, iz, iv, idx;
-   int  nxy  = nx*ny;
-   int  nxyz = nxy*nz;
+   int  ix, iy, iz, iv;
+   real a[8], fh[8];
 
 
 // determine spacing parameters of equidistant (!!!) table
-   dx    = ( xt[nx-1] - xt[0] ) / (real)(nx-1);
-   dy    = ( yt[ny-1] - yt[0] ) / (real)(ny-1);
-   dz    = ( zt[nz-1] - zt[0] ) / (real)(nz-1);
+   const real dx    = ( xt[nx-1] - xt[0] ) / (real)(nx-1);
+   const real dy    = ( yt[ny-1] - yt[0] ) / (real)(ny-1);
+   const real dz    = ( zt[nz-1] - zt[0] ) / (real)(nz-1);
 
-   dxi   = (real)1.0 / dx;
-   dyi   = (real)1.0 / dy;
-   dzi   = (real)1.0 / dz;
+   const real dxi   = (real)1.0 / dx;
+   const real dyi   = (real)1.0 / dy;
+   const real dzi   = (real)1.0 / dz;
 
-   dxyi  = dxi*dyi;
-   dxzi  = dxi*dzi;
-   dyzi  = dyi*dzi;
-   dxyzi = dxi*dyi*dzi;
+   const real dxyi  = dxi*dyi;
+   const real dxzi  = dxi*dzi;
+   const real dyzi  = dyi*dzi;
+   const real dxyzi = dxyi*dzi;
 
 
 // determine location in table
@@ -79,12 +76,14 @@ void nuc_eos_C_linterp_some( const real x, const real y, const real z,
 
 
 // set up aux vars for interpolation
-   delx = xt[ix] - x;
-   dely = yt[iy] - y;
-   delz = zt[iz] - z;
+   const real delx = xt[ix] - x;
+   const real dely = yt[iy] - y;
+   const real delz = zt[iz] - z;
 
 
-   idx = ix + nx*( iy + ny*iz );
+   const int nxy  = nx*ny;
+   const int nxyz = nxy*nz;
+   const int idx  = ix + nx*iy + nxy*iz;
 
    for (int i=0; i<nvars; i++)
    {

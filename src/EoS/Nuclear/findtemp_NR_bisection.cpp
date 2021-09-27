@@ -82,27 +82,24 @@ void findtemp_NR_bisection( const real lr, const real lt0, const real ye, const 
 {
 
 // local vars
-   int  itmax = 20;               // use at most 20 iterations, then go to bisection
-   real dvardlt;                  // derivative dlogprs/dlogT
-   real ldt;
-   real var, var0, var1;          // temp vars for finding value
-   real ltn, lt, lt1;             // temp vars for temperature
-   real ltmax = logtemp[ntemp-1]; // max temp
-   real ltmin = logtemp[0];       // min temp
-
-   real dtemp, drho, dye;
-   real dtempi, drhoi, dyei;
+   const int  itmax = 20;               // use at most 20 iterations, then go to bisection
+   const real ltmax = logtemp[ntemp-1]; // max temp
+   const real ltmin = logtemp[0];       // min temp
+         real dvardlt;                  // derivative dlogprs/dlogT
+         real ldt;
+         real var, var0, var1;          // temp vars for finding value
+         real ltn, lt, lt1;             // temp vars for temperature
 
 
 // determine spacing parameters of equidistant (!!!) table
 #  if 1
-   dtemp = ( logtemp[ntemp-1] - logtemp[0] ) / ( (real)1.0*( ntemp-1 ) );
-   drho  = (  logrho[nrho -1] -  logrho[0] ) / ( (real)1.0*( nrho -1 ) );
-   dye   = (     yes[nye  -1] -     yes[0] ) / ( (real)1.0*( nye  -1 ) );
+   const real dtemp  = ( logtemp[ntemp-1] - logtemp[0] ) / ( (real)1.0*( ntemp-1 ) );
+   const real drho   = (  logrho[nrho -1] -  logrho[0] ) / ( (real)1.0*( nrho -1 ) );
+   const real dye    = (     yes[nye  -1] -     yes[0] ) / ( (real)1.0*( nye  -1 ) );
 
-   dtempi = (real)1.0 / dtemp;
-   drhoi  = (real)1.0 / drho;
-   dyei   = (real)1.0 / dye;
+   const real dtempi = (real)1.0 / dtemp;
+   const real drhoi  = (real)1.0 / drho;
+   const real dyei   = (real)1.0 / dye;
 #  endif
 
 // setting up some vars
@@ -111,6 +108,7 @@ void findtemp_NR_bisection( const real lr, const real lt0, const real ye, const 
    var1    = var0;
    lt      = lt0;
    lt1     = lt;
+
 
 // step 1: do we already have the right temperature
    nuc_eos_C_linterp_for_temp( lr, lt, ye, &var, alltables, nrho, ntemp, nye,
@@ -125,7 +123,9 @@ void findtemp_NR_bisection( const real lr, const real lt0, const real ye, const 
    lt1  = lt;
    var1 = var;
 
+
    int it = 0;
+
    while ( it < itmax )
    {
 //    step 2: check if the two bounding values of the temperature
@@ -213,6 +213,7 @@ void findtemp_NR_bisection( const real lr, const real lt0, const real ye, const 
          return;
       }
 
+
 //    if we are closer than 10^-3  to the root (prs-prs0)=0, we are switching to the secant method,
 //    since the table is rather coarse and the derivatives may be garbage.
       if (  FABS( var - var0 ) < 1.0e-3*FABS( var0 )  )
@@ -264,8 +265,8 @@ real linterp2D( const real *xs, const real *ys, const real *fs, const real x, co
 // then interpolate in y
 // assume rectangular grid
 
-   real t1 = ( fs[1] - fs[0] )/( xs[1] - xs[0] )*( x - xs[0] ) + fs[0];
-   real t2 = ( fs[3] - fs[2] )/( xs[1] - xs[0] )*( x - xs[0] ) + fs[2];
+   const real t1 = ( fs[1] - fs[0] )/( xs[1] - xs[0] )*( x - xs[0] ) + fs[0];
+   const real t2 = ( fs[3] - fs[2] )/( xs[1] - xs[0] )*( x - xs[0] ) + fs[2];
 
    return ( t2 - t1 )/( ys[1] - ys[0] )*( y - ys[0] ) + t1;
 
@@ -306,24 +307,23 @@ void nuc_eos_C_linterp_for_temp( const real x, const real y, const real z,
 {
 
 // helper variables
-   real fh[8], delx, dely, delz, a[8];
-   real dx, dy, dz, dxi, dyi, dzi, dxyi, dxzi, dyzi, dxyzi;
+   real fh[8], a[8];
    int  ix, iy, iz;
 
 // determine spacing parameters of equidistant (!!!) table
-   dx = ( xt[nx-1] - xt[0] )/( (real)1.0*(nx-1) );
-   dy = ( yt[ny-1] - yt[0] )/( (real)1.0*(ny-1) );
-   dz = ( zt[nz-1] - zt[0] )/( (real)1.0*(nz-1) );
+   const real dx = ( xt[nx-1] - xt[0] )/( (real)1.0*(nx-1) );
+   const real dy = ( yt[ny-1] - yt[0] )/( (real)1.0*(ny-1) );
+   const real dz = ( zt[nz-1] - zt[0] )/( (real)1.0*(nz-1) );
 
-   dxi = 1.0/dx;
-   dyi = 1.0/dy;
-   dzi = 1.0/dz;
+   const real dxi = 1.0/dx;
+   const real dyi = 1.0/dy;
+   const real dzi = 1.0/dz;
 
-   dxyi = dxi*dyi;
-   dxzi = dxi*dzi;
-   dyzi = dyi*dzi;
+   const real dxyi = dxi*dyi;
+   const real dxzi = dxi*dzi;
+   const real dyzi = dyi*dzi;
 
-   dxyzi = dxi*dyi*dzi;
+   const real dxyzi = dxi*dyi*dzi;
 
 // determine location in table
    ix = 1 + (int)( ( x - xt[0] )*dxi );
@@ -335,9 +335,9 @@ void nuc_eos_C_linterp_for_temp( const real x, const real y, const real z,
    iz = MAX( 1, MIN( iz, nz-1 ) );
 
 // set up aux vars for interpolation
-   delx = xt[ix] - x;
-   dely = yt[iy] - y;
-   delz = zt[iz] - z;
+   const real delx = xt[ix] - x;
+   const real dely = yt[iy] - y;
+   const real delz = zt[iz] - z;
 
    int idx[8];
 
@@ -431,22 +431,23 @@ void bisection( const real lr, const real lt0, const real ye, const real var0,
                 const int keymode, int *keyerr, const real prec )
 {
 
-   int bcount    = 0;
-   int maxbcount = 30;
-   int itmax     = 50;
+   const int maxbcount = 30;
+   const int itmax     = 50;
+         int bcount    = 0;
 
 // temporary local vars
-   real lt, lt1, lt2;
-   real ltmin = logtemp[0];
-   real ltmax = logtemp[ntemp-1];
+   const real ltmin = logtemp[0];
+   const real ltmax = logtemp[ntemp-1];
+
    double f1, f2, fmid, dlt, ltmid;
-   real f1a[1] = { 0.0 };
-   real f2a[1] = { 0.0 };
+   real   lt, lt1, lt2;
+   real   f1a[1] = { 0.0 };
+   real   f2a[1] = { 0.0 };
 
 // iv is the index of the table variable we do the bisection on
-   int iv    = 0;
-   int nvars = 1;
-   int TargetIdx[1];
+   const int iv    = 0;
+   const int nvars = 1;
+         int TargetIdx[1];
 
    if      ( keymode == NUC_MODE_ENGY )   TargetIdx[0] = NUC_VAR_IDX_EORT;
    else if ( keymode == NUC_MODE_ENTR )   TargetIdx[0] = NUC_VAR_IDX_ENTR;
