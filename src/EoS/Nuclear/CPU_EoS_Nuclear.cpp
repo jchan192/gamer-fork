@@ -126,7 +126,7 @@ void EoS_SetAuxArray_Nuclear( double AuxArray_Flt[], int AuxArray_Int[] )
    AuxArray_Flt[NUC_AUX_VSQR2CODE ] = 1.0 / SQR(UNIT_V);
    AuxArray_Flt[NUC_AUX_KELVIN2MEV] = Const_kB_eV*1.0e-6;
    AuxArray_Flt[NUC_AUX_MEV2KELVIN] = 1.0 / AuxArray_Flt[NUC_AUX_KELVIN2MEV];
-   AuxArray_Flt[NUC_AUX_M_kB      ] = 0.5*Const_amu/Const_kB*(UNIT_E/UNIT_M);
+   AuxArray_Flt[NUC_AUX_M_kB      ] = 0.5*Const_amu/Const_kB*(UNIT_E/UNIT_M); // assume the mean molecular weight is 0.5
 
    AuxArray_Int[NUC_AUX_NRHO      ] = g_nrho;
 #  if ( NUC_TABLE_MODE == NUC_TABLE_MODE_TEMP )
@@ -226,7 +226,7 @@ static real EoS_DensEint2Pres_Nuclear( const real Dens_Code, const real Eint_Cod
    const real sEint2CGS   = AuxArray_Flt[NUC_AUX_VSQR2CGS  ];
    const real Pres2Code   = AuxArray_Flt[NUC_AUX_PRES2CODE ];
 #  if ( NUC_TABLE_MODE == NUC_TABLE_MODE_TEMP )
-   const real MeV2Kelvin  = AuxArray_Flt[NUC_AUX_MEV2KELVIN];
+   const real Kelvin2MeV  = AuxArray_Flt[NUC_AUX_KELVIN2MEV];
    const real m_kB        = AuxArray_Flt[NUC_AUX_M_kB      ];
 #  endif
 
@@ -248,7 +248,7 @@ static real EoS_DensEint2Pres_Nuclear( const real Dens_Code, const real Eint_Cod
 
 // set up the initial guess of temperature for temperature-based table
 #  if ( NUC_TABLE_MODE == NUC_TABLE_MODE_TEMP )
-   real Temp_IG   = ( Eint_Code*(2.0/3.0) ) * m_kB / Dens_Code / MeV2Kelvin;
+   real Temp_IG   = ( Eint_Code*(2.0/3.0) ) * m_kB / Dens_Code * Kelvin2MeV;
 #  else
    real Temp_IG   = NULL_REAL;
 #  endif
@@ -351,7 +351,7 @@ static real EoS_DensPres2Eint_Nuclear( const real Dens_Code, const real Pres_Cod
    const real Pres2CGS    = AuxArray_Flt[NUC_AUX_PRES2CGS  ];
    const real sEint2Code  = AuxArray_Flt[NUC_AUX_VSQR2CODE ];
 #  if ( NUC_TABLE_MODE == NUC_TABLE_MODE_TEMP )
-   const real MeV2Kelvin  = AuxArray_Flt[NUC_AUX_MEV2KELVIN];
+   const real Kelvin2MeV  = AuxArray_Flt[NUC_AUX_KELVIN2MEV];
    const real m_kB        = AuxArray_Flt[NUC_AUX_M_kB      ];
 #  endif
 
@@ -372,7 +372,7 @@ static real EoS_DensPres2Eint_Nuclear( const real Dens_Code, const real Pres_Cod
 
 // set up the initial guess of temperature for temperature-based table
 #  if ( NUC_TABLE_MODE == NUC_TABLE_MODE_TEMP )
-   real Temp_IG  = m_kB * Pres_Code / Dens_Code / MeV2Kelvin;
+   real Temp_IG  = m_kB * Pres_Code / Dens_Code * Kelvin2MeV;
 #  else
    real Temp_IG  = NULL_REAL;
 #  endif
@@ -481,7 +481,7 @@ static real EoS_DensPres2CSqr_Nuclear( const real Dens_Code, const real Pres_Cod
    const real Pres2CGS    = AuxArray_Flt[NUC_AUX_PRES2CGS  ];
    const real CsSqr2Code  = AuxArray_Flt[NUC_AUX_VSQR2CODE ];
 #  if ( NUC_TABLE_MODE == NUC_TABLE_MODE_TEMP )
-   const real MeV2Kelvin  = AuxArray_Flt[NUC_AUX_MEV2KELVIN];
+   const real Kelvin2MeV  = AuxArray_Flt[NUC_AUX_KELVIN2MEV];
    const real m_kB        = AuxArray_Flt[NUC_AUX_M_kB      ];
 #  endif
 
@@ -503,7 +503,7 @@ static real EoS_DensPres2CSqr_Nuclear( const real Dens_Code, const real Pres_Cod
 
 // set up the initial guess of temperature for temperature-based table
 #  if ( NUC_TABLE_MODE == NUC_TABLE_MODE_TEMP )
-   real Temp_IG  = m_kB * Pres_Code / Dens_Code / MeV2Kelvin;
+   real Temp_IG  = m_kB * Pres_Code / Dens_Code * Kelvin2MeV;
 #  else
    real Temp_IG  = NULL_REAL;
 #  endif
@@ -663,21 +663,24 @@ static real EoS_DensTemp2Pres_Nuclear( const real Dens_Code, const real Temp_Kel
 // Note        :  1. See EoS_DensEint2Pres_Nuclear()
 //                2. In_*[] and Out[] must NOT overlap
 //                3. Support energy, temperature, entropy, and pressure modes:
-//                   --> In_Flt[0] = mass density            in code units
-//                       In_Flt[1] = internal energy density in code units (energy      mode)
-//                                 = temperature             in kelvin     (temperature mode)
-//                                 = entropy                 in kB/baryon  (entropy     mode)
-//                                 = pressure                in code units (pressure    mode)
+//                   --> In_Flt[0] = mass density            in code unit
+//                       In_Flt[1] = internal energy density in code unit (energy      mode)
+//                                 = temperature             in kelvin    (temperature mode)
+//                                 = entropy                 in kB/baryon (entropy     mode)
+//                                 = pressure                in code unit (pressure    mode)
 //                       In_Flt[2] = Ye                      dimensionless
 //                4. The thermodynamic variables returned in Out[] are specified in In_Int[]:
 //                   --> In_Int[ 0] = number of thermodynamic variables retrieved from the nuclear EoS table
 //                       In_Int[>0] = indices of thermodynamic variables in the nuclear EoS table
 //                                    (NUC_VAR_IDX_* defined in NuclearEoS.h)
 //                5. The size of Out[] must at least be In_Int[0] + 1:
-//                   --> The last item in Out[] stores the internal energy density or temperature either
+//                   --> Out[NTarget] stores the internal energy density or temperature either
 //                       from the input value or the value found in the auxiliary nuclear EoS table
-//                6. Unit conversion will be applied to the returned internal energy density,
-//                   temperature, pressure, and sound speed squared
+//                6. Unit conversion is applied to the returned thermodynamic variables:
+//                   --> internal energy density (in code unit)
+//                       temperature             (in kelvin   )
+//                       pressure                (in code unit)
+//                       sound speed squared     (in code unit)
 //
 // Parameter   :  Mode        : Which mode we will use
 //                              --> Supported modes: NUC_MODE_ENGY (0)
@@ -759,11 +762,11 @@ static void EoS_General_Nuclear( const int Mode, real Out[], const real In_Flt[]
 #  endif // GAMER_DEBUG
 
 
-   const int  NTarget          = In_Int[0];
-   const int *TargetIdx        = In_Int+1;
-         int  NUC_TAB_MODE_AUX = NULL_INT;
-         int  Err              = NULL_INT;
-         real Temp_IG          = NULL_REAL;
+   const int  NTarget      = In_Int[0];
+   const int *TargetIdx    = In_Int+1;
+         int  TableIdx_Aux = NULL_INT;
+         int  Err          = NULL_INT;
+         real Temp_IG      = NULL_REAL;
          real TmpIn[3];
 
    TmpIn[0] = Dens_CGS;
@@ -795,12 +798,12 @@ static void EoS_General_Nuclear( const int Mode, real Out[], const real In_Flt[]
 #        endif // GAMER_DEBUG
 
 
-         TmpIn[1]         = sEint_CGS;
-         NUC_TAB_MODE_AUX = NUC_TAB_EORT_MODE;
+         TmpIn[1]     = sEint_CGS;
+         TableIdx_Aux = NUC_TAB_EORT_MODE;
 
 //       set up the initial guess of temperature for temperature-based table
 #        if ( NUC_TABLE_MODE == NUC_TABLE_MODE_TEMP )
-         Temp_IG = ( Eint_Code*(2.0/3.0) ) * m_kB / Dens_Code / MeV2Kelvin;
+         Temp_IG = ( Eint_Code*(2.0/3.0) ) * m_kB / Dens_Code * Kelvin2MeV;
 #        endif
       } // case NUC_MODE_ENGY
       break;
@@ -829,8 +832,8 @@ static void EoS_General_Nuclear( const int Mode, real Out[], const real In_Flt[]
 #        endif // GAMER_DEBUG
 
 
-         TmpIn[1]         = Temp_MeV;
-         NUC_TAB_MODE_AUX = NUC_TAB_EORT_MODE;
+         TmpIn[1]     = Temp_MeV;
+         TableIdx_Aux = NUC_TAB_EORT_MODE;
       } // case NUC_MODE_TEMP
       break;
 
@@ -848,8 +851,8 @@ static void EoS_General_Nuclear( const int Mode, real Out[], const real In_Flt[]
 #        endif // GAMER_DEBUG
 
 
-         TmpIn[1]         = Entr;
-         NUC_TAB_MODE_AUX = NUC_TAB_ENTR_MODE;
+         TmpIn[1]     = Entr;
+         TableIdx_Aux = NUC_TAB_ENTR_MODE;
       } // case NUC_MODE_ENTR
       break;
 
@@ -877,12 +880,12 @@ static void EoS_General_Nuclear( const int Mode, real Out[], const real In_Flt[]
 #        endif // GAMER_DEBUG
 
 
-         TmpIn[1]         = Pres_CGS;
-         NUC_TAB_MODE_AUX = NUC_TAB_PRES_MODE;
+         TmpIn[1]     = Pres_CGS;
+         TableIdx_Aux = NUC_TAB_PRES_MODE;
 
 //       set up the initial guess of temperature for temperature-based table
 #        if ( NUC_TABLE_MODE == NUC_TABLE_MODE_TEMP )
-         Temp_IG = m_kB * Pres_Code / Dens_Code / MeV2Kelvin;
+         Temp_IG = m_kB * Pres_Code / Dens_Code * Kelvin2MeV;
 #        endif
       } // case NUC_MODE_PRES
       break;
@@ -908,7 +911,7 @@ static void EoS_General_Nuclear( const int Mode, real Out[], const real In_Flt[]
    nuc_eos_C_short( Out, TmpIn, NTarget, TargetIdx,
                     EnergyShift, Temp_IG, NRho, NTorE, NYe, NRho_Mode, NMode, NYe_Mode,
                     Table[NUC_TAB_ALL], Table[NUC_TAB_ALL_MODE], Table[NUC_TAB_RHO], Table[NUC_TAB_TORE], Table[NUC_TAB_YE],
-                    Table[NUC_TAB_RHO_MODE], Table[NUC_TAB_MODE_AUX], Table[NUC_TAB_YE_MODE],
+                    Table[NUC_TAB_RHO_MODE], Table[TableIdx_Aux], Table[NUC_TAB_YE_MODE],
                     Int_Aux, Int_Main, Mode, &Err, Tolerance );
 
 // trigger a *hard failure* if the EoS driver fails

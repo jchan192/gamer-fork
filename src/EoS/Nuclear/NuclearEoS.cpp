@@ -50,14 +50,17 @@ void findtemp_NR_bisection( const real lr, const real lt_IG, const real ye, cons
 //                       Temperature mode (1)
 //                       Entropy     mode (2)
 //                       Pressure    mode (3)
+//                3. Out[] must have the size of at least NTarget+1:
+//                   --> Out[NTarget] stores the internal energy or temperature either
+//                       from the input value or the value found in the auxiliary nuclear EoS table
 //
 // Parameter   :  Out            : Output array
 //                In             : Input array
 //                                 --> In[0] = mass density    ( rho) in g/cm^3
-//                                     In[1] = internal energy ( eps) in cm^2/s^2   (0)
-//                                           = temperature     (temp) in MeV        (1)
-//                                           = entropy         (entr) in kB/baryon  (2)
-//                                           = pressure        (pres) in dyne/cm^2  (3)
+//                                     In[1] = internal energy ( eps) in cm^2/s^2   (keymode = 0/NUC_MODE_ENGY)
+//                                           = temperature     (temp) in MeV        (keymode = 1/NUC_MODE_TEMP)
+//                                           = entropy         (entr) in kB/baryon  (keymode = 2/NUC_MODE_ENTR)
+//                                           = pressure        (pres) in dyne/cm^2  (keymode = 3/NUC_MODE_PRES)
 //                                     In[2] = Ye              (  Ye) dimensionless
 //                NTarget        : Number of thermodynamic variables retrieved from the nuclear EoS table
 //                TargetIdx      : Indices of thermodynamic variables to be returned
@@ -74,14 +77,14 @@ void findtemp_NR_bisection( const real lr, const real lt_IG, const real ye, cons
 //                nye_Aux        : Size of Ye                          array in the auxiliary table
 //                alltables      : Nuclear EoS table
 //                alltables_mode : Auxiliary arrays for finding internal energy/temperature in different modes
-//                logrho         : density                     index array in the Nuclear EoS table (log scale)
-//                logtoreps      : internal energy/temperature index array in the Nuclear EoS table (log scale)
-//                yes            : Ye                          index array in the Nuclear EoS table
-//                logrho_Aux     : density                     index array in the auxiliary table (log scale)
-//                mode_Aux       : internal energy/temperature index array in the auxiliary table (log scale)
-//                                 entropy
-//                                 pressure                                                       (log scale)
-//                yes_Aux        : Ye                          index array in the auxiliary table
+//                logrho         : density                     index array in the Nuclear EoS table (log    scale)
+//                logtoreps      : internal energy/temperature index array in the Nuclear EoS table (log    scale)
+//                yes            : Ye                          index array in the Nuclear EoS table (linear scale)
+//                logrho_Aux     : density                     index array in the auxiliary table   (log    scale)
+//                mode_Aux       : internal energy/temperature index array in the auxiliary table   (log    scale)
+//                                 entropy                                                          (linear scale)
+//                                 pressure                                                         (log    scale)
+//                yes_Aux        : Ye                          index array in the auxiliary table   (linear scale)
 //                IntScheme_Aux  : Interpolation scheme for the auxiliary table
 //                IntScheme_Main : Interpolation scheme for the Nuclear EoS table
 //                keymode        : Which mode we will use
@@ -280,6 +283,8 @@ void nuc_eos_C_short( real *Out, const real *In,
    }
 
 
+// store the temperature or internal energy, from either the input value or the auxiliary table,
+// in Out[NTarget], with scale conversion and energy shift correction
 #  if ( NUC_TABLE_MODE == NUC_TABLE_MODE_TEMP )
    Out[NTarget] = POW( (real)10.0, ltoreps );
 #  else
