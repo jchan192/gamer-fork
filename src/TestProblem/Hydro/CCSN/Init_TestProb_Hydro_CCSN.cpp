@@ -277,7 +277,7 @@ void SetGridIC( real fluid[], const double x, const double y, const double z, co
       const int  NTarget = 0;
 #     endif
             int  TmpIn_Int[NTarget+1];
-            real TmpIn_Flt[3], Out[NTarget+1];
+            real TmpIn_Flt[3], TmpOut[NTarget+1];
 
       TmpIn_Flt[0] = (real)Dens;
       TmpIn_Flt[1] = (real)Temp;
@@ -285,11 +285,11 @@ void SetGridIC( real fluid[], const double x, const double y, const double z, co
 
       TmpIn_Int[0] = NTarget;
 #     if ( NUC_TABLE_MODE == NUC_TABLE_MODE_TEMP )
-      TmpIn_Int[1] = 1;
+      TmpIn_Int[1] = NUC_VAR_IDX_EORT;
 #     endif
 
-      EoS_General_CPUPtr( 1, Out, TmpIn_Flt, TmpIn_Int, EoS_AuxArray_Flt, EoS_AuxArray_Int, h_EoS_Table );
-      Eint = Out[0];
+      EoS_General_CPUPtr( NUC_MODE_TEMP, TmpOut, TmpIn_Flt, TmpIn_Int, EoS_AuxArray_Flt, EoS_AuxArray_Int, h_EoS_Table );
+      Eint = TmpOut[0];
    }
 
    else                         // Pressure Mode

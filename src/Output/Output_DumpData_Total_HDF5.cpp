@@ -1129,9 +1129,9 @@ void Output_DumpData_Total_HDF5( const char *FileName )
                      TmpIn_Flt[2] = u[YE] / u[DENS];
 
                      TmpIn_Int[0] = NTarget;
-                     TmpIn_Int[1] = 2;
+                     TmpIn_Int[1] = NUC_VAR_IDX_ENTR;
 
-                     EoS_General_CPUPtr( 0, TmpOut, TmpIn_Flt, TmpIn_Int, EoS_AuxArray_Flt, EoS_AuxArray_Int, h_EoS_Table );
+                     EoS_General_CPUPtr( NUC_MODE_ENGY, TmpOut, TmpIn_Flt, TmpIn_Int, EoS_AuxArray_Flt, EoS_AuxArray_Int, h_EoS_Table );
                      Entr = TmpOut[0];
 #                    else
                      Aux_Error( ERROR_INFO, "OPT__OUTPUT_ENTR is only supported by EOS_NUCLEAR !!\n" );
