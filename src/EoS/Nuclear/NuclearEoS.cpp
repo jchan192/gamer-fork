@@ -17,15 +17,18 @@ void nuc_eos_C_cubinterp_some( const real x, const real y, const real z,
                                const int *TargetIdx, real *output_vars, const real *alltables,
                                const int nx, const int ny, const int nz, const int nvars,
                                const real *xt, const real *yt, const real *zt );
+
 void nuc_eos_C_linterp_some( const real x, const real y, const real z,
                              const int *TargetIdx, real *output_vars, const real *alltables,
                              const int nx, const int ny, const int nz, const int nvars,
                              const real *xt, const real *yt, const real *zt );
+
 void findtoreps( const real x, const real y, const real z,
                  real *found_lt, const real *table_Aux,
                  const int nx, const int ny, const int nz, const int ntemp,
                  const real *xt, const real *yt, const real *zt, const real *logtoreps,
                  const int IntScheme_Aux, int *keyerr );
+
 void findtemp_NR_bisection( const real lr, const real lt_IG, const real ye, const real varin, real *ltout,
                             const int nrho, const int ntemp, const int nye, const real *alltables,
                             const real *logrho, const real *logtemp, const real *yes,
