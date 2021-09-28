@@ -439,10 +439,10 @@ void bisection( const real lr, const real lt0, const real ye, const real var0,
    const real ltmin = logtemp[0];
    const real ltmax = logtemp[ntemp-1];
 
-   double f1, f2, fmid, dlt, ltmid;
-   real   lt, lt1, lt2;
-   real   f1a[1] = { 0.0 };
-   real   f2a[1] = { 0.0 };
+   real f1, f2, fmid, dlt, ltmid;
+   real lt, lt1, lt2;
+   real f1a[1] = { 0.0 };
+   real f2a[1] = { 0.0 };
 
 // iv is the index of the table variable we do the bisection on
    const int iv    = 0;
