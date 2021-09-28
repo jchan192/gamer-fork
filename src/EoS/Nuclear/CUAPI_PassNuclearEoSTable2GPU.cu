@@ -11,9 +11,9 @@ extern int g_nrho_mode;
 extern int g_nmode;
 extern int g_nye_mode;
 
-#if   ( NUC_TABLE_MODE == NUC_TABLE_MODE_TEMP )
+#if ( NUC_TABLE_MODE == NUC_TABLE_MODE_TEMP )
 extern int g_ntemp;
-#elif ( NUC_TABLE_MODE == NUC_TABLE_MODE_ENGY )
+#else
 extern int g_neps;
 #endif
 
@@ -39,11 +39,11 @@ void CUAPI_PassNuclearEoSTable2GPU()
 // set the table size
    long EoS_TableSize[NUC_TABLE_NPTR];
 
-#if   ( NUC_TABLE_MODE == NUC_TABLE_MODE_TEMP )
+#  if ( NUC_TABLE_MODE == NUC_TABLE_MODE_TEMP )
    int  n_def_mode = g_ntemp;
-#elif ( NUC_TABLE_MODE == NUC_TABLE_MODE_ENGY )
+#  else
    int  n_def_mode = g_neps;
-#endif
+#  endif
 
    EoS_TableSize[NUC_TAB_ALL      ] = sizeof(real)*g_nrho*n_def_mode*g_nye*NUC_TABLE_NVAR;
    EoS_TableSize[NUC_TAB_ALL_MODE ] = sizeof(real)*g_nrho_mode*g_nmode*g_nye_mode*3;

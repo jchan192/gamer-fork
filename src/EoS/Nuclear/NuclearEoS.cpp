@@ -17,15 +17,18 @@ void nuc_eos_C_cubinterp_some( const real x, const real y, const real z,
                                const int *TargetIdx, real *output_vars, const real *alltables,
                                const int nx, const int ny, const int nz, const int nvars,
                                const real *xt, const real *yt, const real *zt );
+
 void nuc_eos_C_linterp_some( const real x, const real y, const real z,
                              const int *TargetIdx, real *output_vars, const real *alltables,
                              const int nx, const int ny, const int nz, const int nvars,
                              const real *xt, const real *yt, const real *zt );
+
 void findtoreps( const real x, const real y, const real z,
-                 real *found_lt, const real *alltables_Aux,
+                 real *found_lt, const real *table_Aux,
                  const int nx, const int ny, const int nz, const int ntemp,
                  const real *xt, const real *yt, const real *zt, const real *logtoreps,
-                 const int interpol_TL, const int keymode, int *keyerr );
+                 const int IntScheme_Aux, int *keyerr );
+
 void findtemp_NR_bisection( const real lr, const real lt_IG, const real ye, const real varin, real *ltout,
                             const int nrho, const int ntemp, const int nye, const real *alltables,
                             const real *logrho, const real *logtemp, const real *yes,
@@ -73,7 +76,7 @@ void findtemp_NR_bisection( const real lr, const real lt_IG, const real ye, cons
 //                                         pressure
 //                nye_Aux        : Size of Ye                          array in the auxiliary table
 //                alltables      : Nuclear EoS table
-//                alltables_mode : Auxiliary arrays for finding internal energy/temperature in different modes
+//                alltables_Aux  : Auxiliary arrays for finding internal energy/temperature in different modes
 //                logrho         : density                     index array in the Nuclear EoS table (log    scale)
 //                logtoreps      : internal energy/temperature index array in the Nuclear EoS table (log    scale)
 //                yes            : Ye                          index array in the Nuclear EoS table (linear scale)
@@ -82,8 +85,8 @@ void findtemp_NR_bisection( const real lr, const real lt_IG, const real ye, cons
 //                                 entropy                                                          (linear scale)
 //                                 pressure                                                         (log    scale)
 //                yes_Aux        : Ye                          index array in the auxiliary table   (linear scale)
-//                interpol_TL    : Interpolation schemes for the auxiliary table
-//                interpol_other : Interpolation schemes for the Nuclear EoS table
+//                IntScheme_Aux  : Interpolation scheme for the auxiliary table
+//                IntScheme_Main : Interpolation scheme for the Nuclear EoS table
 //                keymode        : Which mode we will use
 //                                 --> 0 : Energy mode
 //                                     1 : Temperature mode
@@ -109,8 +112,8 @@ void findtemp_NR_bisection( const real lr, const real lt_IG, const real ye, cons
 //                                     151 : Ye   too low
 //                                     152 : Ye   NaN
 //                                     665 : fail in finding internal energy or temperature
-//                                     668 : bisection failed (temperature-based table only) (WIP)
-//                                     669 : bisection failed (temperature-based table only) (WIP)
+//                                     668 : fail in bracketing the target value in the bisection method
+//                                     669 : fail in finding temperature         in the bisection method
 //                rfeps          : Tolerance for Newton-Raphson and bisection methods
 //
 // Return      :  Out[]
@@ -124,7 +127,7 @@ void nuc_eos_C_short( real *Out, const real *In,
                       const real *alltables, const real *alltables_Aux,
                       const real *logrho, const real *logtoreps, const real *yes,
                       const real *logrho_Aux, const real *mode_Aux, const real *yes_Aux,
-                      const int interpol_TL, const int interpol_other,
+                      const int IntScheme_Aux, const int IntScheme_Main,
                       const int keymode, int *keyerr, const real rfeps )
 {
 
@@ -132,6 +135,7 @@ void nuc_eos_C_short( real *Out, const real *In,
    const real  xye      = In[2];
          real  ltoreps  = NULL_REAL;
          real  var_mode = NULL_REAL;
+         int   var_idx;
               *keyerr   = 0;
 
 #  if ( NUC_TABLE_MODE == NUC_TABLE_MODE_TEMP )
@@ -165,6 +169,7 @@ void nuc_eos_C_short( real *Out, const real *In,
          const int   npt_chk   = nmode_Aux;
          const real *table_chk = mode_Aux;
                      var_mode  = leps;
+                     var_idx   = NUC_VAR_IDX_EORT;
 #        else
          const int   npt_chk   = ntoreps;
          const real *table_chk = logtoreps;
@@ -190,6 +195,7 @@ void nuc_eos_C_short( real *Out, const real *In,
          const int   npt_chk   = nmode_Aux;
          const real *table_chk = mode_Aux;
                      var_mode  = lt;
+                     var_idx   = NUC_VAR_IDX_EORT;
 #        endif
 
          if ( lt   >  table_chk[npt_chk-1]  )  {  *keyerr = 120;  return;  }
@@ -203,6 +209,7 @@ void nuc_eos_C_short( real *Out, const real *In,
       {
          const real entr     = In[1];
                     var_mode = entr;
+                    var_idx  = NUC_VAR_IDX_ENTR;
 
          if ( entr >  mode_Aux[nmode_Aux-1] )  {  *keyerr = 130;  return;  }
          if ( entr <  mode_Aux[          0] )  {  *keyerr = 131;  return;  }
@@ -215,6 +222,7 @@ void nuc_eos_C_short( real *Out, const real *In,
       {
          const real lprs     = LOG10( In[1] );
                     var_mode = lprs;
+                    var_idx  = NUC_VAR_IDX_PRES;
 
          if ( lprs >  mode_Aux[nmode_Aux-1] )  {  *keyerr = 140;  return;  }
          if ( lprs <  mode_Aux[          0] )  {  *keyerr = 141;  return;  }
@@ -228,8 +236,10 @@ void nuc_eos_C_short( real *Out, const real *In,
    if ( ltoreps == NULL_REAL )
    {
 //    (a) Auxiliary table
-      findtoreps( lr, var_mode, xye, &ltoreps, alltables_Aux, nrho_Aux, nmode_Aux, nye_Aux, ntoreps,
-                  logrho_Aux, mode_Aux, yes_Aux, logtoreps, interpol_TL, keymode, keyerr );
+      const real *table_Aux = alltables_Aux + var_idx*nrho_Aux*nmode_Aux*nye_Aux;
+
+      findtoreps( lr, var_mode, xye, &ltoreps, table_Aux, nrho_Aux, nmode_Aux, nye_Aux, ntoreps,
+                  logrho_Aux, mode_Aux, yes_Aux, logtoreps, IntScheme_Aux, keyerr );
 
 
 //    (b) Newton-Raphson and bisection methods (for temperature-based table only)
@@ -246,7 +256,7 @@ void nuc_eos_C_short( real *Out, const real *In,
 // find other thermodynamic variables
    if ( NTarget > 0 )
    {
-      if ( interpol_other == NUC_INTERPOL_LINEAR )
+      if ( IntScheme_Main == NUC_INT_LINEAR )
       {
          nuc_eos_C_linterp_some( lr, ltoreps, xye, TargetIdx, Out, alltables,
                                  nrho, ntoreps, nye, NTarget, logrho, logtoreps, yes );

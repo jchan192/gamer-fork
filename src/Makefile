@@ -486,7 +486,7 @@ CPU_FILE    += CPU_FluidSolver_RTVD.cpp  CPU_FluidSolver_MHM.cpp  CPU_FluidSolve
 
 CPU_FILE    += CPU_EoS_Gamma.cpp  CPU_EoS_User_Template.cpp  CPU_EoS_Isothermal.cpp  CPU_EoS_Nuclear.cpp \
                EoS_Init.cpp  EoS_End.cpp  EoS_End_Nuclear.cpp  NuclearEoS.cpp  cubinterp_some.cpp  linterp_some.cpp \
-               findtoreps.cpp findtemp_NR_bisection.cpp readtable.cpp
+               findtoreps.cpp  findtemp_NR_bisection.cpp  readtable.cpp
 
 CPU_FILE    += Hydro_Init_ByFunction_AssignData.cpp  Hydro_Aux_Check_Negative.cpp \
                Hydro_BoundaryCondition_Reflecting.cpp  Hydro_BoundaryCondition_Outflow.cpp
@@ -892,9 +892,9 @@ else ifeq "$(filter -DGPU_ARCH=VOLTA, $(SIMU_OPTION))" "-DGPU_ARCH=VOLTA"
    endif
 else ifeq "$(filter -DGPU_ARCH=TURING, $(SIMU_OPTION))" "-DGPU_ARCH=TURING"
    ifeq "$(filter -DFLOAT8, $(SIMU_OPTION))" "-DFLOAT8"
-     NVCCFLAG_FLU += --maxrregcount=224
+     NVCCFLAG_FLU += --maxrregcount=256
    else
-     NVCCFLAG_FLU += --maxrregcount=224
+     NVCCFLAG_FLU += --maxrregcount=256
    endif
 else ifeq "$(filter -DGPU_ARCH=AMPERE, $(SIMU_OPTION))" "-DGPU_ARCH=AMPERE"
    ifeq "$(filter -DFLOAT8, $(SIMU_OPTION))" "-DFLOAT8"

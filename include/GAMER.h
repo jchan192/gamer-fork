@@ -74,6 +74,9 @@ extern "C" {
 #  include "Serial.h"
 #endif
 
+#if ( EOS == EOS_NUCLEAR )
+#  include "NuclearEoS.h"
+#endif
 
 
 #endif // #ifndef __GAMER_H__
