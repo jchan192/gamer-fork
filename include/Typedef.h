@@ -405,10 +405,10 @@ const PatchType_t
 
 // nuclear EoS interpolation schemes
 #if ( MODEL == HYDRO  &&  EOS == EOS_NUCLEAR )
-typedef int NucEoSInterpol_t;
-const NucEoSInterpol_t
-   NUC_INTERPOL_LINEAR = 1,
-   NUC_INTERPOL_CUBIC  = 2;
+typedef int Nuc_IntScheme_t;
+const Nuc_IntScheme_t
+   NUC_INT_LINEAR = 1,
+   NUC_INT_CUBIC  = 2;
 #endif
 
 

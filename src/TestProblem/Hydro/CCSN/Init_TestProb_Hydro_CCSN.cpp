@@ -271,15 +271,30 @@ void SetGridIC( real fluid[], const double x, const double y, const double z, co
 
    if ( CCSN_Eint_Mode == 0 )   // Temperature Mode
    {
-      real Out[3], In[3] = { (real)Dens, (real)Temp, (real)Ye };
+#     if ( NUC_TABLE_MODE == NUC_TABLE_MODE_TEMP )
+      const int  NTarget = 1;
+#     else
+      const int  NTarget = 0;
+#     endif
+            int  TmpIn_Int[NTarget+1];
+            real TmpIn_Flt[3], TmpOut[NTarget+1];
 
-      EoS_General_CPUPtr( 1, Out, In, EoS_AuxArray_Flt, EoS_AuxArray_Int, h_EoS_Table );
-      Eint = Out[0];
+      TmpIn_Flt[0] = (real)Dens;
+      TmpIn_Flt[1] = (real)Temp;
+      TmpIn_Flt[2] = (real)Ye;
+
+      TmpIn_Int[0] = NTarget;
+#     if ( NUC_TABLE_MODE == NUC_TABLE_MODE_TEMP )
+      TmpIn_Int[1] = NUC_VAR_IDX_EORT;
+#     endif
+
+      EoS_General_CPUPtr( NUC_MODE_TEMP, TmpOut, TmpIn_Flt, TmpIn_Int, EoS_AuxArray_Flt, EoS_AuxArray_Int, h_EoS_Table );
+      Eint = TmpOut[0];
    }
 
    else                         // Pressure Mode
    {
-      Eint = EoS_DensPres2Eint_CPUPtr( Dens, Pres, Passive, EoS_AuxArray_Flt, EoS_AuxArray_Int, h_EoS_Table, NULL );
+      Eint = EoS_DensPres2Eint_CPUPtr( Dens, Pres, Passive, EoS_AuxArray_Flt, EoS_AuxArray_Int, h_EoS_Table );
    }
 
 

@@ -330,12 +330,21 @@ void WriteFile( FILE *File, const int lv, const int PID, const int i, const int 
 
    if ( OPT__OUTPUT_ENTR ) {
 #     if ( EOS == EOS_NUCLEAR )
-      real TmpOut[2], TmpEint, TmpPres;
+      const int  NTarget = 1;
+            int  TmpIn_Int[NTarget+1];
+            real TmpIn_Flt[3], TmpOut[NTarget+1], TmpEint;
 
       TmpEint = Hydro_Con2Eint( u[DENS], u[MOMX], u[MOMY], u[MOMZ], u[ENGY], CheckMinEint_No, NULL_REAL, Emag );
-      TmpPres = EoS_DensEint2Pres_CPUPtr( u[DENS], TmpEint, u+NCOMP_FLUID, EoS_AuxArray_Flt, EoS_AuxArray_Int, h_EoS_Table,
-                                          TmpOut );
-      Entr    = TmpOut[1];
+
+      TmpIn_Flt[0] = u[DENS];
+      TmpIn_Flt[1] = TmpEint;
+      TmpIn_Flt[2] = u[YE] / u[DENS];
+
+      TmpIn_Int[0] = NTarget;
+      TmpIn_Int[1] = NUC_VAR_IDX_ENTR;
+
+      EoS_General_CPUPtr( NUC_MODE_ENGY, TmpOut, TmpIn_Flt, TmpIn_Int, EoS_AuxArray_Flt, EoS_AuxArray_Int, h_EoS_Table );
+      Entr = TmpOut[0];
 #     else
       Aux_Error( ERROR_INFO, "OPT__OUTPUT_ENTR is only supported by EOS_NUCLEAR !!\n" );
 #     endif

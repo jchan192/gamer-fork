@@ -74,7 +74,7 @@ if CCSN_Mag == 0:
     CCSN_Mag_np = re.findall(r"CCSN_Mag_np" + regex_num, par_testprob)
     CCSN_Mag_np = float(CCSN_Mag_np[0])
 
-    ColIdx = ColIdx_IC.get(CCSN_Prof_File, (0, 2, 6))
+    ColIdx = ColIdx_IC.get(os.path.basename(CCSN_Prof_File), (0, 2, 6))
 else:
     CCSN_Mag_R0 = re.findall(r"CCSN_Mag_R0" + regex_num, par_testprob)
     CCSN_Mag_R0 = float(CCSN_Mag_R0[0]) / UNIT_L
