@@ -542,8 +542,8 @@ void GetCenterOfMass( const double CM_Old[], double CM_New[], const double CM_Ma
 #     ifdef PARTICLE
       Prepare_PatchData_InitParticleDensityArray( lv );
 
-      Par_CollectParticle2OneLevel( lv, PredictParPos_No, NULL_REAL, SibBufPatch, FaSibBufPatch, JustCountNPar_No,
-                                    TimingSendPar_No );
+      Par_CollectParticle2OneLevel( lv, _PAR_MASS|_PAR_POSX|_PAR_POSY|_PAR_POSZ, PredictParPos_No, NULL_REAL,
+                                    SibBufPatch, FaSibBufPatch, JustCountNPar_No, TimingSendPar_No );
 #     endif
 
 //    get the total density on grids
@@ -694,8 +694,8 @@ void Record_EridanusII()
 #     ifdef PARTICLE
       Prepare_PatchData_InitParticleDensityArray( lv );
 
-      Par_CollectParticle2OneLevel( lv, PredictParPos_No, NULL_REAL, SibBufPatch, FaSibBufPatch, JustCountNPar_No,
-                                    TimingSendPar_No );
+      Par_CollectParticle2OneLevel( lv, _PAR_MASS|_PAR_POSX|_PAR_POSY|_PAR_POSZ, PredictParPos_No, NULL_REAL,
+                                    SibBufPatch, FaSibBufPatch, JustCountNPar_No, TimingSendPar_No );
 #     endif
 
 //    get the total density on grids
@@ -934,6 +934,7 @@ void Init_ExtPotAuxArray_EridanusII( double AuxArray[] )
 //                           --> Including both active and passive variables
 //                x/y/z    : Target physical coordinates
 //                Time     : Target physical time
+//                dt       : Time interval to advance solution
 //                lv       : Target refinement level
 //                AuxArray : Auxiliary array
 //
@@ -941,7 +942,7 @@ void Init_ExtPotAuxArray_EridanusII( double AuxArray[] )
 //                false : This cell has not been reset
 //-------------------------------------------------------------------------------------------------------
 bool Reset( real fluid[], const double x, const double y, const double z, const double Time,
-            const int lv, double AuxArray[] )
+            const double dt, const int lv, double AuxArray[] )
 {
 
    const real dr[3] = { x-Tidal_CM[0], y-Tidal_CM[1], z-Tidal_CM[2] };
