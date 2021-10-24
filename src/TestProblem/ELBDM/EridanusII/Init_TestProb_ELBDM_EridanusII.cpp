@@ -155,7 +155,7 @@ void SetParameter()
    ReadPara->Add( "Soliton_CoreRadius",        &Soliton_CoreRadius,        -1.0,           Eps_double,       NoMax_double      );
    ReadPara->Add( "Soliton_InputMode",         &Soliton_InputMode,          1,             1,                3                 );
    ReadPara->Add( "Soliton_OuterSlope",        &Soliton_OuterSlope,        -8.0,           NoMin_double,     NoMax_double      );
-   ReadPara->Add( "Soliton_DensProf_Filename",  Soliton_DensProf_Filename,  Useless_str,   Useless_str,      Useless_str       );
+   ReadPara->Add( "Soliton_DensProf_Filename",  Soliton_DensProf_Filename,  NoDef_str,     Useless_str,      Useless_str       );
    ReadPara->Add( "Soliton_CM_MaxR",           &Soliton_CM_MaxR,           -1.0,           Eps_double,       NoMax_double      );
    ReadPara->Add( "Soliton_CM_TolErrR",        &Soliton_CM_TolErrR,        -1.0,           NoMin_double,     NoMax_double      );
    ReadPara->Add( "Star_RSeed",                &Star_RSeed,                 123,           0,                NoMax_int         );
