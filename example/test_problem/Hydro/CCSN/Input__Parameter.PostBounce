@@ -163,17 +163,6 @@ OPT__EXT_POT                  3           # add external potential    (0=off, 1=
                                           # --> for 3 (GREP), one must also enable GREP in the Makefile
                                           # --> for table/GREP, edit the corresponding parameters below too
 
-# tabular external potential
-EXT_POT_TABLE_NAME            ExtPotTable # external potential table: filename
-EXT_POT_TABLE_NPOINT_X        129         # ...                     : table size (i.e., number of data points) along x/y/z
-EXT_POT_TABLE_NPOINT_Y        129         #
-EXT_POT_TABLE_NPOINT_Z        129         #
-EXT_POT_TABLE_DH              0.0078125   # ...                     : spatial interval between adjacent data points
-EXT_POT_TABLE_EDGEL_X         0.0         # ...                     : starting x/y/z coordinates
-EXT_POT_TABLE_EDGEL_Y         0.0         #
-EXT_POT_TABLE_EDGEL_Z         0.0         #
-EXT_POT_TABLE_FLOAT8         -1           # ...                     : double precision (<0=auto -> FLOAT8, 0=off, 1=on) [-1]
-                                          # --> not supported yet; use -1 for now
 
 # GREP
 GREP_CENTER_METHOD            1              # center of radial profile                                     [1]
