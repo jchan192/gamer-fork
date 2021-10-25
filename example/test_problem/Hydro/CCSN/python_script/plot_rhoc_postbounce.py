@@ -18,9 +18,12 @@ import matplotlib.pyplot as plt
 
 # dictionary for the corresponding reference solution
 path_RefSol = "../ReferenceSolution/PostBounce"
-RefSol      = {"s20GREP_LS220_15ms_none": "flash_1d_s20GREP_LS220_none.dat"}
+RefSol      = {"s20GREP_LS220_15ms_none": "flash_1d_s20GREP_LS220_none.dat",
+               "s20GREP_LS220_15ms_LB1" : "flash_1d_s20GREP_LS220_15ms_LB1.dat",
+               "s20GREP_LS220_15ms_LB2" : "flash_1d_s20GREP_LS220_15ms_LB2.dat",
+               "s20GREP_LS220_15ms_LB3" : "flash_1d_s20GREP_LS220_15ms_LB3.dat" }
 
-# retrieve the filename of input profile in INput__TestProb
+# retrieve the filename of input profile in Input__TestProb
 par_testprob   = open("../Input__TestProb").read()
 CCSN_Prof_File = re.findall(r"CCSN_Prof_File\s*(\S*)\s", par_testprob)
 CCSN_Prof_File = os.path.basename(CCSN_Prof_File[0])
@@ -63,3 +66,5 @@ ax.legend(loc = "upper right")
 
 fig.tight_layout()
 plt.savefig("Rhoc_PostBounce.png", dpi = 200)
+
+plt.close(fig)

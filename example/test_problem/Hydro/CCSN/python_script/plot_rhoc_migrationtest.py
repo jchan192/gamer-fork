@@ -37,3 +37,5 @@ ax.legend(loc = "upper right")
 
 fig.tight_layout()
 plt.savefig("Rhoc_MigrationTest.png", dpi = 200)
+
+plt.close(fig)
