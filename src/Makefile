@@ -656,16 +656,16 @@ endif # SUPPORT_LIBYT
 # local source terms source files
 # ------------------------------------------------------------------------------------
 GPU_FILE    += CUAPI_Asyn_SrcSolver.cu  CUSRC_SrcSolver_IterateAllCells.cu  CUSRC_Src_Deleptonization.cu \
-               CUSRC_Src_User_Template.cu
+               CUSRC_Src_User_Template.cu  CUSRC_Src_Lightbulb.cu
 
 CPU_FILE    += CPU_SrcSolver.cpp  CPU_SrcSolver_IterateAllCells.cpp  CPU_Src_Deleptonization.cpp \
-               CPU_Src_User_Template.cpp
+               CPU_Src_User_Template.cpp  CPU_Src_Lightbulb.cpp
 
 CPU_FILE    += Src_AdvanceDt.cpp  Src_Prepare.cpp  Src_Close.cpp  Src_Init.cpp  Src_End.cpp \
                Src_WorkBeforeMajorFunc.cpp
 
-vpath %.cu     SourceTerms  SourceTerms/User_Template  SourceTerms/Deleptonization
-vpath %.cpp    SourceTerms  SourceTerms/User_Template  SourceTerms/Deleptonization
+vpath %.cu     SourceTerms  SourceTerms/User_Template  SourceTerms/Deleptonization  SourceTerms/LightBulb
+vpath %.cpp    SourceTerms  SourceTerms/User_Template  SourceTerms/Deleptonization  SourceTerms/LightBulb
 
 
 # Grackle source files (included only if "SUPPORT_GRACKLE" is turned on)

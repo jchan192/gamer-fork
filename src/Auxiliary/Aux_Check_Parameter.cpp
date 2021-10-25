@@ -1429,6 +1429,11 @@ void Aux_Check_Parameter()
       Aux_Error( ERROR_INFO, "SRC_DELEPTONIZATION is only supported in HYDRO !!\n" );
 #  endif
 
+#  if ( MODEL != HYDRO  ||  EOS != EOS_NUCLEAR )
+   if ( SrcTerms.Lightbulb )
+      Aux_Error( ERROR_INFO, "SRC_LIGHTBULB is only supported in HYDRO and must work with EOS_NUCLEAR !!\n" );
+#  endif
+
    if ( SRC_GPU_NPGROUP % GPU_NSTREAM != 0 )
       Aux_Error( ERROR_INFO, "SRC_GPU_NPGROUP (%d) %% GPU_NSTREAM (%d) != 0 !!\n",
                  SRC_GPU_NPGROUP, GPU_NSTREAM );

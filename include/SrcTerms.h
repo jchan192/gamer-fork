@@ -26,6 +26,7 @@ typedef void (*SrcFunc_t)( real fluid[], const real B[],
 //
 // Data Member :  Any                       : True if at least one of the source terms is activated
 //                Deleptonization           : SRC_DELEPTONIZATION
+//                Lightbulb                 : SRC_LIGHTBULB
 //                User                      : SRC_USER
 //                BoxCenter                 : Simulation box center
 //                Unit_*                    : Code units
@@ -38,6 +39,8 @@ typedef void (*SrcFunc_t)( real fluid[], const real B[],
 //                                            --> For GPU, Dlep_Profile_DataDevPtr[]/RadiusDevPtr[] store the
 //                                                addresses of global memory arrays, which should NOT be used by host
 //                Dlep_Profile_NBin         : Number of radial bins in Dlep_Profile_*
+//                Lightbulb_Lnue            : Electron neutrino luminosity in erg/s
+//                Lightbulb_Tnue            : Electron neutrino temperature in MeV
 //
 // Method      :  None --> It seems that CUDA does not support functions in a struct
 //-------------------------------------------------------------------------------------------------------
@@ -46,6 +49,7 @@ struct SrcTerms_t
 
    bool   Any;
    bool   Deleptonization;
+   bool   Lightbulb;
    bool   User;
 
    double BoxCenter[3];
@@ -61,14 +65,21 @@ struct SrcTerms_t
    real   Unit_B;
 #  endif
 
-// deleptonization
 #  if ( MODEL == HYDRO )
+// deleptonization
    SrcFunc_t Dlep_FuncPtr;
    double   *Dlep_AuxArrayDevPtr_Flt;
    int      *Dlep_AuxArrayDevPtr_Int;
    real    (*Dlep_Profile_DataDevPtr)[SRC_DLEP_PROF_NBINMAX];
    real     *Dlep_Profile_RadiusDevPtr;
    int       Dlep_Profile_NBin;
+
+// lightbulb
+   SrcFunc_t Lightbulb_FuncPtr;
+   double   *Lightbulb_AuxArrayDevPtr_Flt;
+   int      *Lightbulb_AuxArrayDevPtr_Int;
+   double    Lightbulb_Lnue;
+   double    Lightbulb_Tnue;
 #  endif
 
 // user-specified source term

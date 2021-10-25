@@ -6,6 +6,9 @@
 #if ( MODEL == HYDRO )
 void Src_WorkBeforeMajorFunc_Deleptonization( const int lv, const double TimeNew, const double TimeOld, const double dt,
                                               double AuxArray_Flt[], int AuxArray_Int[] );
+
+void Src_WorkBeforeMajorFunc_Lightbulb( const int lv, const double TimeNew, const double TimeOld, const double dt,
+                                        double AuxArray_Flt[], int AuxArray_Int[] );
 #endif
 
 // this function pointer can be set by a test problem initializer for a user-specified source term
@@ -37,14 +40,19 @@ void (*Src_WorkBeforeMajorFunc_User_Ptr)    ( const int lv, const double TimeNew
 void Src_WorkBeforeMajorFunc( const int lv, const double TimeNew, const double TimeOld, const double dt )
 {
 
-// (1) deleptonization
 #  if ( MODEL == HYDRO )
+// (1) deleptonization
    if ( SrcTerms.Deleptonization )
       Src_WorkBeforeMajorFunc_Deleptonization( lv, TimeNew, TimeOld, dt,
                                                Src_Dlep_AuxArray_Flt, Src_Dlep_AuxArray_Int );
+
+// (2) Lightbulb
+   if ( SrcTerms.Lightbulb )
+      Src_WorkBeforeMajorFunc_Lightbulb( lv, TimeNew, TimeOld, dt,
+                                         Src_Lightbulb_AuxArray_Flt, Src_Lightbulb_AuxArray_Int );
 #  endif
 
-// (2) user-specified source term
+// (3) user-specified source term
 // --> users may not define Src_WorkBeforeMajorFunc_User_Ptr
    if ( SrcTerms.User  &&  Src_WorkBeforeMajorFunc_User_Ptr != NULL )
       Src_WorkBeforeMajorFunc_User_Ptr       ( lv, TimeNew, TimeOld, dt,

@@ -262,11 +262,13 @@ double GREP_MINBINSIZE;
 // (2-11) source terms
 SrcTerms_t SrcTerms;
 #if ( MODEL == HYDRO )
-double     Src_Dlep_AuxArray_Flt[SRC_NAUX_DLEP];
-int        Src_Dlep_AuxArray_Int[SRC_NAUX_DLEP];
+double     Src_Dlep_AuxArray_Flt     [SRC_NAUX_DLEP     ];
+int        Src_Dlep_AuxArray_Int     [SRC_NAUX_DLEP     ];
+double     Src_Lightbulb_AuxArray_Flt[SRC_NAUX_LIGHTBULB];
+int        Src_Lightbulb_AuxArray_Int[SRC_NAUX_LIGHTBULB];
 #endif
-double     Src_User_AuxArray_Flt[SRC_NAUX_USER];
-int        Src_User_AuxArray_Int[SRC_NAUX_USER];
+double     Src_User_AuxArray_Flt     [SRC_NAUX_USER     ];
+int        Src_User_AuxArray_Int     [SRC_NAUX_USER     ];
 
 // (2-11) user-defined derived fields
 bool OPT__OUTPUT_USER_FIELD;
