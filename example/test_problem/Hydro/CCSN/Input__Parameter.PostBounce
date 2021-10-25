@@ -163,6 +163,16 @@ OPT__EXT_POT                  3           # add external potential    (0=off, 1=
                                           # --> for 3 (GREP), one must also enable GREP in the Makefile
                                           # --> for table/GREP, edit the corresponding parameters below too
 
+
+# source terms
+SRC_DELEPTONIZATION           0           # deleptonization (for simulations of stellar core collapse) [0] ##HYDRO ONLY##
+SRC_LIGHTBULB                 0           # lightbulb scheme for neutrino heating and cooling [0] ##HYDRO ONLY##
+SRC_LIGHTBULB_LNUE            1.0e52      # electron neutrino luminosity in erg/s [1e52] ##HYDRO ONLY##
+SRC_LIGHTBULB_TNUE            4.0         # electron neutrino temperature in MeV [4.0] ##HYDRO ONLY##
+SRC_USER                      0           # user-defined source terms -> edit "Src_User.cpp" [0]
+SRC_GPU_NPGROUP              -1           # number of patch groups sent into the CPU/GPU source-term solver (<=0=auto) [-1]
+
+
 # tabular external potential
 EXT_POT_TABLE_NAME            ExtPotTable # external potential table: filename
 EXT_POT_TABLE_NPOINT_X        129         # ...                     : table size (i.e., number of data points) along x/y/z
@@ -174,6 +184,7 @@ EXT_POT_TABLE_EDGEL_Y         0.0         #
 EXT_POT_TABLE_EDGEL_Z         0.0         #
 EXT_POT_TABLE_FLOAT8         -1           # ...                     : double precision (<0=auto -> FLOAT8, 0=off, 1=on) [-1]
                                           # --> not supported yet; use -1 for now
+
 
 # GREP
 GREP_CENTER_METHOD            1              # center of radial profile                                     [1]
