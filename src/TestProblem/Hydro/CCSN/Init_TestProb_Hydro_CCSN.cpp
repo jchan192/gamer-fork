@@ -36,8 +36,8 @@ static double     CCSN_Mag_R0;                     // characteristic radius of m
 #endif
 
 static int        CCSN_Eint_Mode;                  // Mode of obtaining internal energy in SetGridIC()
-                                                   // ( 0=Temp Mode: Eint(dens, temp, [Ye])
-                                                   //   1=Pres Mode: Eint(dens, pres, [Ye]) )
+                                                   // ( 1=Temp Mode: Eint(dens, temp, [Ye])
+                                                   //   2=Pres Mode: Eint(dens, pres, [Ye]) )
 // =======================================================================================
 
 
@@ -117,7 +117,7 @@ void SetParameter()
    ReadPara->Add( "CCSN_Mag_np",       &CCSN_Mag_np,           0.0,           NoMin_double,     NoMax_double      );
    ReadPara->Add( "CCSN_Mag_R0",       &CCSN_Mag_R0,           1.0e8,         0.0,              NoMax_double      );
 #  endif
-   ReadPara->Add( "CCSN_Eint_Mode",    &CCSN_Eint_Mode,        1,             0,                1                 );
+   ReadPara->Add( "CCSN_Eint_Mode",    &CCSN_Eint_Mode,        2,             1,                2                 );
 
    ReadPara->Read( FileName );
 
@@ -146,8 +146,8 @@ void SetParameter()
 // (1-3) check the runtime parameters
    if ( CCSN_Prob == Migration_Test )
    {
-      if ( CCSN_Eint_Mode != 1 )
-         Aux_Error( ERROR_INFO, "Temperature mode for internal energy is not supported in Migration Test yet!!\n" );
+      if ( CCSN_Eint_Mode == 1 )
+         Aux_Error( ERROR_INFO, "Temperature mode for obtaining internal energy is not supported in Migration Test yet!!\n" );
    }
 
 
@@ -269,7 +269,7 @@ void SetGridIC( real fluid[], const double x, const double y, const double z, co
    real *Passive = NULL;
 #  endif
 
-   if ( CCSN_Eint_Mode == 0 )   // Temperature Mode
+   if ( CCSN_Eint_Mode == 1 )   // Temperature Mode
    {
 #     if ( NUC_TABLE_MODE == NUC_TABLE_MODE_TEMP )
       const int  NTarget = 1;
