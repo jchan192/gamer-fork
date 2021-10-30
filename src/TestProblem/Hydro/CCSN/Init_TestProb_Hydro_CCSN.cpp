@@ -35,11 +35,18 @@ static double     CCSN_Mag_np;                     // dependence of magnetic fie
 static double     CCSN_Mag_R0;                     // characteristic radius of magnetic field
 #endif
 
+static bool       CCSN_GW_OUTPUT;                  // output GW signals (0=off, 1=on)
+static double     CCSN_GW_DT;                      // output GW signals every CCSN_GW_DT interval
+
 static int        CCSN_Eint_Mode;                  // Mode of obtaining internal energy in SetGridIC()
                                                    // ( 1=Temp Mode: Eint(dens, temp, [Ye])
                                                    //   2=Pres Mode: Eint(dens, pres, [Ye]) )
 // =======================================================================================
 
+
+// problem-specific function prototypes
+void Record_CCSN_CentralDens();
+void Record_CCSN_GWSignal();
 
 
 
@@ -115,8 +122,11 @@ void SetParameter()
    ReadPara->Add( "CCSN_Mag",          &CCSN_Mag,              1,             0,                1                 );
    ReadPara->Add( "CCSN_Mag_B0",       &CCSN_Mag_B0,           1.0e14,        0.0,              NoMax_double      );
    ReadPara->Add( "CCSN_Mag_np",       &CCSN_Mag_np,           0.0,           NoMin_double,     NoMax_double      );
-   ReadPara->Add( "CCSN_Mag_R0",       &CCSN_Mag_R0,           1.0e8,         0.0,              NoMax_double      );
+   ReadPara->Add( "CCSN_Mag_R0",       &CCSN_Mag_R0,           1.0e8,         Eps_double,       NoMax_double      );
 #  endif
+   ReadPara->Add( "CCSN_GW_OUTPUT",    &CCSN_GW_OUTPUT,        false,         Useless_bool,     Useless_bool      );
+   ReadPara->Add( "CCSN_GW_DT",        &CCSN_GW_DT,            1.0,           Eps_double,       NoMax_double      );
+
    ReadPara->Add( "CCSN_Eint_Mode",    &CCSN_Eint_Mode,        2,             1,                2                 );
 
    ReadPara->Read( FileName );
@@ -183,6 +193,8 @@ void SetParameter()
       Aux_Message( stdout, "  dependence of magnetic field on density = %13.7e\n",  CCSN_Mag_np    );
       Aux_Message( stdout, "  characteristic radius of magnetic field = %13.7e\n",  CCSN_Mag_R0    );
 #     endif
+      Aux_Message( stdout, "  output GW signals                       = %d\n",      CCSN_GW_OUTPUT );
+      Aux_Message( stdout, "  sampling interval of GW signals         = %13.7e\n",  CCSN_GW_DT     );
       Aux_Message( stdout, "  Mode for obtaining internal energy      = %d\n",      CCSN_Eint_Mode );
       Aux_Message( stdout, "=============================================================================\n" );
    }
@@ -499,138 +511,25 @@ void Load_IC_Prof_CCSN()
 
 
 //-------------------------------------------------------------------------------------------------------
-// Function    :  Record_CCSN_CentralDens
-// Description :  Record the maximum density
-//-------------------------------------------------------------------------------------------------------
-void Record_CCSN_CentralDens()
-{
-
-   const char   filename_central_dens[] = "Record__CentralDens";
-   const double BoxCenter[3]            = { amr->BoxCenter[0], amr->BoxCenter[1], amr->BoxCenter[2] };
-
-// allocate memory for per-thread arrays
-#  ifdef OPENMP
-   const int NT = OMP_NTHREAD;   // number of OpenMP threads
-#  else
-   const int NT = 1;
-#  endif
-
-   double DataCoord[4] = { -__DBL_MAX__ }, **OMP_DataCoord=NULL;
-   Aux_AllocateArray2D( OMP_DataCoord, NT, 4 );
-
-
-#  pragma omp parallel
-   {
-#     ifdef OPENMP
-      const int TID = omp_get_thread_num();
-#     else
-      const int TID = 0;
-#     endif
-
-//    initialize arrays
-      OMP_DataCoord[TID][0] = -__DBL_MAX__;
-      for (int b=1; b<4; b++)   OMP_DataCoord[TID][b] = 0.0;
-
-      for (int lv=0; lv<NLEVEL; lv++)
-      {
-         const double dh = amr->dh[lv];
-
-#        pragma omp for schedule( runtime )
-         for (int PID=0; PID<amr->NPatchComma[lv][1]; PID++)
-         {
-            if ( amr->patch[0][lv][PID]->son != -1 )  continue;
-
-            for (int k=0; k<PS1; k++)  {  const double z = amr->patch[0][lv][PID]->EdgeL[2] + (k+0.5)*dh;
-            for (int j=0; j<PS1; j++)  {  const double y = amr->patch[0][lv][PID]->EdgeL[1] + (j+0.5)*dh;
-            for (int i=0; i<PS1; i++)  {  const double x = amr->patch[0][lv][PID]->EdgeL[0] + (i+0.5)*dh;
-
-               const double dens = amr->patch[ amr->FluSg[lv] ][lv][PID]->fluid[DENS][k][j][i];
-
-               if ( dens > OMP_DataCoord[TID][0] )
-               {
-                  OMP_DataCoord[TID][0] = dens;
-                  OMP_DataCoord[TID][1] = x;
-                  OMP_DataCoord[TID][2] = y;
-                  OMP_DataCoord[TID][3] = z;
-               }
-
-            }}} // i,j,k
-         } // for (int PID=0; PID<amr->NPatchComma[lv][1]; PID++)
-      } // for (int lv=0; lv<NLEVEL; lv++)
-   } // OpenMP parallel region
-
-
-// find the maximum over all OpenMP threads
-   for (int TID=0; TID<NT; TID++)
-   {
-      if ( OMP_DataCoord[TID][0] > DataCoord[0] )
-         for (int b=0; b<4; b++)   DataCoord[b] = OMP_DataCoord[TID][b];
-   }
-
-// free per-thread arrays
-   Aux_DeallocateArray2D( OMP_DataCoord );
-
-
-// collect data from all ranks
-#  ifndef SERIAL
-   {
-      double DataCoord_All[4 * MPI_NRank];
-
-      MPI_Allgather( DataCoord, 4, MPI_DOUBLE, DataCoord_All, 4, MPI_DOUBLE, MPI_COMM_WORLD );
-
-      for (int i=0; i<MPI_NRank; i++)
-      {
-         if ( DataCoord_All[4 * i] > DataCoord[0] )
-            for (int b=0; b<4; b++)   DataCoord[b] = DataCoord_All[4 * i + b];
-      }
-   }
-#  endif // ifndef SERIAL
-
-
-// output to file
-   if ( MPI_Rank == 0 )
-   {
-
-      static bool FirstTime = true;
-
-//    output file header
-      if ( FirstTime )
-      {
-         if ( Aux_CheckFileExist(filename_central_dens) )
-         {
-             Aux_Message( stderr, "WARNING : file \"%s\" already exists !!\n", filename_central_dens );
-         }
-
-         else
-         {
-             FILE *file_max_dens = fopen( filename_central_dens, "w" );
-             fprintf( file_max_dens, "#%14s %12s %16s %16s %16s %16s\n",
-                                     "Time [sec]", "Step", "Dens [g/cm^3]", "PosX [cm]", "PosY [cm]", "PosZ [cm]" );
-             fclose( file_max_dens );
-         }
-
-         FirstTime = false;
-      }
-
-      FILE *file_max_dens = fopen( filename_central_dens, "a" );
-      fprintf( file_max_dens, "%15.7e %12ld %16.7e %16.7e %16.7e %16.7e\n",
-               Time[0]*UNIT_T, Step, DataCoord[0]*UNIT_D, DataCoord[1]*UNIT_L, DataCoord[2]*UNIT_L, DataCoord[3]*UNIT_L );
-      fclose( file_max_dens );
-
-   } // if ( MPI_Rank == 0 )
-
-} // FUNCTION : Record_CCSN_CentralDens()
-
-
-
-//-------------------------------------------------------------------------------------------------------
 // Function    :  Record_CCSN
-// Description :  Interface for calling multiple record functions
+// Description :  Interface for invoking multiple record functions
 //-------------------------------------------------------------------------------------------------------
 void Record_CCSN()
 {
 
-   Record_CCSN_CentralDens();   // record the maximum density
+// 1. record the maximum density
+   Record_CCSN_CentralDens();
+
+
+// 2. record the GW signal
+   if ( CCSN_GW_OUTPUT )
+   {
+      double Physical_Time = Time[0];
+      double Dump_Time = int( Physical_Time / CCSN_GW_DT ) * CCSN_GW_DT;
+
+      if ( dTime_Base >= CCSN_GW_DT  ||  fabs( Physical_Time - Dump_Time ) < 1.0e-8 * Physical_Time )
+         Record_CCSN_GWSignal();
+   }
 
 } // FUNCTION : Record_CCSN()
 
@@ -642,7 +541,7 @@ void Record_CCSN()
 //
 // Note        :  1. Invoked by "Flag_Check" using the function pointer "Flag_User_Ptr"
 //                   --> The function pointer may be reset by various test problem initializers, in which case
-//                       this funtion will become useless
+//                       this function will become useless
 //                2. Enabled by the runtime option "OPT__FLAG_USER"
 //
 // Parameter   :  i,j,k       : Indices of the target element in the patch ptr[ amr->FluSg[lv] ][lv][PID]
