@@ -31,7 +31,7 @@ static double   Soliton_CM_TolErrR;                      // maximum allowed erro
        double   Tidal_Vrot;                              // rotational velocity due to the point mass
        double   Tidal_CM[3] = { __DBL_MAX__, __DBL_MAX__, __DBL_MAX__ }; // Center of mass of the satellite
 
-static int      Sponge_Mode;                             // 1/2/3: sponge BC/truncation BC/none
+       int      Sponge_Mode;                             // 1/2/3: sponge BC/truncation BC/none
 static double   Sponge_Width;                            // sponge width
 static double   Sponge_Amp;                              // sponge amplitude
 
