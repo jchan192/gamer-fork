@@ -205,7 +205,7 @@ void Record_CCSN_GWSignal()
                const double dx = x - BoxCenter[0];
                const double dy = y - BoxCenter[1];
                const double dz = z - BoxCenter[2];
-               const double r = SQRT( SQR(dx) + SQR(dy) + SQR(dz) );
+               const double r = sqrt( SQR(dx) + SQR(dy) + SQR(dz) );
 
                const double dens  = amr->patch[ amr->FluSg[lv] ][lv][PID]->fluid[DENS][k][j][i];
                const double momx  = amr->patch[ amr->FluSg[lv] ][lv][PID]->fluid[MOMX][k][j][i];

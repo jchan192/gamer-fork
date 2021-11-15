@@ -237,7 +237,7 @@ void SetGridIC( real fluid[], const double x, const double y, const double z, co
    const double x0 = x - BoxCenter[0];
    const double y0 = y - BoxCenter[1];
    const double z0 = z - BoxCenter[2];
-   const double r  = SQRT(  SQR( x0 ) + SQR( y0 ) + SQR( z0 )  );
+   const double r  = sqrt(  SQR( x0 ) + SQR( y0 ) + SQR( z0 )  );
 
    double Dens, Velr, Pres, Momx, Momy, Momz, Eint, Etot, Ye, Temp, Entr;
 
@@ -378,10 +378,10 @@ void SetBFieldIC_Liu2008( real magnetic[], const double x, const double y, const
    double r_yp, dens_yp, pres_yp;
    double r_zp, dens_zp, pres_zp;
 
-   r    = SQRT(  SQR( x0         ) + SQR( y0         ) + SQR( z0         )  );
-   r_xp = SQRT(  SQR( x0 + delta ) + SQR( y0         ) + SQR( z0         )  );
-   r_yp = SQRT(  SQR( x0         ) + SQR( y0 + delta ) + SQR( z0         )  );
-   r_zp = SQRT(  SQR( x0         ) + SQR( y0         ) + SQR( z0 + delta )  );
+   r    = sqrt(  SQR( x0         ) + SQR( y0         ) + SQR( z0         )  );
+   r_xp = sqrt(  SQR( x0 + delta ) + SQR( y0         ) + SQR( z0         )  );
+   r_yp = sqrt(  SQR( x0         ) + SQR( y0 + delta ) + SQR( z0         )  );
+   r_zp = sqrt(  SQR( x0         ) + SQR( y0         ) + SQR( z0 + delta )  );
 
    dens    = Mis_InterpolateFromTable( CCSN_Prof_NBin, Table_R, Table_Dens, r    );
    dens_xp = Mis_InterpolateFromTable( CCSN_Prof_NBin, Table_R, Table_Dens, r_xp );
@@ -461,7 +461,7 @@ void SetBFieldIC_Suwa2007( real magnetic[], const double x, const double y, cons
    const double x0 = x - BoxCenter[0];
    const double y0 = y - BoxCenter[1];
    const double z0 = z - BoxCenter[2];
-   const double r  = SQRT(  SQR( x0 ) + SQR( y0 ) + SQR( z0 )  );
+   const double r  = sqrt(  SQR( x0 ) + SQR( y0 ) + SQR( z0 )  );
 
    const double B0     = CCSN_Mag_B0 / UNIT_B;
    const double R0     = CCSN_Mag_R0 / UNIT_L;
