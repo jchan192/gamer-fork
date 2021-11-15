@@ -126,7 +126,6 @@ void SetParameter()
 #  endif
    ReadPara->Add( "CCSN_GW_OUTPUT",    &CCSN_GW_OUTPUT,        false,         Useless_bool,     Useless_bool      );
    ReadPara->Add( "CCSN_GW_DT",        &CCSN_GW_DT,            1.0,           Eps_double,       NoMax_double      );
-
    ReadPara->Add( "CCSN_Eint_Mode",    &CCSN_Eint_Mode,        2,             1,                2                 );
 
    ReadPara->Read( FileName );
@@ -524,11 +523,19 @@ void Record_CCSN()
 // 2. record the GW signal
    if ( CCSN_GW_OUTPUT )
    {
-      double Physical_Time = Time[0];
-      double Dump_Time = int( Physical_Time / CCSN_GW_DT ) * CCSN_GW_DT;
+      static double DumpTime_Last = -__DBL_MAX__;
 
-      if ( dTime_Base >= CCSN_GW_DT  ||  fabs( Physical_Time - Dump_Time ) < 1.0e-8 * Physical_Time )
+             double PhysicalTime = Time[0];
+             double DumpTime = int( PhysicalTime / CCSN_GW_DT ) * CCSN_GW_DT;
+
+//    output data when (a) the elapsed time > GW_OUTPUT_DT
+//                     (b) the physical time is almost a multiple of GW_OUTPUT_DT
+      if ( fabs( PhysicalTime - DumpTime_Last ) > CCSN_GW_DT  ||
+           fabs( PhysicalTime - DumpTime      ) < 1.0e-2 * CCSN_GW_DT )
+      {
+         DumpTime_Last = PhysicalTime;
          Record_CCSN_GWSignal();
+      }
    }
 
 } // FUNCTION : Record_CCSN()
