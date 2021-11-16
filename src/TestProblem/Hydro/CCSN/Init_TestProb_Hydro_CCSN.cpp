@@ -47,6 +47,7 @@ static int        CCSN_Eint_Mode;                  // Mode of obtaining internal
 // problem-specific function prototypes
 void Record_CCSN_CentralDens();
 void Record_CCSN_GWSignal();
+void Mis_GetTimeStep_User_Lightbulb( const int lv, const double dTime_dt );
 
 
 
@@ -646,6 +647,11 @@ void Init_TestProb_Hydro_CCSN()
    Flag_User_Ptr                  = Flag_User_CCSN;
    Aux_Record_User_Ptr            = Record_CCSN;
    End_User_Ptr                   = End_CCSN;
+// estimate the evolution time-step constrained by the lightbulb source term
+   if ( SrcTerms.Lightbulb )
+   {
+      Mis_GetTimeStep_User_Ptr    = Mis_GetTimeStep_User_Lightbulb;  // option: OPT__DT_USER;
+   }
 #  endif // #if ( MODEL == HYDRO )
 
 
