@@ -41,6 +41,8 @@ static double     CCSN_GW_DT;                      // output GW signals every CC
 static int        CCSN_Eint_Mode;                  // Mode of obtaining internal energy in SetGridIC()
                                                    // ( 1=Temp Mode: Eint(dens, temp, [Ye])
                                                    //   2=Pres Mode: Eint(dens, pres, [Ye]) )
+
+static double     CCSN_MaxRefine_RadFac;           // factor that determines the maximum refinement level based on distance from the box center
 // =======================================================================================
 
 
@@ -117,17 +119,19 @@ void SetParameter()
 // ********************************************************************************************************************************
 // ReadPara->Add( "KEY_IN_THE_FILE",   &VARIABLE,              DEFAULT,       MIN,              MAX               );
 // ********************************************************************************************************************************
-   ReadPara->Add( "CCSN_Prob",         &CCSN_Prob,             -1,            0,                1                 );
-   ReadPara->Add( "CCSN_Prof_File",     CCSN_Prof_File,        Useless_str,   Useless_str,      Useless_str       );
+   ReadPara->Add( "CCSN_Prob",             &CCSN_Prob,             -1,            0,                1                 );
+   ReadPara->Add( "CCSN_Prof_File",         CCSN_Prof_File,        Useless_str,   Useless_str,      Useless_str       );
 #  ifdef MHD
-   ReadPara->Add( "CCSN_Mag",          &CCSN_Mag,              1,             0,                1                 );
-   ReadPara->Add( "CCSN_Mag_B0",       &CCSN_Mag_B0,           1.0e14,        0.0,              NoMax_double      );
-   ReadPara->Add( "CCSN_Mag_np",       &CCSN_Mag_np,           0.0,           NoMin_double,     NoMax_double      );
-   ReadPara->Add( "CCSN_Mag_R0",       &CCSN_Mag_R0,           1.0e8,         Eps_double,       NoMax_double      );
+   ReadPara->Add( "CCSN_Mag",              &CCSN_Mag,              1,             0,                1                 );
+   ReadPara->Add( "CCSN_Mag_B0",           &CCSN_Mag_B0,           1.0e14,        0.0,              NoMax_double      );
+   ReadPara->Add( "CCSN_Mag_np",           &CCSN_Mag_np,           0.0,           NoMin_double,     NoMax_double      );
+   ReadPara->Add( "CCSN_Mag_R0",           &CCSN_Mag_R0,           1.0e8,         Eps_double,       NoMax_double      );
 #  endif
-   ReadPara->Add( "CCSN_GW_OUTPUT",    &CCSN_GW_OUTPUT,        false,         Useless_bool,     Useless_bool      );
-   ReadPara->Add( "CCSN_GW_DT",        &CCSN_GW_DT,            1.0,           Eps_double,       NoMax_double      );
-   ReadPara->Add( "CCSN_Eint_Mode",    &CCSN_Eint_Mode,        2,             1,                2                 );
+   ReadPara->Add( "CCSN_GW_OUTPUT",        &CCSN_GW_OUTPUT,        false,         Useless_bool,     Useless_bool      );
+   ReadPara->Add( "CCSN_GW_DT",            &CCSN_GW_DT,            1.0,           Eps_double,       NoMax_double      );
+   ReadPara->Add( "CCSN_Eint_Mode",        &CCSN_Eint_Mode,        2,             1,                2                 );
+   ReadPara->Add( "CCSN_MaxRefine_RadFac", &CCSN_MaxRefine_RadFac, 0.15,          0.0,              NoMax_double      );
+
 
    ReadPara->Read( FileName );
 
@@ -184,18 +188,19 @@ void SetParameter()
    if ( MPI_Rank == 0 )
    {
       Aux_Message( stdout, "=============================================================================\n" );
-      Aux_Message( stdout, "  test problem ID                         = %d\n",      TESTPROB_ID    );
-      Aux_Message( stdout, "  target CCSN problem                     = %s\n",      CCSN_Name      );
-      Aux_Message( stdout, "  initial profile                         = %s\n",      CCSN_Prof_File );
+      Aux_Message( stdout, "  test problem ID                         = %d\n",      TESTPROB_ID           );
+      Aux_Message( stdout, "  target CCSN problem                     = %s\n",      CCSN_Name             );
+      Aux_Message( stdout, "  initial profile                         = %s\n",      CCSN_Prof_File        );
 #     ifdef MHD
-      Aux_Message( stdout, "  magnetic field profile                  = %d\n",      CCSN_Mag       );
-      Aux_Message( stdout, "  magnetic field strength                 = %13.7e\n",  CCSN_Mag_B0    );
-      Aux_Message( stdout, "  dependence of magnetic field on density = %13.7e\n",  CCSN_Mag_np    );
-      Aux_Message( stdout, "  characteristic radius of magnetic field = %13.7e\n",  CCSN_Mag_R0    );
+      Aux_Message( stdout, "  magnetic field profile                  = %d\n",      CCSN_Mag              );
+      Aux_Message( stdout, "  magnetic field strength                 = %13.7e\n",  CCSN_Mag_B0           );
+      Aux_Message( stdout, "  dependence of magnetic field on density = %13.7e\n",  CCSN_Mag_np           );
+      Aux_Message( stdout, "  characteristic radius of magnetic field = %13.7e\n",  CCSN_Mag_R0           );
 #     endif
-      Aux_Message( stdout, "  output GW signals                       = %d\n",      CCSN_GW_OUTPUT );
-      Aux_Message( stdout, "  sampling interval of GW signals         = %13.7e\n",  CCSN_GW_DT     );
-      Aux_Message( stdout, "  Mode for obtaining internal energy      = %d\n",      CCSN_Eint_Mode );
+      Aux_Message( stdout, "  output GW signals                       = %d\n",      CCSN_GW_OUTPUT        );
+      Aux_Message( stdout, "  sampling interval of GW signals         = %13.7e\n",  CCSN_GW_DT            );
+      Aux_Message( stdout, "  mode for obtaining internal energy      = %d\n",      CCSN_Eint_Mode        );
+      Aux_Message( stdout, "  radial factor for maximum refine level  = %13.7e\n",  CCSN_MaxRefine_RadFac );
       Aux_Message( stdout, "=============================================================================\n" );
    }
 
@@ -576,13 +581,24 @@ bool Flag_User_CCSN( const int i, const int j, const int k, const int lv, const 
    const double dx = Center[0] - Pos[0];
    const double dy = Center[1] - Pos[1];
    const double dz = Center[2] - Pos[2];
-   const double r  = SQRT(  SQR( dx ) + SQR( dy ) + SQR( dz )  );
+   const double r  = sqrt(  SQR( dx ) + SQR( dy ) + SQR( dz )  );
 
-   const real (*Rho )[PS1][PS1] = amr->patch[ amr->FluSg[lv] ][lv][PID]->fluid[DENS];  // density
-   const real dens = Rho[k][j][i];
+   const real (*Rho )[PS1][PS1] = amr->patch[ amr->FluSg[lv] ][lv][PID]->fluid[DENS];
 
-   if (  ( r > Threshold[0] )  &&  ( r < Threshold[1] )  &&  ( dens > Threshold[2] )  )
+
+// TODO: fine-tune the criteria
+// always allow the highest level can be reached in the region with r < 30 km
+   if ( r * UNIT_L < 3e6 )
+   {
       Flag = true;
+   }
+
+   else
+   {
+//    if density is larger than the threshold (equivalent to Input__Flag_Rho)
+//    and the grid width at lv+1 is larger than the threshold `r * CCSN_MaxRefine_RadFac` (equivalent to Flag_Region)
+      if (  ( Rho[k][j][i] > Threshold[0] )  &&  ( 0.5 * dh > r * CCSN_MaxRefine_RadFac )  )   Flag = true;
+   }
 
    return Flag;
 
