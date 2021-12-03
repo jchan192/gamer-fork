@@ -166,9 +166,6 @@ OPT__EXT_POT                  3           # add external potential    (0=off, 1=
 
 # source terms
 SRC_DELEPTONIZATION           0           # deleptonization (for simulations of stellar core collapse) [0] ##HYDRO ONLY##
-SRC_LIGHTBULB                 0           # lightbulb scheme for neutrino heating and cooling [0] ##HYDRO ONLY##
-SRC_LIGHTBULB_LNUE            1.0e52      # electron neutrino luminosity in erg/s [1e52] ##HYDRO ONLY##
-SRC_LIGHTBULB_TNUE            4.0         # electron neutrino temperature in MeV [4.0] ##HYDRO ONLY##
 SRC_USER                      0           # user-defined source terms -> edit "Src_User.cpp" [0]
 SRC_GPU_NPGROUP              -1           # number of patch groups sent into the CPU/GPU source-term solver (<=0=auto) [-1]
 
@@ -283,7 +280,7 @@ OPT__OPTIMIZE_AGGRESSIVE      0           # apply aggressive optimizations (expe
 # checks
 OPT__CK_REFINE                0           # check the grid refinement [0]
 OPT__CK_PROPER_NESTING        0           # check the proper-nesting condition [0]
-OPT__CK_CONSERVATION          0           # check the conservation law [0]
+OPT__CK_CONSERVATION          1           # check the conservation law [0]
 OPT__CK_NORMALIZE_PASSIVE     0           # check the normalization of passive scalars [0] ##OPT__NORMALIZE_PASSIVE ONLY##
 OPT__CK_RESTRICT              0           # check the data restriction [0]
 OPT__CK_FINITE                0           # check if all variables are finite [0]

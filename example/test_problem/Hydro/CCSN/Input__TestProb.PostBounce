@@ -13,8 +13,8 @@ CCSN_Mag_np      0.0                               # dependence of magnetic fiel
 CCSN_Mag_R0      1.0e8                             # characteristic radius of magnetic field (in cm)   [1.0e8]
 
 CCSN_GW_OUTPUT   0                                 # output GW signal (0=off, 1=on)                    [0]
-CCSN_GW_DT       1.0                               # output GW signal every CCSN_GW_OUTPUT_DT interval [1.0]
+CCSN_GW_DT       1.0                               # output interval of GW signal                      [1.0]
 
-CCSN_Eint_Mode   2                                 # Mode of obtaining internal energy in SetGridIC()  [2]
+CCSN_Eint_Mode   1                                 # Mode of obtaining internal energy in SetGridIC()  [2]
                                                    # ( 1=Temp Mode: Eint(dens, temp, [Ye])
                                                    #   2=Pres Mode: Eint(dens, pres, [Ye]) )
