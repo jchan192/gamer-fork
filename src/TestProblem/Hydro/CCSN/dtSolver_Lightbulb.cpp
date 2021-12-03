@@ -4,7 +4,7 @@
 // declare as static so that other functions cannot invoke it directly and must use the function pointer
 double Mis_GetTimeStep_User_Lightbulb( const int lv, const double dTime_dt );
 
-static const double heatTimeFac = 0.1;
+extern double CCSN_LB_TimeFac;
 
 
 
@@ -164,7 +164,7 @@ double Mis_GetTimeStep_User_Lightbulb( const int lv, const double dTime_dt )
 #  endif // ifndef SERIAL
 
 
-   dt_LB = (dt_LB * heatTimeFac) / dTime_dt;
+   dt_LB = (dt_LB * CCSN_LB_TimeFac) / dTime_dt;
 
    return dt_LB;
 

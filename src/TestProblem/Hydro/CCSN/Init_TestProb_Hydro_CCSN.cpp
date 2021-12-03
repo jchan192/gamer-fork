@@ -43,6 +43,7 @@ static int        CCSN_Eint_Mode;                  // Mode of obtaining internal
                                                    //   2=Pres Mode: Eint(dens, pres, [Ye]) )
 
 static double     CCSN_MaxRefine_RadFac;           // factor that determines the maximum refinement level based on distance from the box center
+       double     CCSN_LB_TimeFac;                 // factor that scales the dt constrained by lightbulb scheme
 // =======================================================================================
 
 
@@ -131,6 +132,7 @@ void SetParameter()
    ReadPara->Add( "CCSN_GW_DT",            &CCSN_GW_DT,            1.0,           Eps_double,       NoMax_double      );
    ReadPara->Add( "CCSN_Eint_Mode",        &CCSN_Eint_Mode,        2,             1,                2                 );
    ReadPara->Add( "CCSN_MaxRefine_RadFac", &CCSN_MaxRefine_RadFac, 0.15,          0.0,              NoMax_double      );
+   ReadPara->Add( "CCSN_LB_TimeFac",       &CCSN_LB_TimeFac,       0.1,           Eps_double,       1.0               );
 
 
    ReadPara->Read( FileName );
@@ -201,6 +203,7 @@ void SetParameter()
       Aux_Message( stdout, "  sampling interval of GW signals         = %13.7e\n",  CCSN_GW_DT            );
       Aux_Message( stdout, "  mode for obtaining internal energy      = %d\n",      CCSN_Eint_Mode        );
       Aux_Message( stdout, "  radial factor for maximum refine level  = %13.7e\n",  CCSN_MaxRefine_RadFac );
+      Aux_Message( stdout, "  scaling factor for lightbulb dt         = %13.7e\n",  CCSN_LB_TimeFac       );
       Aux_Message( stdout, "=============================================================================\n" );
    }
 
