@@ -73,3 +73,4 @@ Note:
 
 6. Additional Record files:
    --> Record__CentralDens : maximum density in the simulation box
+   --> Record__QuadMom_2nd : second-order time derivative of mass quadrupole moments

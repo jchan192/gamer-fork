@@ -602,7 +602,7 @@ bool Flag_User_CCSN( const int i, const int j, const int k, const int lv, const 
    else
    {
 //    if density is larger than the threshold (equivalent to Input__Flag_Rho)
-//    and the grid width at lv+1 is larger than the threshold `r * CCSN_MaxRefine_RadFac` (equivalent to Flag_Region)
+//    and the cell width at lv+1 is larger than the threshold `r * CCSN_MaxRefine_RadFac` (equivalent to Flag_Region)
       if (  ( Rho[k][j][i] > Threshold[0] )  &&  ( 0.5 * dh > r * CCSN_MaxRefine_RadFac )  )   Flag = true;
    }
 
