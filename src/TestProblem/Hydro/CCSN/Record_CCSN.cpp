@@ -130,6 +130,7 @@ void Record_CCSN_CentralDens()
 
 
 
+#ifdef GRAVITY
 //-------------------------------------------------------------------------------------------------------
 // Function    :  Record_CCSN_GWSignal
 // Description :  Record the second-order time derivative of mass quadrupole moments
@@ -305,4 +306,4 @@ void Record_CCSN_GWSignal()
    } // if ( MPI_Rank == 0 )
 
 } // FUNCTION : Record_CCSN_GWSignal()
-
+#endif // ifdef GRAVITY

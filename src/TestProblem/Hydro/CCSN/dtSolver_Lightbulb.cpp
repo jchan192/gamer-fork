@@ -1,6 +1,10 @@
 #include "GAMER.h"
 #include "NuclearEoS.h"
 
+#if ( MODEL == HYDRO  &&  EOS == EOS_NUCLEAR )
+
+
+
 // declare as static so that other functions cannot invoke it directly and must use the function pointer
 double Mis_GetTimeStep_User_Lightbulb( const int lv, const double dTime_dt );
 
@@ -170,3 +174,6 @@ double Mis_GetTimeStep_User_Lightbulb( const int lv, const double dTime_dt )
 
 } // FUNCTION : Mis_GetTimeStep_User_Lightbulb
 
+
+
+#endif // if ( MODEL == HYDRO  &&  EOS == EOS_NUCLEAR )

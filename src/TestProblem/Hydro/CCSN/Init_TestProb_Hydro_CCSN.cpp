@@ -1,5 +1,6 @@
 #include "GAMER.h"
 #include "TestProb.h"
+#include "NuclearEoS.h"
 
 
 
@@ -529,6 +530,7 @@ void Record_CCSN()
    Record_CCSN_CentralDens();
 
 
+#ifdef GRAVITY
 // 2. record the GW signal
    if ( CCSN_GW_OUTPUT )
    {
@@ -546,6 +548,7 @@ void Record_CCSN()
          Record_CCSN_GWSignal();
       }
    }
+#endif
 
 } // FUNCTION : Record_CCSN()
 
@@ -667,10 +670,12 @@ void Init_TestProb_Hydro_CCSN()
    Aux_Record_User_Ptr            = Record_CCSN;
    End_User_Ptr                   = End_CCSN;
 // estimate the evolution time-step constrained by the lightbulb source term
+#  if ( EOS == EOS_NUCLEAR )
    if ( SrcTerms.Lightbulb )
    {
       Mis_GetTimeStep_User_Ptr    = Mis_GetTimeStep_User_Lightbulb;  // option: OPT__DT_USER;
    }
+#  endif // #if ( EOS == EOS_NUCLEAR )
 #  endif // #if ( MODEL == HYDRO )
 
 

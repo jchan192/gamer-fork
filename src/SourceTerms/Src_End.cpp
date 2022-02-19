@@ -3,7 +3,7 @@
 
 
 // prototypes of built-in source terms
-#if ( MODEL == HYDRO )
+#if ( MODEL == HYDRO  &&  EOS == EOS_NUCLEAR )
 void Src_End_Deleptonization();
 void Src_End_Lightbulb();
 #endif
@@ -32,7 +32,7 @@ void Src_End()
 
 
 // stop all source terms
-#  if ( MODEL == HYDRO )
+#  if ( MODEL == HYDRO  &&  EOS == EOS_NUCLEAR )
    if ( SrcTerms.Deleptonization )
       Src_End_Deleptonization();
 
