@@ -460,7 +460,11 @@
 
 // 4. source-term solver
 //=========================================================================================
+#  if ( EOS == EOS_NUCLEAR )
+#     define SRC_BLOCK_SIZE         256
+#  else
 #     define SRC_BLOCK_SIZE         512
+#  endif
 
 
 
