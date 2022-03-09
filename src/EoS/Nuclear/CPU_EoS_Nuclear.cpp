@@ -173,7 +173,7 @@ GPU_DEVICE static
 bool Nuc_Overflow( const real x )
 {
 
-   if ( x != x  ||  x < -__FLT_MAX__  ||  x > __FLT_MAX__ )    return true;
+   if ( x != x  ||  x < -HUGE_NUMBER  ||  x > HUGE_NUMBER )    return true;
    else                                                        return false;
 
 } // FUNCTION : Nuc_Overflow
@@ -210,14 +210,9 @@ static real EoS_DensEint2Pres_Nuclear( const real Dens_Code, const real Eint_Cod
    if ( AuxArray_Flt == NULL )   printf( "ERROR : AuxArray_Flt == NULL in %s !!\n", __FUNCTION__ );
    if ( AuxArray_Int == NULL )   printf( "ERROR : AuxArray_Int == NULL in %s !!\n", __FUNCTION__ );
 
-   if ( Hydro_CheckNegative(Dens_Code) )
-      printf( "ERROR : invalid input density (%14.7e) at file <%s>, line <%d>, function <%s>\n",
-              Dens_Code, __FILE__, __LINE__, __FUNCTION__ );
-
+   Hydro_CheckUnphysical( UNPHY_MODE_SING, &Dens_Code, "input density",                 ERROR_INFO, UNPHY_VERBOSE );
 // still require Eint>0 for the nuclear EoS
-   if ( Hydro_CheckNegative(Eint_Code) )
-      printf( "ERROR : invalid input internal energy density (%14.7e) at file <%s>, line <%d>, function <%s>\n",
-              Eint_Code, __FILE__, __LINE__, __FUNCTION__ );
+   Hydro_CheckUnphysical( UNPHY_MODE_SING, &Eint_Code, "input internal energy density", ERROR_INFO, UNPHY_VERBOSE );
 #  endif // GAMER_DEBUG
 
 
@@ -293,11 +288,10 @@ static real EoS_DensEint2Pres_Nuclear( const real Dens_Code, const real Eint_Cod
 
 // final check
 #  ifdef GAMER_DEBUG
-   if ( Hydro_CheckNegative(Pres_Code) )
+   if (  Hydro_CheckUnphysical( UNPHY_MODE_SING, &Pres_Code, "output pressure", ERROR_INFO, UNPHY_VERBOSE )  )
    {
-      printf( "ERROR : invalid output pressure (%13.7e code units) in %s() !!\n", Pres_Code, __FUNCTION__ );
-      printf( "        Dens=%13.7e code units, Eint=%13.7e code units, Ye=%13.7e, Mode %d\n", Dens_Code, Eint_Code, Ye, Mode );
-      printf( "        EoS error code: %d\n", Err );
+      printf( "   Dens=%13.7e code units, Eint=%13.7e code units, Ye=%13.7e, Mode %d\n", Dens_Code, Eint_Code, Ye, Mode );
+      printf( "   EoS error code: %d\n", Err );
    }
 #  endif // GAMER_DEBUG
 
@@ -336,13 +330,8 @@ static real EoS_DensPres2Eint_Nuclear( const real Dens_Code, const real Pres_Cod
    if ( AuxArray_Flt == NULL )   printf( "ERROR : AuxArray_Flt == NULL in %s !!\n", __FUNCTION__ );
    if ( AuxArray_Int == NULL )   printf( "ERROR : AuxArray_Int == NULL in %s !!\n", __FUNCTION__ );
 
-   if ( Hydro_CheckNegative(Dens_Code) )
-      printf( "ERROR : invalid input density (%14.7e) at file <%s>, line <%d>, function <%s>\n",
-              Dens_Code, __FILE__, __LINE__, __FUNCTION__ );
-
-   if ( Hydro_CheckNegative(Pres_Code) )
-      printf( "ERROR : invalid input pressure (%14.7e) at file <%s>, line <%d>, function <%s>\n",
-              Pres_Code, __FILE__, __LINE__, __FUNCTION__ );
+   Hydro_CheckUnphysical( UNPHY_MODE_SING, &Dens_Code, "input density",  ERROR_INFO, UNPHY_VERBOSE );
+   Hydro_CheckUnphysical( UNPHY_MODE_SING, &Pres_Code, "input pressure", ERROR_INFO, UNPHY_VERBOSE );
 #  endif // GAMER_DEBUG
 
 
@@ -423,11 +412,10 @@ static real EoS_DensPres2Eint_Nuclear( const real Dens_Code, const real Pres_Cod
 // final check
 #  ifdef GAMER_DEBUG
 // still require Eint>0 for the nuclear EoS
-   if ( Hydro_CheckNegative(Eint_Code) )
+   if (  Hydro_CheckUnphysical( UNPHY_MODE_SING, &Eint_Code, "output internal energy density", ERROR_INFO, UNPHY_VERBOSE )  )
    {
-      printf( "ERROR : invalid output internal energy density (%13.7e code units) in %s() !!\n", Eint_Code, __FUNCTION__ );
-      printf( "        Dens=%13.7e code units, Pres=%13.7e code units, Ye=%13.7e, Mode %d\n", Dens_Code, Pres_Code, Ye, Mode );
-      printf( "        EoS error code: %d\n", Err );
+      printf( "   Dens=%13.7e code units, Pres=%13.7e code units, Ye=%13.7e, Mode %d\n", Dens_Code, Pres_Code, Ye, Mode );
+      printf( "   EoS error code: %d\n", Err );
    }
 #  endif // GAMER_DEBUG
 
@@ -466,13 +454,8 @@ static real EoS_DensPres2CSqr_Nuclear( const real Dens_Code, const real Pres_Cod
    if ( AuxArray_Flt == NULL )   printf( "ERROR : AuxArray_Flt == NULL in %s !!\n", __FUNCTION__ );
    if ( AuxArray_Int == NULL )   printf( "ERROR : AuxArray_Int == NULL in %s !!\n", __FUNCTION__ );
 
-   if ( Hydro_CheckNegative(Dens_Code) )
-      printf( "ERROR : invalid input density (%14.7e) at file <%s>, line <%d>, function <%s>\n",
-              Dens_Code, __FILE__, __LINE__, __FUNCTION__ );
-
-   if ( Hydro_CheckNegative(Pres_Code) )
-      printf( "ERROR : invalid input pressure (%14.7e) at file <%s>, line <%d>, function <%s>\n",
-              Pres_Code, __FILE__, __LINE__, __FUNCTION__ );
+   Hydro_CheckUnphysical( UNPHY_MODE_SING, &Dens_Code, "input density",  ERROR_INFO, UNPHY_VERBOSE );
+   Hydro_CheckUnphysical( UNPHY_MODE_SING, &Pres_Code, "input pressure", ERROR_INFO, UNPHY_VERBOSE );
 #  endif // GAMER_DEBUG
 
 
@@ -548,11 +531,10 @@ static real EoS_DensPres2CSqr_Nuclear( const real Dens_Code, const real Pres_Cod
 
 // final check
 #  ifdef GAMER_DEBUG
-   if ( Hydro_CheckNegative(Cs2_Code) )
+   if (  Hydro_CheckUnphysical( UNPHY_MODE_SING, &Cs2_Code, "output sound speed squared", ERROR_INFO, UNPHY_VERBOSE )  )
    {
-      printf( "ERROR : invalid output sound speed squared (%13.7e) in %s() !!\n", Cs2_Code, __FUNCTION__ );
-      printf( "        Dens=%13.7e code units, Pres=%13.7e code units, Ye=%13.7e, Mode %d\n", Dens_Code, Pres_Code, Ye, Mode );
-      printf( "        EoS error code: %d\n", Err );
+      printf( "   Dens=%13.7e code units, Pres=%13.7e code units, Ye=%13.7e, Mode %d\n", Dens_Code, Pres_Code, Ye, Mode );
+      printf( "   EoS error code: %d\n", Err );
    }
 #  endif // GAMER_DEBUG
 
@@ -738,13 +720,8 @@ static void EoS_General_Nuclear( const int Mode, real Out[], const real In_Flt[]
 
 // check the input density and Ye
 #  ifdef GAMER_DEBUG
-   if ( Hydro_CheckNegative(Dens_Code) )
-      printf( "ERROR : invalid input density (%14.7e) at file <%s>, line <%d>, function <%s>\n",
-              Dens_Code, __FILE__, __LINE__, __FUNCTION__ );
-
-   if ( Hydro_CheckNegative(Ye) )
-      printf( "ERROR : invalid input Ye (%14.7e) at file <%s>, line <%d>, function <%s>\n",
-              Ye, __FILE__, __LINE__, __FUNCTION__ );
+   Hydro_CheckUnphysical( UNPHY_MODE_SING, &Dens_Code, "input density", ERROR_INFO, UNPHY_VERBOSE );
+   Hydro_CheckUnphysical( UNPHY_MODE_SING, &Ye,        "input Ye",      ERROR_INFO, UNPHY_VERBOSE );
 #  endif // GAMER_DEBUG
 
 
@@ -782,9 +759,7 @@ static void EoS_General_Nuclear( const int Mode, real Out[], const real In_Flt[]
 
 //       check the input internal energy density
 #        ifdef GAMER_DEBUG
-         if ( Hydro_CheckNegative(Eint_Code) )
-            printf( "ERROR : invalid input internal energy density (%14.7e) at file <%s>, line <%d>, function <%s>\n",
-                    Eint_Code, __FILE__, __LINE__, __FUNCTION__ );
+         Hydro_CheckUnphysical( UNPHY_MODE_SING, &Eint_Code, "input internal energy density", ERROR_INFO, UNPHY_VERBOSE );
 #        endif // GAMER_DEBUG
 
 
@@ -816,9 +791,7 @@ static void EoS_General_Nuclear( const int Mode, real Out[], const real In_Flt[]
 
 //       check the input temperature
 #        ifdef GAMER_DEBUG
-         if ( Hydro_CheckNegative(Temp_Kelv) )
-            printf( "ERROR : invalid input temperature (%14.7e) at file <%s>, line <%d>, function <%s>\n",
-                    Temp_Kelv, __FILE__, __LINE__, __FUNCTION__ );
+         Hydro_CheckUnphysical( UNPHY_MODE_SING, &Temp_Kelv, "input temperature", ERROR_INFO, UNPHY_VERBOSE );
 #        endif // GAMER_DEBUG
 
 
@@ -845,9 +818,7 @@ static void EoS_General_Nuclear( const int Mode, real Out[], const real In_Flt[]
 
 //       check the input entropy
 #        ifdef GAMER_DEBUG
-         if ( Hydro_CheckNegative(Entr) )
-            printf( "ERROR : invalid input entropy (%14.7e) at file <%s>, line <%d>, function <%s>\n",
-                    Entr, __FILE__, __LINE__, __FUNCTION__ );
+         Hydro_CheckUnphysical( UNPHY_MODE_SING, &Entr, "input entropy", ERROR_INFO, UNPHY_VERBOSE );
 #        endif // GAMER_DEBUG
 
 
@@ -864,9 +835,7 @@ static void EoS_General_Nuclear( const int Mode, real Out[], const real In_Flt[]
 
 //       check the input pressure
 #        ifdef GAMER_DEBUG
-         if ( Hydro_CheckNegative(Pres_Code) )
-            printf( "ERROR : invalid input pressure (%14.7e) at file <%s>, line <%d>, function <%s>\n",
-                    Pres_Code, __FILE__, __LINE__, __FUNCTION__ );
+         Hydro_CheckUnphysical( UNPHY_MODE_SING, &Pres_Code, "input pressure", ERROR_INFO, UNPHY_VERBOSE );
 #        endif // GAMER_DEBUG
 
 
@@ -929,11 +898,10 @@ static void EoS_General_Nuclear( const int Mode, real Out[], const real In_Flt[]
             Out[i] *= Pres2Code;
 
 #           ifdef GAMER_DEBUG
-            if ( Hydro_CheckNegative(Out[i]) )
+            if (  Hydro_CheckUnphysical( UNPHY_MODE_SING, &Out[i], "output pressure", ERROR_INFO, UNPHY_VERBOSE )  )
             {
-               printf( "ERROR : invalid output pressure (%13.7e code units) in %s() !!\n", Out[i], __FUNCTION__ );
-               printf( "        Dens=%13.7e code units, Var_mode=%13.7e code units, Ye=%13.7e, Mode %d\n", Dens_Code, In_Flt[1], Ye, Mode );
-               printf( "        EoS error code: %d\n", Err );
+               printf( "   Dens=%13.7e code units, Var_mode=%13.7e code units, Ye=%13.7e, Mode %d\n", Dens_Code, In_Flt[1], Ye, Mode );
+               printf( "   EoS error code: %d\n", Err );
             }
 #           endif
          }
@@ -945,11 +913,10 @@ static void EoS_General_Nuclear( const int Mode, real Out[], const real In_Flt[]
             Out[i] *= CsSqr2Code;
 
 #           ifdef GAMER_DEBUG
-            if ( Hydro_CheckNegative(Out[i]) )
+            if (  Hydro_CheckUnphysical( UNPHY_MODE_SING, &Out[i], "output sound speed squared", ERROR_INFO, UNPHY_VERBOSE )  )
             {
-               printf( "ERROR : invalid output sound speed squared (%13.7e) in %s() !!\n", Out[i], __FUNCTION__ );
-               printf( "        Dens=%13.7e code units, Var_mode=%13.7e code units, Ye=%13.7e, Mode %d\n", Dens_Code, In_Flt[1], Ye, Mode );
-               printf( "        EoS error code: %d\n", Err );
+               printf( "   Dens=%13.7e code units, Var_mode=%13.7e code units, Ye=%13.7e, Mode %d\n", Dens_Code, In_Flt[1], Ye, Mode );
+               printf( "   EoS error code: %d\n", Err );
             }
 #           endif
          }
@@ -963,11 +930,10 @@ static void EoS_General_Nuclear( const int Mode, real Out[], const real In_Flt[]
             Out[i]  = (  ( Out[i] + EnergyShift ) * sEint2Code  ) * Dens_Code;
 
 #           ifdef GAMER_DEBUG
-            if ( Hydro_CheckNegative(Out[i]) )
+            if (  Hydro_CheckUnphysical( UNPHY_MODE_SING, &Out[i], "output internal energy density", ERROR_INFO, UNPHY_VERBOSE )  )
             {
-               printf( "ERROR : invalid output internal energy density (%13.7e code units) in %s() !!\n", Out[i], __FUNCTION__ );
-               printf( "        Dens=%13.7e code units, Var_mode=%13.7e code units, Ye=%13.7e, Mode %d\n", Dens_Code, In_Flt[1], Ye, Mode );
-               printf( "        EoS error code: %d\n", Err );
+               printf( "   Dens=%13.7e code units, Var_mode=%13.7e code units, Ye=%13.7e, Mode %d\n", Dens_Code, In_Flt[1], Ye, Mode );
+               printf( "   EoS error code: %d\n", Err );
             }
 #           endif // GAMER_DEBUG
 
@@ -976,11 +942,10 @@ static void EoS_General_Nuclear( const int Mode, real Out[], const real In_Flt[]
             Out[i] *= MeV2Kelvin;
 
 #           ifdef GAMER_DEBUG
-            if ( Hydro_CheckNegative(Out[i]) )
+            if (  Hydro_CheckUnphysical( UNPHY_MODE_SING, &Out[i], "output temperature", ERROR_INFO, UNPHY_VERBOSE )  )
             {
-               printf( "ERROR : invalid output temperature (%13.7e K) in %s() !!\n", Out[i], __FUNCTION__ );
-               printf( "        Dens=%13.7e code units, Var_mode=%13.7e code units, Ye=%13.7e, Mode %d\n", Dens_Code, In_Flt[1], Ye, Mode );
-               printf( "        EoS error code: %d\n", Err );
+               printf( "   Dens=%13.7e code units, Var_mode=%13.7e code units, Ye=%13.7e, Mode %d\n", Dens_Code, In_Flt[1], Ye, Mode );
+               printf( "   EoS error code: %d\n", Err );
             }
 #           endif // GAMER_DEBUG
 
@@ -997,11 +962,10 @@ static void EoS_General_Nuclear( const int Mode, real Out[], const real In_Flt[]
    Out[NTarget] *= MeV2Kelvin;
 
 #  ifdef GAMER_DEBUG
-   if ( Hydro_CheckNegative(Out[NTarget]) )
+   if (  Hydro_CheckUnphysical( UNPHY_MODE_SING, &Out[NTarget], "output temperature", ERROR_INFO, UNPHY_VERBOSE )  )
    {
-      printf( "ERROR : invalid output temperature (%13.7e K) in %s() !!\n", Out[NTarget], __FUNCTION__ );
-      printf( "        Dens=%13.7e code units, Var_mode=%13.7e code units, Ye=%13.7e, Mode %d\n", Dens_Code, In_Flt[1], Ye, Mode );
-      printf( "        EoS error code: %d\n", Err );
+      printf( "   Dens=%13.7e code units, Var_mode=%13.7e code units, Ye=%13.7e, Mode %d\n", Dens_Code, In_Flt[1], Ye, Mode );
+      printf( "   EoS error code: %d\n", Err );
    }
 #  endif // GAMER_DEBUG
 
@@ -1010,11 +974,10 @@ static void EoS_General_Nuclear( const int Mode, real Out[], const real In_Flt[]
    Out[NTarget]  = (  ( Out[NTarget] + EnergyShift ) * sEint2Code  ) * Dens_Code;
 
 #  ifdef GAMER_DEBUG
-   if ( Hydro_CheckNegative(Out[NTarget]) )
+   if (  Hydro_CheckUnphysical( UNPHY_MODE_SING, &Out[NTarget], "output internal energy density", ERROR_INFO, UNPHY_VERBOSE )  )
    {
-      printf( "ERROR : invalid output internal energy density (%13.7e code units) in %s() !!\n", Out[NTarget], __FUNCTION__ );
-      printf( "        Dens=%13.7e code units, Var_mode=%13.7e code units, Ye=%13.7e, Mode %d\n", Dens_Code, In_Flt[1], Ye, Mode );
-      printf( "        EoS error code: %d\n", Err );
+      printf( "   Dens=%13.7e code units, Var_mode=%13.7e code units, Ye=%13.7e, Mode %d\n", Dens_Code, In_Flt[1], Ye, Mode );
+      printf( "   EoS error code: %d\n", Err );
    }
 #  endif // GAMER_DEBUG
 
