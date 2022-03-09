@@ -173,7 +173,7 @@ GPU_DEVICE static
 bool Nuc_Overflow( const real x )
 {
 
-   if ( x != x  ||  x < -__FLT_MAX__  ||  x > __FLT_MAX__ )    return true;
+   if ( x != x  ||  x < -HUGE_NUMBER  ||  x > HUGE_NUMBER )    return true;
    else                                                        return false;
 
 } // FUNCTION : Nuc_Overflow
