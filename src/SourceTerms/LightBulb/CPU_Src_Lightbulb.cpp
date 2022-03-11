@@ -194,12 +194,11 @@ static void Src_Lightbulb( real fluid[], const real B[],
 
 // final check
 #  ifdef GAMER_DEBUG
-   if ( Hydro_CheckNegative(Eint_Update) )
+   if (  Hydro_CheckUnphysical( UNPHY_MODE_SING, &Eint_Update, "output internal energy density", ERROR_INFO, UNPHY_VERBOSE )  )
    {
-      printf( "ERROR : invalid output internal energy density (%13.7e code units) in %s() !!\n", Eint_Update, __FUNCTION__ );
-      printf( "        Dens=%13.7e code units, Eint=%13.7e code units, Ye=%13.7e\n", Dens_Code, Eint_Code, Ye );
-      printf( "        Temp=%13.7e MeV, Xn=%13.7e, Xp=%13.7e\n", Temp_MeV, Xn, Xp );
-      printf( "        heating=%13.7e, cooling=%13.7e, dt=%13.7e, dEint=%13.7e\n", rate_heating, rate_cooling, dt, dEint_Code );
+      printf( "   Dens=%13.7e code units, Eint=%13.7e code units, Ye=%13.7e\n", Dens_Code, Eint_Code, Ye );
+      printf( "   Temp=%13.7e MeV, Xn=%13.7e, Xp=%13.7e\n", Temp_MeV, Xn, Xp );
+      printf( "   heating=%13.7e, cooling=%13.7e, dt=%13.7e, dEint=%13.7e\n", rate_heating, rate_cooling, dt, dEint_Code );
    }
 #  endif // GAMER_DEBUG
 
