@@ -310,7 +310,7 @@ void WriteFile( FILE *File, const int lv, const int PID, const int i, const int 
 #  if ( MODEL == HYDRO )
    const bool CheckMinPres_No = false;
    const bool CheckMinTemp_No = false;
-   const bool CheckMinEint_No = false;
+   const bool CheckMinEntr_No = false;
    real Pres=-1.0, Temp=-1.0, Entr=-1.0, Cs=-1.0;  // initial values must be negative
 
 // no need to increase Der_FieldIdx for fields not using DerField[]
@@ -329,25 +329,9 @@ void WriteFile( FILE *File, const int lv, const int PID, const int i, const int 
    }
 
    if ( OPT__OUTPUT_ENTR ) {
-#     if ( EOS == EOS_NUCLEAR )
-      const int  NTarget = 1;
-            int  TmpIn_Int[NTarget+1];
-            real TmpIn_Flt[3], TmpOut[NTarget+1], TmpEint;
-
-      TmpEint = Hydro_Con2Eint( u[DENS], u[MOMX], u[MOMY], u[MOMZ], u[ENGY], CheckMinEint_No, NULL_REAL, Emag );
-
-      TmpIn_Flt[0] = u[DENS];
-      TmpIn_Flt[1] = TmpEint;
-      TmpIn_Flt[2] = u[YE] / u[DENS];
-
-      TmpIn_Int[0] = NTarget;
-      TmpIn_Int[1] = NUC_VAR_IDX_ENTR;
-
-      EoS_General_CPUPtr( NUC_MODE_ENGY, TmpOut, TmpIn_Flt, TmpIn_Int, EoS_AuxArray_Flt, EoS_AuxArray_Int, h_EoS_Table );
-      Entr = TmpOut[0];
-#     else
-      Aux_Error( ERROR_INFO, "OPT__OUTPUT_ENTR is only supported by EOS_NUCLEAR !!\n" );
-#     endif
+      Entr = Hydro_Con2Entr( u[DENS], u[MOMX], u[MOMY], u[MOMZ], u[ENGY], u+NCOMP_FLUID,
+                             CheckMinEntr_No, NULL_REAL, Emag, EoS_DensEint2Entr_CPUPtr,
+                             EoS_AuxArray_Flt, EoS_AuxArray_Int, h_EoS_Table );
       fprintf( File, " %13.6e", Entr );
    }
 

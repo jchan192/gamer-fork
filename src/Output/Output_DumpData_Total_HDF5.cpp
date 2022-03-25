@@ -69,7 +69,7 @@ Procedure for outputting new variables:
 
 
 //-------------------------------------------------------------------------------------------------------
-// Function    :  Output_DumpData_Total_HDF5 (FormatVersion = 2449)
+// Function    :  Output_DumpData_Total_HDF5 (FormatVersion = 2450)
 // Description :  Output all simulation data in the HDF5 format, which can be used as a restart file
 //                or loaded by YT
 //
@@ -220,6 +220,7 @@ Procedure for outputting new variables:
 //                2447 : 2022/01/22 --> output OPT__FREEZE_PAR
 //                2448 : 2022/01/30 --> output MINMOD_MAX_ITER and MONO_MAX_ITER
 //                2449 : 2022/03/16 --> output OPT__FLAG_LOHNER_ENTR and MIN_ENTR
+//                2450 : 2022/03/25 --> output OPT__OUTPUT_ENTR
 //-------------------------------------------------------------------------------------------------------
 void Output_DumpData_Total_HDF5( const char *FileName )
 {
@@ -1107,40 +1108,23 @@ void Output_DumpData_Total_HDF5( const char *FileName )
 //             d-3. gas entropy
                if ( v == EntrDumpIdx )
                {
-                  const bool CheckMinEint_No = false;
+                  const bool CheckMinEntr_No = false;
 
                   for (int PID=0; PID<amr->NPatchComma[lv][1]; PID++)
                   for (int k=0; k<PS1; k++)
                   for (int j=0; j<PS1; j++)
                   for (int i=0; i<PS1; i++)
                   {
-                     real u[NCOMP_TOTAL], Out[2], Eint, Pres, Emag=NULL_REAL, Entr=NULL_REAL;
+                     real u[NCOMP_TOTAL], Entr, Emag=NULL_REAL;
 
                      for (int v=0; v<NCOMP_TOTAL; v++)   u[v] = amr->patch[ amr->FluSg[lv] ][lv][PID]->fluid[v][k][j][i];
 
 #                    ifdef MHD
                      Emag = MHD_GetCellCenteredBEnergyInPatch( lv, PID, i, j, k, amr->MagSg[lv] );
 #                    endif
-
-#                    if ( EOS == EOS_NUCLEAR )
-                     const int  NTarget = 1;
-                           int  TmpIn_Int[NTarget+1];
-                           real TmpIn_Flt[3], TmpOut[NTarget+1];
-
-                     Eint = Hydro_Con2Eint( u[DENS], u[MOMX], u[MOMY], u[MOMZ], u[ENGY], CheckMinEint_No, NULL_REAL, Emag );
-
-                     TmpIn_Flt[0] = u[DENS];
-                     TmpIn_Flt[1] = Eint;
-                     TmpIn_Flt[2] = u[YE] / u[DENS];
-
-                     TmpIn_Int[0] = NTarget;
-                     TmpIn_Int[1] = NUC_VAR_IDX_ENTR;
-
-                     EoS_General_CPUPtr( NUC_MODE_ENGY, TmpOut, TmpIn_Flt, TmpIn_Int, EoS_AuxArray_Flt, EoS_AuxArray_Int, h_EoS_Table );
-                     Entr = TmpOut[0];
-#                    else
-                     Aux_Error( ERROR_INFO, "OPT__OUTPUT_ENTR is only supported by EOS_NUCLEAR !!\n" );
-#                    endif
+                     Entr = Hydro_Con2Entr( u[DENS], u[MOMX], u[MOMY], u[MOMZ], u[ENGY], u+NCOMP_FLUID,
+                                            CheckMinEntr_No, NULL_REAL, Emag, EoS_DensEint2Entr_CPUPtr,
+                                            EoS_AuxArray_Flt, EoS_AuxArray_Int, h_EoS_Table );
                      FieldData[PID][k][j][i] = Entr;
                   }
                } // if ( v == EntrDumpIdx )
@@ -1337,7 +1321,7 @@ void Output_DumpData_Total_HDF5( const char *FileName )
                if ( H5_Status < 0 )   Aux_Error( ERROR_INFO, "failed to write a field (lv %d, v %d) !!\n", lv, v );
 
                H5_Status = H5Dclose( H5_SetID_Field );
-            } // for (int v=0; v<NFieldOut; v++)
+            } // for (int v=0; v<NFieldStored; v++)
 
 
 //          5-2-1-5.free resource before dumping magnetic field to save memory
@@ -1742,7 +1726,7 @@ void FillIn_KeyInfo( KeyInfo_t &KeyInfo, const int NFieldStored )
 
    const time_t CalTime = time( NULL );   // calendar time
 
-   KeyInfo.FormatVersion        = 2449;
+   KeyInfo.FormatVersion        = 2450;
    KeyInfo.Model                = MODEL;
    KeyInfo.NLevel               = NLEVEL;
    KeyInfo.NCompFluid           = NCOMP_FLUID;
