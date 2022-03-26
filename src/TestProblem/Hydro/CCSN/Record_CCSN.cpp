@@ -190,7 +190,7 @@ void Record_CCSN_GWSignal()
             Prepare_PatchData( lv, TimeNew, &h_Pot_Array_P_Out[ArrayID][0][0][0][0], NULL,
                                GRA_GHOST_SIZE, NPG, PID0_List+Disp, _POTE, _NONE,
                                OPT__GRA_INT_SCHEME, INT_NONE, UNIT_PATCH, (GRA_GHOST_SIZE==0)?NSIDE_00:NSIDE_06, false,
-                               OPT__BC_FLU, OPT__BC_POT, -1.0, -1.0, -1.0, false );
+                               OPT__BC_FLU, OPT__BC_POT, -1.0, -1.0, -1.0, -1.0, false );
 
 #        pragma omp for schedule( runtime )
          for (int PID_IDX=0; PID_IDX<8*NPG; PID_IDX++)

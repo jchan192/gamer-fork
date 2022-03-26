@@ -161,16 +161,16 @@ void SetParameter()
    } // switch ( CCSN_Prob )
 
 // (1-3) check the runtime parameters
-   if ( CCSN_Prob == Migration_Test )
-   {
-      if ( CCSN_Eint_Mode == 1 )
-         Aux_Error( ERROR_INFO, "Temperature mode for obtaining internal energy is not supported in Migration Test yet!!\n" );
-   }
+   if (  ( CCSN_Prob == Migration_Test )  &&  ( CCSN_Eint_Mode == 1 )  )
+      Aux_Error( ERROR_INFO, "Temperature mode for obtaining internal energy is not supported in Migration Test yet!!\n" );
 
 #  if ( EOS != EOS_NUCLEAR )
    if ( CCSN_Eint_Mode == 0 )
       Aux_Error( ERROR_INFO, "Temperature mode only works with EOS_NUCLEAR !!\n" );
 #  endif
+
+   if (  OPT__DT_USER  &&  ( SrcTerms.Lightbulb == 0 )  )
+      Aux_Error( ERROR_INFO, "OPT__DT_USER only supports SRC_LIGHTBULB == 1 !!\n" );
 
 
 // (2) set the problem-specific derived parameters
