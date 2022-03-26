@@ -85,7 +85,7 @@ void Src_Init()
       Src_Init_Deleptonization();
 
 //    check if the source-term function is set properly
-      if ( SrcTerms.Dlep_FuncPtr == NULL )   Aux_Error( ERROR_INFO, "SrcTerms.Dlep_FuncPtr == NULL !!\n" );
+      if ( SrcTerms.Dlep_FuncPtr == NULL )        Aux_Error( ERROR_INFO, "SrcTerms.Dlep_FuncPtr == NULL !!\n" );
    }
 
 // (2) lightbulb
@@ -101,12 +101,12 @@ void Src_Init()
 // (3) user-specified source term
    if ( SrcTerms.User )
    {
-      if ( Src_Init_User_Ptr == NULL )       Aux_Error( ERROR_INFO, "Src_Init_User_Ptr == NULL !!\n" );
+      if ( Src_Init_User_Ptr == NULL )            Aux_Error( ERROR_INFO, "Src_Init_User_Ptr == NULL !!\n" );
 
       Src_Init_User_Ptr();
 
 //    check if the source-term function is set properly
-      if ( SrcTerms.User_FuncPtr == NULL )   Aux_Error( ERROR_INFO, "SrcTerms.User_FuncPtr == NULL !!\n" );
+      if ( SrcTerms.User_FuncPtr == NULL )        Aux_Error( ERROR_INFO, "SrcTerms.User_FuncPtr == NULL !!\n" );
    }
 
 

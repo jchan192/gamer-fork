@@ -168,12 +168,6 @@ OPT__EXT_POT                  3           # add external potential    (0=off, 1=
                                           # --> for table/GREP, edit the corresponding parameters below too
 
 
-# source terms
-SRC_DELEPTONIZATION           0           # deleptonization (for simulations of stellar core collapse) [0] ##HYDRO ONLY##
-SRC_USER                      0           # user-defined source terms -> edit "Src_User.cpp" [0]
-SRC_GPU_NPGROUP              -1           # number of patch groups sent into the CPU/GPU source-term solver (<=0=auto) [-1]
-
-
 # GREP
 GREP_CENTER_METHOD            1              # center of radial profile                                     [1]
                                              # (1=box center)
