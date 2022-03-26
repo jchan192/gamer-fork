@@ -167,6 +167,11 @@ void SetParameter()
          Aux_Error( ERROR_INFO, "Temperature mode for obtaining internal energy is not supported in Migration Test yet!!\n" );
    }
 
+#  if ( EOS != EOS_NUCLEAR )
+   if ( CCSN_Eint_Mode == 0 )
+      Aux_Error( ERROR_INFO, "Temperature mode only works with EOS_NUCLEAR !!\n" );
+#  endif
+
 
 // (2) set the problem-specific derived parameters
 
@@ -309,7 +314,9 @@ void SetGridIC( real fluid[], const double x, const double y, const double z, co
       TmpIn_Int[1] = NUC_VAR_IDX_EORT;
 #     endif
 
+#     if ( EOS == EOS_NUCLEAR )
       EoS_General_CPUPtr( NUC_MODE_TEMP, TmpOut, TmpIn_Flt, TmpIn_Int, EoS_AuxArray_Flt, EoS_AuxArray_Int, h_EoS_Table );
+#     endif
       Eint = TmpOut[0];
    }
 

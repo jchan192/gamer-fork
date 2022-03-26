@@ -184,7 +184,7 @@ void Poi_Prepare_GREP( const double Time, const int lv )
 static void Update_GREP_Profile( const int lv, const int Sg, const double PrepTime )
 {
 
-   long       TVar         [] = {               _DENS,             _VELR,               _PRES,           _EINT_DER };
+   long       TVar         [] = {               _DENS,             _VELR,               _PRES,               _EINT };
    Profile_t *Prof_Leaf    [] = { DensAve[    lv][Sg], VrAve[    lv][Sg], PresAve[    lv][Sg], EngyAve[    lv][Sg] };
    Profile_t *Prof_NonLeaf [] = { DensAve[NLEVEL][Sg], VrAve[NLEVEL][Sg], PresAve[NLEVEL][Sg], EngyAve[NLEVEL][Sg] };
 
