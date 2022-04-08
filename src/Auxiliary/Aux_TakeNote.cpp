@@ -870,8 +870,9 @@ void Aux_TakeNote()
       fprintf( Note, "SRC_ANY                         %d\n",      SrcTerms.Any              );
       fprintf( Note, "SRC_DELEPTONIZATION             %d\n",      SrcTerms.Deleptonization  );
       fprintf( Note, "SRC_LIGHTBULB                   %d\n",      SrcTerms.Lightbulb        );
+      if ( SrcTerms.Lightbulb ) {
       fprintf( Note, "SRC_LIGHTBULB_LNUE              %13.7e\n",  SrcTerms.Lightbulb_Lnue   );
-      fprintf( Note, "SRC_LIGHTBULB_TNUE              %13.7e\n",  SrcTerms.Lightbulb_Tnue   );
+      fprintf( Note, "SRC_LIGHTBULB_TNUE              %13.7e\n",  SrcTerms.Lightbulb_Tnue   ); }
       fprintf( Note, "SRC_USER                        %d\n",      SrcTerms.User             );
       fprintf( Note, "SRC_GPU_NPGROUP                 %d\n",      SRC_GPU_NPGROUP           );
       fprintf( Note, "***********************************************************************************\n" );

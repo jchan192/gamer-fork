@@ -1,6 +1,5 @@
 #include "GAMER.h"
 #include "TestProb.h"
-#include "NuclearEoS.h"
 
 
 
@@ -165,7 +164,7 @@ void SetParameter()
       Aux_Error( ERROR_INFO, "Temperature mode for obtaining internal energy is not supported in Migration Test yet!!\n" );
 
 #  if ( EOS != EOS_NUCLEAR )
-   if ( CCSN_Eint_Mode == 0 )
+   if ( CCSN_Eint_Mode == 1 )
       Aux_Error( ERROR_INFO, "Temperature mode only works with EOS_NUCLEAR !!\n" );
 #  endif
 
@@ -546,8 +545,8 @@ void Record_CCSN()
              double PhysicalTime = Time[0];
              double DumpTime = int( PhysicalTime / CCSN_GW_DT ) * CCSN_GW_DT;
 
-//    output data when (a) the elapsed time > GW_OUTPUT_DT
-//                     (b) the physical time is almost a multiple of GW_OUTPUT_DT
+//    output data when (a) the elapsed time > CCSN_GW_DT
+//                     (b) the physical time is almost a multiple of CCSN_GW_DT
       if ( fabs( PhysicalTime - DumpTime_Last ) > CCSN_GW_DT  ||
            fabs( PhysicalTime - DumpTime      ) < 1.0e-2 * CCSN_GW_DT )
       {

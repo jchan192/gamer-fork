@@ -142,7 +142,7 @@ void Record_CCSN_GWSignal()
 {
 
    const char   filename_QuadMom_2nd[ ] = "Record__QuadMom_2nd";
-   const double BoxCenter           [3] = { 0.5*amr->BoxSize[0], 0.5*amr->BoxSize[1], 0.5*amr->BoxSize[2] };
+   const double BoxCenter           [3] = { amr->BoxCenter[0], amr->BoxCenter[1], amr->BoxCenter[2] };
 
 // allocate memory for per-thread arrays
 #  ifdef OPENMP

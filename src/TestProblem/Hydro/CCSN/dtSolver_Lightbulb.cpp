@@ -168,7 +168,7 @@ double Mis_GetTimeStep_User_Lightbulb( const int lv, const double dTime_dt )
 #  endif // ifndef SERIAL
 
 
-   dt_LB = (dt_LB * CCSN_LB_TimeFac) / dTime_dt;
+   dt_LB *= CCSN_LB_TimeFac;
 
    return dt_LB;
 
