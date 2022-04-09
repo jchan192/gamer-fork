@@ -1,7 +1,7 @@
 #include "GAMER.h"
 #include "NuclearEoS.h"
 
-#if ( MODEL == HYDRO  &&  EOS == EOS_NUCLEAR )
+#if ( MODEL == HYDRO )
 
 
 
@@ -78,7 +78,11 @@ double Mis_GetTimeStep_User_Lightbulb( const int lv, const double dTime_dt )
             const double Momy   = amr->patch[ amr->FluSg[lv] ][lv][PID]->fluid[MOMY][k][j][i];
             const double Momz   = amr->patch[ amr->FluSg[lv] ][lv][PID]->fluid[MOMZ][k][j][i];
             const double Engy   = amr->patch[ amr->FluSg[lv] ][lv][PID]->fluid[ENGY][k][j][i];
+#           if ( EOS == EOS_NUCLEAR )
             const double YeDens = amr->patch[ amr->FluSg[lv] ][lv][PID]->fluid[YE  ][k][j][i];
+#           else
+            const double YeDens = NULL_REAL;
+#           endif
 
 #           ifdef MHD
             const double Emag = MHD_GetCellCenteredBEnergy( amr->patch[ amr->MagSg[lv] ][lv][PID]->magnetic[MAGX],
@@ -172,4 +176,4 @@ double Mis_GetTimeStep_User_Lightbulb( const int lv, const double dTime_dt )
 
 
 
-#endif // if ( MODEL == HYDRO  &&  EOS == EOS_NUCLEAR )
+#endif // if ( MODEL == HYDRO )

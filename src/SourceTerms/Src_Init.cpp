@@ -3,7 +3,7 @@
 
 
 // prototypes of built-in source terms
-#if ( MODEL == HYDRO  &&  EOS == EOS_NUCLEAR )
+#if ( MODEL == HYDRO )
 void Src_Init_Deleptonization();
 void Src_Init_Lightbulb();
 #endif
@@ -34,7 +34,7 @@ void Src_Init()
 
 // check if at least one source term is activated
    if (
-#       if ( MODEL == HYDRO  &&  EOS == EOS_NUCLEAR )
+#       if ( MODEL == HYDRO )
         SrcTerms.Deleptonization  ||
         SrcTerms.Lightbulb        ||
 #       endif
@@ -61,7 +61,7 @@ void Src_Init()
 
 
 // initialize all function pointers as NULL
-#  if ( MODEL == HYDRO  &&  EOS == EOS_NUCLEAR )
+#  if ( MODEL == HYDRO )
    SrcTerms.Dlep_FuncPtr                 = NULL;
    SrcTerms.Dlep_AuxArrayDevPtr_Flt      = NULL;
    SrcTerms.Dlep_AuxArrayDevPtr_Int      = NULL;
@@ -78,7 +78,7 @@ void Src_Init()
 
 
 // initialize all source terms
-#  if ( MODEL == HYDRO  &&  EOS == EOS_NUCLEAR )
+#  if ( MODEL == HYDRO )
 // (1) deleptonization
    if ( SrcTerms.Deleptonization )
    {

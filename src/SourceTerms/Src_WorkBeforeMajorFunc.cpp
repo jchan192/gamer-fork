@@ -3,7 +3,7 @@
 
 
 // prototypes of built-in source terms
-#if ( MODEL == HYDRO  &&  EOS == EOS_NUCLEAR )
+#if ( MODEL == HYDRO )
 void Src_WorkBeforeMajorFunc_Deleptonization( const int lv, const double TimeNew, const double TimeOld, const double dt,
                                               double AuxArray_Flt[], int AuxArray_Int[] );
 
@@ -40,7 +40,7 @@ void (*Src_WorkBeforeMajorFunc_User_Ptr)    ( const int lv, const double TimeNew
 void Src_WorkBeforeMajorFunc( const int lv, const double TimeNew, const double TimeOld, const double dt )
 {
 
-#  if ( MODEL == HYDRO  &&  EOS == EOS_NUCLEAR )
+#  if ( MODEL == HYDRO )
 // (1) deleptonization
    if ( SrcTerms.Deleptonization )
       Src_WorkBeforeMajorFunc_Deleptonization( lv, TimeNew, TimeOld, dt,

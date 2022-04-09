@@ -1,7 +1,7 @@
 #include "CUFLU.h"
 #include "NuclearEoS.h"
 
-#if ( MODEL == HYDRO  &&  EOS == EOS_NUCLEAR )
+#if ( MODEL == HYDRO )
 
 #define SRC_AUX_KELVIN2MEV    0     // AuxArray_Flt: convert kelvin to MeV
 #define SRC_AUX_VSQR2CODE     1     // AuxArray_Flt: convert velocity^2 to code unit
@@ -144,7 +144,11 @@ static void Src_Lightbulb( real fluid[], const real B[],
    const real Dens_Code  = fluid[DENS];
    const real Eint_Code  = Hydro_Con2Eint( fluid[DENS], fluid[MOMX], fluid[MOMY], fluid[MOMZ], fluid[ENGY],
                                            true, MinEint, Emag );
+#  if ( EOS == EOS_NUCLEAR )
    const real Ye         = fluid[YE] / fluid[DENS];
+#  else
+   const real Ye         = NULL_REAL;
+#  endif
 
 
 // 1. call nuclear EoS driver to obtain Xn, Xp, and temperature, using energy mode
@@ -400,4 +404,4 @@ void Src_End_Lightbulb()
 
 
 
-#endif // #if ( MODEL == HYDRO  &&  EOS == EOS_NUCLEAR )
+#endif // #if ( MODEL == HYDRO )

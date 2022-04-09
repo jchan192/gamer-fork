@@ -688,13 +688,12 @@ void Init_TestProb_Hydro_CCSN()
    Flag_User_Ptr                  = Flag_User_CCSN;
    Aux_Record_User_Ptr            = Record_CCSN;
    End_User_Ptr                   = End_CCSN;
+
 // estimate the evolution time-step constrained by the lightbulb source term
-#  if ( EOS == EOS_NUCLEAR )
    if ( SrcTerms.Lightbulb )
    {
       Mis_GetTimeStep_User_Ptr    = Mis_GetTimeStep_User_Lightbulb;  // option: OPT__DT_USER;
    }
-#  endif // #if ( EOS == EOS_NUCLEAR )
 #  endif // #if ( MODEL == HYDRO )
 
 
