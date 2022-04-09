@@ -536,25 +536,38 @@ void Record_CCSN()
    Record_CCSN_CentralDens();
 
 
-#ifdef GRAVITY
 // 2. record the GW signal
+#  ifdef GRAVITY
    if ( CCSN_GW_OUTPUT )
    {
-      static double DumpTime_Last = -__DBL_MAX__;
+      static real DumpTime_CCSN = NULL_REAL;
 
-             double PhysicalTime = Time[0];
-             double DumpTime = int( PhysicalTime / CCSN_GW_DT ) * CCSN_GW_DT;
-
-//    output data when (a) the elapsed time > CCSN_GW_DT
-//                     (b) the physical time is almost a multiple of CCSN_GW_DT
-      if ( fabs( PhysicalTime - DumpTime_Last ) > CCSN_GW_DT  ||
-           fabs( PhysicalTime - DumpTime      ) < 1.0e-2 * CCSN_GW_DT )
+//    set the first dump time
+      if ( DumpTime_CCSN == NULL_REAL )
       {
-         DumpTime_Last = PhysicalTime;
+         if ( OPT__INIT != INIT_BY_RESTART  ||  OPT__RESTART_RESET )
+            DumpTime_CCSN = Time[0];
+
+         else
+         {
+            DumpTime_CCSN = ( int(Time[0]/CCSN_GW_DT) + 1.0 )*CCSN_GW_DT;
+
+//          be careful about round-off errors
+            if (   (  DumpTime_CCSN <= Time[0]  )                                         ||
+                   (  Time[0] != 0.0 && fabs( (Time[0]-CCSN_GW_DT)/Time[0] ) < 1.0e-8  )  ||
+                   (  Time[0] == 0.0 && fabs(  Time[0]-CCSN_GW_DT          ) < 1.0e-12 )      )
+               DumpTime_CCSN += CCSN_GW_DT;
+         }
+      }
+
+//    output data if the elasped time > CCSN_GW_DT
+      if ( Time[0] > DumpTime_CCSN )
+      {
          Record_CCSN_GWSignal();
+         DumpTime_CCSN += CCSN_GW_DT;
       }
    }
-#endif
+#  endif
 
 } // FUNCTION : Record_CCSN()
 
