@@ -81,14 +81,10 @@ double Mis_GetTimeStep_User_Lightbulb( const int lv, const double dTime_dt )
             const double YeDens = amr->patch[ amr->FluSg[lv] ][lv][PID]->fluid[YE  ][k][j][i];
 
 #           ifdef MHD
-            const real B_CC[3];
-            MHD_GetCellCenteredBField( B_CC,
-                                       amr->patch[ amr->MagSg[lv] ][lv][PID]->magnetic[MAGX],
-                                       amr->patch[ amr->MagSg[lv] ][lv][PID]->magnetic[MAGY],
-                                       amr->patch[ amr->MagSg[lv] ][lv][PID]->magnetic[MAGZ],
-                                       PS1, PS1, PS1, i, j, k );
-
-            const double Emag = (double)0.5*(  SQR( B[MAGX] ) + SQR( B[MAGY] ) + SQR( B[MAGZ] )  );
+            const double Emag = MHD_GetCellCenteredBEnergy( amr->patch[ amr->MagSg[lv] ][lv][PID]->magnetic[MAGX],
+                                                            amr->patch[ amr->MagSg[lv] ][lv][PID]->magnetic[MAGY],
+                                                            amr->patch[ amr->MagSg[lv] ][lv][PID]->magnetic[MAGZ],
+                                                            PS1, PS1, PS1, i, j, k );
 #           else
             const double Emag = NULL_REAL;
 #           endif
