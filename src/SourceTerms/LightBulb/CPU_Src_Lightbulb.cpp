@@ -174,8 +174,8 @@ static void Src_Lightbulb( real fluid[], const real B[],
 
    EoS->General_FuncPtr( NUC_MODE_ENGY, Out, In_Flt, In_Int, EoS->AuxArrayDevPtr_Flt, EoS->AuxArrayDevPtr_Int, EoS->Table );
 
-   const real Xn       = Out[0];               // neutron number fraction
-   const real Xp       = Out[1];               // proton  number fraction
+   const real Xn       = Out[0];               // neutron mass fraction
+   const real Xp       = Out[1];               // proton  mass fraction
    const real Temp_MeV = Out[2] * Kelvin2MeV;  // temperature in MeV
 
 

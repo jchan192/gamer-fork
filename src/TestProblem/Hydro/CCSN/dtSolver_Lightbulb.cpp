@@ -94,7 +94,7 @@ double Mis_GetTimeStep_User_Lightbulb( const int lv, const double dTime_dt )
 #           endif
 
             const real Dens_Code = Dens;
-            const real Eint_Code = Hydro_Con2Eint( Dens, Momx, Momy, Momz, Engy, false, NULL_REAL, Emag );
+            const real Eint_Code = Hydro_Con2Eint( Dens, Momx, Momy, Momz, Engy, true, MIN_EINT, Emag );
             const real Ye        = YeDens / Dens;
 
 
@@ -120,8 +120,8 @@ double Mis_GetTimeStep_User_Lightbulb( const int lv, const double dTime_dt )
 
             EoS_General_CPUPtr( NUC_MODE_ENGY, Out, In_Flt, In_Int, EoS_AuxArray_Flt, EoS_AuxArray_Int, h_EoS_Table );
 
-            const real Xn       = Out[0];               // neutron number fraction
-            const real Xp       = Out[1];               // proton  number fraction
+            const real Xn       = Out[0];               // neutron mass fraction
+            const real Xp       = Out[1];               // proton  mass fraction
             const real Temp_MeV = Out[2] * Kelvin2MeV;  // temperature in MeV
 
             const double rate_heating = 1.544e20 * ( SrcTerms.Lightbulb_Lnue / 1.0e52 ) * ( 1.0e14 / r2_CGS )
