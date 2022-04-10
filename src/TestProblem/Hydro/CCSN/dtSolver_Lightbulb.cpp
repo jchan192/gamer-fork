@@ -152,23 +152,13 @@ double Mis_GetTimeStep_User_Lightbulb( const int lv, const double dTime_dt )
    Aux_DeallocateArray2D( OMP_dt_LB_Inv );
 
 
-// collect data from all ranks
+// find the maximum over all MPI processes
 #  ifndef SERIAL
-   {
-      double dt_LB_Inv_All[MPI_NRank];
-
-      MPI_Allgather( &dt_LB_Inv, 1, MPI_DOUBLE, dt_LB_Inv_All, 1, MPI_DOUBLE, MPI_COMM_WORLD );
-
-      for (int i=0; i<MPI_NRank; i++)
-      {
-         if (  ( dt_LB_Inv_All[i] > 0.0 )  &&  ( 1.0 / dt_LB_Inv_All[i] < dt_LB )  )
-            dt_LB = 1.0 / dt_LB_Inv_All[i];
-      }
-   }
-#  endif // ifndef SERIAL
+   MPI_Allreduce( &dt_LB_Inv, &dt_LB_Inv, 1, MPI_DOUBLE, MPI_MAX, MPI_COMM_WORLD );
+#  endif
 
 
-   dt_LB *= CCSN_LB_TimeFac;
+   dt_LB = CCSN_LB_TimeFac / dt_LB_Inv;
 
    return dt_LB;
 
