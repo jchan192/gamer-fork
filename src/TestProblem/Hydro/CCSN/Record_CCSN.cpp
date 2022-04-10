@@ -159,43 +159,42 @@ void Record_CCSN_GWSignal()
    double **OMP_QuadMom_2nd    = NULL;
    Aux_AllocateArray2D( OMP_QuadMom_2nd, NT, NData );
 
+   for (int TID=0; TID<NT; TID++) {
+   for (int b=0; b<NData; b++)    {
+      OMP_QuadMom_2nd[TID][b] = 0.0;
+   }}
 
-#  pragma omp parallel
+
+   for (int lv=0; lv<NLEVEL; lv++)
    {
-#     ifdef OPENMP
-      const int TID = omp_get_thread_num();
-#     else
-      const int TID = 0;
-#     endif
+      const double dh        = amr->dh[lv];
+      const double dv        = CUBE( dh );
+      const double TimeNew   = Time[lv];
+      const int    NTotal    = amr->NPatchComma[lv][1] / 8;
+            int   *PID0_List = new int [NTotal];
 
-//    initialize arrays
-      for (int b=0; b<NData; b++)   OMP_QuadMom_2nd[TID][b] = 0.0;
+      for (int t=0; t<NTotal; t++)  PID0_List[t] = 8*t;
 
-      for (int lv=0; lv<NLEVEL; lv++)
+      for (int Disp=0; Disp<NTotal; Disp+=NPG_Max)
       {
-         const double dh = amr->dh[lv];
-         const double dv = CUBE( dh );
+//       prepare the potential file
+         int NPG = ( NPG_Max < NTotal-Disp ) ? NPG_Max : NTotal-Disp;
 
-         const double TimeNew   = Time[lv];
-         const int    NTotal    = amr->NPatchComma[lv][1] / 8;
-               int   *PID0_List = new int [NTotal];
+         Prepare_PatchData( lv, TimeNew, &h_Pot_Array_P_Out[ArrayID][0][0][0][0], NULL,
+                            GRA_GHOST_SIZE, NPG, PID0_List+Disp, _POTE, _NONE,
+                            OPT__GRA_INT_SCHEME, INT_NONE, UNIT_PATCH, (GRA_GHOST_SIZE==0)?NSIDE_00:NSIDE_06, false,
+                            OPT__BC_FLU, OPT__BC_POT, -1.0, -1.0, -1.0, -1.0, false );
 
-         for (int t=0; t<NTotal; t++)  PID0_List[t] = 8*t;
-
-
-         for (int Disp=0; Disp<NTotal; Disp+=NPG_Max)
-         {
-            int NPG = ( NPG_Max < NTotal-Disp ) ? NPG_Max : NTotal-Disp;
-
-            Prepare_PatchData( lv, TimeNew, &h_Pot_Array_P_Out[ArrayID][0][0][0][0], NULL,
-                               GRA_GHOST_SIZE, NPG, PID0_List+Disp, _POTE, _NONE,
-                               OPT__GRA_INT_SCHEME, INT_NONE, UNIT_PATCH, (GRA_GHOST_SIZE==0)?NSIDE_00:NSIDE_06, false,
-                               OPT__BC_FLU, OPT__BC_POT, -1.0, -1.0, -1.0, -1.0, false );
-
-#        pragma omp for schedule( runtime )
+#        pragma omp parallel for schedule( runtime )
          for (int PID_IDX=0; PID_IDX<8*NPG; PID_IDX++)
          {
-            int PID = 8*Disp + PID_IDX;
+#           ifdef OPENMP
+            const int TID = omp_get_thread_num();
+#           else
+            const int TID = 0;
+#           endif
+
+            const int PID = 8*Disp + PID_IDX;
 
             if ( amr->patch[0][lv][PID]->son != -1 )  continue;
 
@@ -239,13 +238,10 @@ void Record_CCSN_GWSignal()
 
             }}} // i,j,k
          } // for (int PID=0; PID<amr->NPatchComma[lv][1]; PID++)
+      } // for (int Disp=0; Disp<NTotal; Disp+=NPG_Max)
 
-#        pragma omp barrier
-         } // for (int Disp=0; Disp<NTotal; Disp+=NPG_Max)
-
-         delete [] PID0_List;
-      } // for (int lv=0; lv<NLEVEL; lv++)
-   } // OpenMP parallel region
+      delete [] PID0_List;
+   } // for (int lv=0; lv<NLEVEL; lv++)
 
 
 // sum over all OpenMP threads
