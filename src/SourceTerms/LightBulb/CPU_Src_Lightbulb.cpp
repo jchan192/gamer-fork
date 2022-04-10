@@ -130,24 +130,24 @@ static void Src_Lightbulb( real fluid[], const real B[],
    const real Kelvin2MeV = AuxArray_Flt[SRC_AUX_KELVIN2MEV];
    const real sEint2Code = AuxArray_Flt[SRC_AUX_VSQR2CODE ];
 
-   const real x0         = x - SrcTerms->BoxCenter[0];
-   const real y0         = y - SrcTerms->BoxCenter[1];
-   const real z0         = z - SrcTerms->BoxCenter[2];
-   const real r2_CGS     = SQR( SrcTerms->Unit_L ) * (  SQR( x0 ) + SQR( y0 ) + SQR( z0 )  );
+   const double x0     = x - SrcTerms->BoxCenter[0];
+   const double y0     = y - SrcTerms->BoxCenter[1];
+   const double z0     = z - SrcTerms->BoxCenter[2];
+   const double r2_CGS = SQR( SrcTerms->Unit_L ) * (  SQR( x0 ) + SQR( y0 ) + SQR( z0 )  );
 
 #  ifdef MHD
-   const real Emag       = (real)0.5*(  SQR( B[MAGX] ) + SQR( B[MAGY] ) + SQR( B[MAGZ] )  );
+   const real Emag = (real)0.5*(  SQR( B[MAGX] ) + SQR( B[MAGY] ) + SQR( B[MAGZ] )  );
 #  else
-   const real Emag       = NULL_REAL;
+   const real Emag = NULL_REAL;
 #  endif
 
-   const real Dens_Code  = fluid[DENS];
-   const real Eint_Code  = Hydro_Con2Eint( fluid[DENS], fluid[MOMX], fluid[MOMY], fluid[MOMZ], fluid[ENGY],
-                                           true, MinEint, Emag );
+   const real Dens_Code = fluid[DENS];
+   const real Eint_Code = Hydro_Con2Eint( fluid[DENS], fluid[MOMX], fluid[MOMY], fluid[MOMZ], fluid[ENGY],
+                                          true, MinEint, Emag );
 #  if ( EOS == EOS_NUCLEAR )
-   const real Ye         = fluid[YE] / fluid[DENS];
+   const real Ye        = fluid[YE] / fluid[DENS];
 #  else
-   const real Ye         = NULL_REAL;
+   const real Ye        = NULL_REAL;
 #  endif
 
 

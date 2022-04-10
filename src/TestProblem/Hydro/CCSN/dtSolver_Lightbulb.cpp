@@ -71,31 +71,31 @@ double Mis_GetTimeStep_User_Lightbulb( const int lv, const double dTime_dt )
          for (int j=0; j<PS1; j++)  {  const double y0 = amr->patch[0][lv][PID]->EdgeL[1] + (j+0.5)*dh - BoxCenter[1];
          for (int i=0; i<PS1; i++)  {  const double x0 = amr->patch[0][lv][PID]->EdgeL[0] + (i+0.5)*dh - BoxCenter[0];
 
-            const real r2_CGS = SQR( UNIT_L ) * (  SQR( x0 ) + SQR( y0 ) + SQR( z0 )  );
+            const double r2_CGS = SQR( UNIT_L ) * (  SQR( x0 ) + SQR( y0 ) + SQR( z0 )  );
 
-            const double Dens   = amr->patch[ amr->FluSg[lv] ][lv][PID]->fluid[DENS][k][j][i];
-            const double Momx   = amr->patch[ amr->FluSg[lv] ][lv][PID]->fluid[MOMX][k][j][i];
-            const double Momy   = amr->patch[ amr->FluSg[lv] ][lv][PID]->fluid[MOMY][k][j][i];
-            const double Momz   = amr->patch[ amr->FluSg[lv] ][lv][PID]->fluid[MOMZ][k][j][i];
-            const double Engy   = amr->patch[ amr->FluSg[lv] ][lv][PID]->fluid[ENGY][k][j][i];
+            const real Dens   = amr->patch[ amr->FluSg[lv] ][lv][PID]->fluid[DENS][k][j][i];
+            const real Momx   = amr->patch[ amr->FluSg[lv] ][lv][PID]->fluid[MOMX][k][j][i];
+            const real Momy   = amr->patch[ amr->FluSg[lv] ][lv][PID]->fluid[MOMY][k][j][i];
+            const real Momz   = amr->patch[ amr->FluSg[lv] ][lv][PID]->fluid[MOMZ][k][j][i];
+            const real Engy   = amr->patch[ amr->FluSg[lv] ][lv][PID]->fluid[ENGY][k][j][i];
 #           if ( EOS == EOS_NUCLEAR )
-            const double YeDens = amr->patch[ amr->FluSg[lv] ][lv][PID]->fluid[YE  ][k][j][i];
+            const real YeDens = amr->patch[ amr->FluSg[lv] ][lv][PID]->fluid[YE  ][k][j][i];
 #           else
-            const double YeDens = NULL_REAL;
+            const real YeDens = NULL_REAL;
 #           endif
 
 #           ifdef MHD
-            const double Emag = MHD_GetCellCenteredBEnergy( amr->patch[ amr->MagSg[lv] ][lv][PID]->magnetic[MAGX],
-                                                            amr->patch[ amr->MagSg[lv] ][lv][PID]->magnetic[MAGY],
-                                                            amr->patch[ amr->MagSg[lv] ][lv][PID]->magnetic[MAGZ],
-                                                            PS1, PS1, PS1, i, j, k );
+            const real Emag = MHD_GetCellCenteredBEnergy( amr->patch[ amr->MagSg[lv] ][lv][PID]->magnetic[MAGX],
+                                                          amr->patch[ amr->MagSg[lv] ][lv][PID]->magnetic[MAGY],
+                                                          amr->patch[ amr->MagSg[lv] ][lv][PID]->magnetic[MAGZ],
+                                                          PS1, PS1, PS1, i, j, k );
 #           else
-            const double Emag = NULL_REAL;
+            const real Emag = NULL_REAL;
 #           endif
 
-            const double Dens_Code = Dens;
-            const double Eint_Code = Hydro_Con2Eint( Dens, Momx, Momy, Momz, Engy, false, NULL_REAL, Emag );
-            const double Ye        = YeDens / Dens;
+            const real Dens_Code = Dens;
+            const real Eint_Code = Hydro_Con2Eint( Dens, Momx, Momy, Momz, Engy, false, NULL_REAL, Emag );
+            const real Ye        = YeDens / Dens;
 
 
 //          compute the neutrino heating rate
@@ -120,16 +120,16 @@ double Mis_GetTimeStep_User_Lightbulb( const int lv, const double dTime_dt )
 
             EoS_General_CPUPtr( NUC_MODE_ENGY, Out, In_Flt, In_Int, EoS_AuxArray_Flt, EoS_AuxArray_Int, h_EoS_Table );
 
-            const double Xn       = Out[0];               // neutron number fraction
-            const double Xp       = Out[1];               // proton  number fraction
-            const double Temp_MeV = Out[2] * Kelvin2MeV;  // temperature in MeV
+            const real Xn       = Out[0];               // neutron number fraction
+            const real Xp       = Out[1];               // proton  number fraction
+            const real Temp_MeV = Out[2] * Kelvin2MeV;  // temperature in MeV
 
             const double rate_heating = 1.544e20 * ( SrcTerms.Lightbulb_Lnue / 1.0e52 ) * ( 1.0e14 / r2_CGS )
                                       * SQR( 0.25 * SrcTerms.Lightbulb_Tnue );
             const double rate_cooling = 1.399e20 * CUBE(  SQR( 0.5 * Temp_MeV )  );
 
-            const double tau       = 1.0e-11 * Dens_Code * UNIT_D;
-            const double rate_CGS  = ( rate_heating - rate_cooling ) * ( Xn + Xp ) * exp( -tau );
+            const double tau      = 1.0e-11 * Dens_Code * UNIT_D;
+            const double rate_CGS = ( rate_heating - rate_cooling ) * ( Xn + Xp ) * exp( -tau );
 
             const double dEint_Code  = rate_CGS * UNIT_T * sEint2Code * Dens_Code;  // dEint per UNIT_T
             const double _Eint_Ratio = fabs( dEint_Code / Eint_Code );
