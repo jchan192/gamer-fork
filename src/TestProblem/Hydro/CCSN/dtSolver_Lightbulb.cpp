@@ -78,7 +78,7 @@ double Mis_GetTimeStep_User_Lightbulb( const int lv, const double dTime_dt )
             const real Momy   = amr->patch[ amr->FluSg[lv] ][lv][PID]->fluid[MOMY][k][j][i];
             const real Momz   = amr->patch[ amr->FluSg[lv] ][lv][PID]->fluid[MOMZ][k][j][i];
             const real Engy   = amr->patch[ amr->FluSg[lv] ][lv][PID]->fluid[ENGY][k][j][i];
-#           if ( EOS == EOS_NUCLEAR )
+#           ifdef YE
             const real YeDens = amr->patch[ amr->FluSg[lv] ][lv][PID]->fluid[YE  ][k][j][i];
 #           else
             const real YeDens = NULL_REAL;
@@ -154,7 +154,7 @@ double Mis_GetTimeStep_User_Lightbulb( const int lv, const double dTime_dt )
 
 // find the maximum over all MPI processes
 #  ifndef SERIAL
-   MPI_Allreduce( &dt_LB_Inv, &dt_LB_Inv, 1, MPI_DOUBLE, MPI_MAX, MPI_COMM_WORLD );
+   MPI_Allreduce( MPI_IN_PLACE, &dt_LB_Inv, 1, MPI_DOUBLE, MPI_MAX, MPI_COMM_WORLD );
 #  endif
 
 

@@ -51,8 +51,8 @@ static double    Riemann_MagR_T1;      // right-state transverse B field 1
 static double    Riemann_MagR_T2;      // right-state transverse B field 2
 #endif
 #if ( EOS == EOS_NUCLEAR )
-static double Riemann_YeL;             // left-state  electron fraction
-static double Riemann_YeR;             // right-state electron fraction
+static double    Riemann_YeL;          // left-state  electron fraction
+static double    Riemann_YeR;          // right-state electron fraction
 #endif
 // =======================================================================================
 
@@ -409,7 +409,7 @@ void SetGridIC( real fluid[], const double x, const double y, const double z, co
    fluid[ MomIdx[1] ] = ( aVT1 + dVT1*Tanh )*fluid[DENS];
    fluid[ MomIdx[2] ] = ( aVT2 + dVT2*Tanh )*fluid[DENS];
    Pres               =   aPre + dPre*Tanh;
-#  if ( EOS == EOS_NUCLEAR )
+#  ifdef YE
    fluid[ YE        ] = ( aYe  + dYe *Tanh )*fluid[DENS];
 #  endif
 

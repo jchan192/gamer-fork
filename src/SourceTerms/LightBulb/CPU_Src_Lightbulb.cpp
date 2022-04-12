@@ -144,7 +144,7 @@ static void Src_Lightbulb( real fluid[], const real B[],
    const real Dens_Code = fluid[DENS];
    const real Eint_Code = Hydro_Con2Eint( fluid[DENS], fluid[MOMX], fluid[MOMY], fluid[MOMZ], fluid[ENGY],
                                           true, MinEint, Emag );
-#  if ( EOS == EOS_NUCLEAR )
+#  ifdef YE
    const real Ye        = fluid[YE] / fluid[DENS];
 #  else
    const real Ye        = NULL_REAL;
@@ -181,16 +181,16 @@ static void Src_Lightbulb( real fluid[], const real B[],
 
 // 2. calculate cooling and heating rate
    const real rate_heating = 1.544e20 * ( SrcTerms->Lightbulb_Lnue / 1.0e52 ) * ( 1.0e14 / r2_CGS )
-                           * SQR( 0.25 * SrcTerms->Lightbulb_Tnue );
-   const real rate_cooling = 1.399e20 * CUBE(  SQR( 0.5 * Temp_MeV )  );
+                           * SQR( 0.25 * SrcTerms->Lightbulb_Tnue ) * SrcTerms->Unit_T * sEint2Code;
+   const real rate_cooling = 1.399e20 * CUBE(  SQR( 0.5 * Temp_MeV )  ) * SrcTerms->Unit_T * sEint2Code;
 
 // approximate the optical depth by density in unit of 10^11 g/cm^3
-   const real tau      = 1.0e-11 * Dens_Code * SrcTerms->Unit_D;
-   const real rate_CGS = ( rate_heating - rate_cooling ) * ( Xn + Xp ) * EXP( -tau );
+   const real tau       = Dens_Code * (real)( 1.0e-11 * SrcTerms->Unit_D );
+   const real rate_Code = ( rate_heating - rate_cooling ) * ( Xn + Xp ) * EXP( -tau );
 
 
 // 3. calculate the change in internal energy and update the input energy density
-   const real dEint_Code  = ( rate_CGS * dt * SrcTerms->Unit_T ) * sEint2Code * Dens_Code;
+   const real dEint_Code  = rate_Code * dt * Dens_Code;
    const real Eint_Update = Eint_Code + dEint_Code;
 
    fluid[ENGY] = Hydro_ConEint2Etot( fluid[DENS], fluid[MOMX], fluid[MOMY], fluid[MOMZ], Eint_Update, Emag );
