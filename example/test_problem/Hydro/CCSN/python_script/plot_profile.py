@@ -182,3 +182,5 @@ for idx, idx_out in enumerate(idx_gamer):
     fnout = "Data_{:06d}_Profile_log.png".format(idx_out)
     fnout = os.path.join(path_gamer, fnout)
     plt.savefig(fnout, dpi = 200)
+
+    plt.close(fig)

@@ -38,9 +38,10 @@ Note:
 
       s20GREP_SFHo_15ms           : SFHo  EoS
       s20GREP_LS220_nonupres_15ms : LS220 EoS, w/o neutrino
-      s20GREP_LS220_15ms_none     : LS220 EoS, w/o neutrino and lightbulb
-      s20GREP_LS220_15ms_LB3      : LS220 EoS, w/o neutrino,
-                                    with lightbulb (lnu = 1.2e52, tnu = 4 MeV)
+      s20GREP_LS220_15ms_none     : LS220 EoS, w/o neutrino, w/o lightbulb
+      s20GREP_LS220_15ms_LB1      : LS220 EoS, w/o neutrino, with lightbulb (Lnue = 1.2e52, Tnue = 4 MeV)
+      s20GREP_LS220_15ms_LB2      : LS220 EoS, w/o neutrino, with lightbulb (Lnue = 2.2e52, Tnue = 4 MeV)
+      s20GREP_LS220_15ms_LB3      : LS220 EoS, w/o neutrino, with lightbulb (Lnue = 4.0e52, Tnue = 4 MeV)
       s20GREP_LS220_15ms_idsa     : LS220 EoS, with IDSA
 
 3. Reference solutions are put at "ReferenceSolution"
@@ -53,7 +54,7 @@ Note:
    --> plot_rhoc_postbounce.py    : plot the evolution of central density with FLASH data (for Post bounce)
    --> plot_slice.py              : slice plot for the specified quantity
 
-5. For MHD simulations, there are 2 magnetic field profiles supported:
+5. For MHD simulations, there are two magnetic field profiles supported:
    (1) CCSN_Mag = 0
       A_r = A_theta = 0
       A_p = B0 * varpi^2 * (1 - rho / rho_max)^np * (P / P_max)
@@ -72,3 +73,4 @@ Note:
 
 6. Additional Record files:
    --> Record__CentralDens : maximum density in the simulation box
+   --> Record__QuadMom_2nd : second-order time derivative of mass quadrupole moments

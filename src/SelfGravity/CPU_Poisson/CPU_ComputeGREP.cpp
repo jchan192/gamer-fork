@@ -10,6 +10,7 @@
 // Note        :  1. Enabled if macro GRAVITY and GREP are set
 //                2. Invoked by Poi_UserWorkBeforePoisson_GREP()
 //                3. The profile Phi_eff stores the value of -Phi_NW(r) + Phi_TOV(r) at the bin center
+//                4. Ref: Marek et al., 2006, A&A, 445, 273 (arXiv: 0502161), sec. 2, case A
 //-------------------------------------------------------------------------------------------------------
 void CPU_ComputeGREP( const Profile_t *DensAve, const Profile_t *EngyAve, const Profile_t *VrAve,
                       const Profile_t *PresAve, Profile_t *Phi_eff )

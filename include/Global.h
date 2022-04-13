@@ -281,11 +281,13 @@ extern double GREP_MINBINSIZE;
 // =======================================================================================================
 extern SrcTerms_t SrcTerms;
 #if ( MODEL == HYDRO )
-extern double     Src_Dlep_AuxArray_Flt[SRC_NAUX_DLEP];
-extern int        Src_Dlep_AuxArray_Int[SRC_NAUX_DLEP];
+extern double     Src_Dlep_AuxArray_Flt     [SRC_NAUX_DLEP     ];
+extern int        Src_Dlep_AuxArray_Int     [SRC_NAUX_DLEP     ];
+extern double     Src_Lightbulb_AuxArray_Flt[SRC_NAUX_LIGHTBULB];
+extern int        Src_Lightbulb_AuxArray_Int[SRC_NAUX_LIGHTBULB];
 #endif
-extern double     Src_User_AuxArray_Flt[SRC_NAUX_USER];
-extern int        Src_User_AuxArray_Int[SRC_NAUX_USER];
+extern double     Src_User_AuxArray_Flt     [SRC_NAUX_USER     ];
+extern int        Src_User_AuxArray_Int     [SRC_NAUX_USER     ];
 
 
 // (2-11) user-defined derived fields

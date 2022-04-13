@@ -5,6 +5,7 @@
 // prototypes of built-in source terms
 #if ( MODEL == HYDRO )
 void Src_Init_Deleptonization();
+void Src_Init_Lightbulb();
 #endif
 
 // this function pointer can be set by a test problem initializer for a user-specified source term
@@ -35,6 +36,7 @@ void Src_Init()
    if (
 #       if ( MODEL == HYDRO )
         SrcTerms.Deleptonization  ||
+        SrcTerms.Lightbulb        ||
 #       endif
         SrcTerms.User
       )
@@ -60,38 +62,51 @@ void Src_Init()
 
 // initialize all function pointers as NULL
 #  if ( MODEL == HYDRO )
-   SrcTerms.Dlep_FuncPtr              = NULL;
-   SrcTerms.Dlep_AuxArrayDevPtr_Flt   = NULL;
-   SrcTerms.Dlep_AuxArrayDevPtr_Int   = NULL;
-   SrcTerms.Dlep_Profile_DataDevPtr   = NULL;
-   SrcTerms.Dlep_Profile_RadiusDevPtr = NULL;
+   SrcTerms.Dlep_FuncPtr                 = NULL;
+   SrcTerms.Dlep_AuxArrayDevPtr_Flt      = NULL;
+   SrcTerms.Dlep_AuxArrayDevPtr_Int      = NULL;
+   SrcTerms.Dlep_Profile_DataDevPtr      = NULL;
+   SrcTerms.Dlep_Profile_RadiusDevPtr    = NULL;
+
+   SrcTerms.Lightbulb_FuncPtr            = NULL;
+   SrcTerms.Lightbulb_AuxArrayDevPtr_Flt = NULL;
+   SrcTerms.Lightbulb_AuxArrayDevPtr_Int = NULL;
 #  endif
-   SrcTerms.User_FuncPtr              = NULL;
-   SrcTerms.User_AuxArrayDevPtr_Flt   = NULL;
-   SrcTerms.User_AuxArrayDevPtr_Int   = NULL;
+   SrcTerms.User_FuncPtr                 = NULL;
+   SrcTerms.User_AuxArrayDevPtr_Flt      = NULL;
+   SrcTerms.User_AuxArrayDevPtr_Int      = NULL;
 
 
 // initialize all source terms
-// (1) deleptonization
 #  if ( MODEL == HYDRO )
+// (1) deleptonization
    if ( SrcTerms.Deleptonization )
    {
       Src_Init_Deleptonization();
 
 //    check if the source-term function is set properly
-      if ( SrcTerms.Dlep_FuncPtr == NULL )   Aux_Error( ERROR_INFO, "SrcTerms.Dlep_FuncPtr == NULL !!\n" );
+      if ( SrcTerms.Dlep_FuncPtr == NULL )        Aux_Error( ERROR_INFO, "SrcTerms.Dlep_FuncPtr == NULL !!\n" );
+   }
+
+// (2) lightbulb
+   if ( SrcTerms.Lightbulb )
+   {
+      Src_Init_Lightbulb();
+
+//    check if the source-term function is set properly
+      if ( SrcTerms.Lightbulb_FuncPtr == NULL )   Aux_Error( ERROR_INFO, "SrcTerms.Lightbulb_FuncPtr == NULL !!\n" );
    }
 #  endif
 
-// (2) user-specified source term
+// (3) user-specified source term
    if ( SrcTerms.User )
    {
-      if ( Src_Init_User_Ptr == NULL )       Aux_Error( ERROR_INFO, "Src_Init_User_Ptr == NULL !!\n" );
+      if ( Src_Init_User_Ptr == NULL )            Aux_Error( ERROR_INFO, "Src_Init_User_Ptr == NULL !!\n" );
 
       Src_Init_User_Ptr();
 
 //    check if the source-term function is set properly
-      if ( SrcTerms.User_FuncPtr == NULL )   Aux_Error( ERROR_INFO, "SrcTerms.User_FuncPtr == NULL !!\n" );
+      if ( SrcTerms.User_FuncPtr == NULL )        Aux_Error( ERROR_INFO, "SrcTerms.User_FuncPtr == NULL !!\n" );
    }
 
 

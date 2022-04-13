@@ -35,11 +35,22 @@ static double     CCSN_Mag_np;                     // dependence of magnetic fie
 static double     CCSN_Mag_R0;                     // characteristic radius of magnetic field
 #endif
 
+static bool       CCSN_GW_OUTPUT;                  // output GW signals (0=off, 1=on)
+static double     CCSN_GW_DT;                      // output GW signals every CCSN_GW_DT interval
+
 static int        CCSN_Eint_Mode;                  // Mode of obtaining internal energy in SetGridIC()
-                                                   // ( 0=Temp Mode: Eint(dens, temp, [Ye])
-                                                   //   1=Pres Mode: Eint(dens, pres, [Ye]) )
+                                                   // ( 1=Temp Mode: Eint(dens, temp, [Ye])
+                                                   //   2=Pres Mode: Eint(dens, pres, [Ye]) )
+
+static double     CCSN_MaxRefine_RadFac;           // factor that determines the maximum refinement level based on distance from the box center
+       double     CCSN_LB_TimeFac;                 // factor that scales the dt constrained by lightbulb scheme
 // =======================================================================================
 
+
+// problem-specific function prototypes
+void Record_CCSN_CentralDens();
+void Record_CCSN_GWSignal();
+void Mis_GetTimeStep_User_Lightbulb( const int lv, const double dTime_dt );
 
 
 
@@ -109,15 +120,20 @@ void SetParameter()
 // ********************************************************************************************************************************
 // ReadPara->Add( "KEY_IN_THE_FILE",   &VARIABLE,              DEFAULT,       MIN,              MAX               );
 // ********************************************************************************************************************************
-   ReadPara->Add( "CCSN_Prob",         &CCSN_Prob,             -1,            0,                1                 );
-   ReadPara->Add( "CCSN_Prof_File",     CCSN_Prof_File,        Useless_str,   Useless_str,      Useless_str       );
+   ReadPara->Add( "CCSN_Prob",             &CCSN_Prob,             -1,            0,                1                 );
+   ReadPara->Add( "CCSN_Prof_File",         CCSN_Prof_File,        Useless_str,   Useless_str,      Useless_str       );
 #  ifdef MHD
-   ReadPara->Add( "CCSN_Mag",          &CCSN_Mag,              1,             0,                1                 );
-   ReadPara->Add( "CCSN_Mag_B0",       &CCSN_Mag_B0,           1.0e14,        0.0,              NoMax_double      );
-   ReadPara->Add( "CCSN_Mag_np",       &CCSN_Mag_np,           0.0,           NoMin_double,     NoMax_double      );
-   ReadPara->Add( "CCSN_Mag_R0",       &CCSN_Mag_R0,           1.0e8,         0.0,              NoMax_double      );
+   ReadPara->Add( "CCSN_Mag",              &CCSN_Mag,              1,             0,                1                 );
+   ReadPara->Add( "CCSN_Mag_B0",           &CCSN_Mag_B0,           1.0e14,        0.0,              NoMax_double      );
+   ReadPara->Add( "CCSN_Mag_np",           &CCSN_Mag_np,           0.0,           NoMin_double,     NoMax_double      );
+   ReadPara->Add( "CCSN_Mag_R0",           &CCSN_Mag_R0,           1.0e8,         Eps_double,       NoMax_double      );
 #  endif
-   ReadPara->Add( "CCSN_Eint_Mode",    &CCSN_Eint_Mode,        1,             0,                1                 );
+   ReadPara->Add( "CCSN_GW_OUTPUT",        &CCSN_GW_OUTPUT,        false,         Useless_bool,     Useless_bool      );
+   ReadPara->Add( "CCSN_GW_DT",            &CCSN_GW_DT,            1.0,           Eps_double,       NoMax_double      );
+   ReadPara->Add( "CCSN_Eint_Mode",        &CCSN_Eint_Mode,        2,             1,                2                 );
+   ReadPara->Add( "CCSN_MaxRefine_RadFac", &CCSN_MaxRefine_RadFac, 0.15,          0.0,              NoMax_double      );
+   ReadPara->Add( "CCSN_LB_TimeFac",       &CCSN_LB_TimeFac,       0.1,           Eps_double,       1.0               );
+
 
    ReadPara->Read( FileName );
 
@@ -144,16 +160,18 @@ void SetParameter()
    } // switch ( CCSN_Prob )
 
 // (1-3) check the runtime parameters
-   if ( CCSN_Prob == Migration_Test )
+   if ( CCSN_Eint_Mode == 1 )
    {
-      if ( CCSN_Eint_Mode != 1 )
-         Aux_Error( ERROR_INFO, "Temperature mode for internal energy is not supported in Migration Test yet!!\n" );
+#     if ( EOS != EOS_NUCLEAR )
+      Aux_Error( ERROR_INFO, "Temperature mode for initializing grids only works with EOS_NUCLEAR !!\n" );
+#     endif
+
+      if ( CCSN_Prob == Migration_Test )
+         Aux_Error( ERROR_INFO, "Temperature mode for initializing grids is not supported in Migration Test yet!!\n" );
    }
 
-#  if ( EOS != EOS_NUCLEAR )
-   if ( CCSN_Eint_Mode == 0 )
-      Aux_Error( ERROR_INFO, "Temperature mode only works with EOS_NUCLEAR !!\n" );
-#  endif
+   if (  OPT__DT_USER  &&  ( SrcTerms.Lightbulb == 0 )  )
+      Aux_Error( ERROR_INFO, "OPT__DT_USER only supports SRC_LIGHTBULB == 1 !!\n" );
 
 
 // (2) set the problem-specific derived parameters
@@ -179,16 +197,20 @@ void SetParameter()
    if ( MPI_Rank == 0 )
    {
       Aux_Message( stdout, "=============================================================================\n" );
-      Aux_Message( stdout, "  test problem ID                         = %d\n",      TESTPROB_ID    );
-      Aux_Message( stdout, "  target CCSN problem                     = %s\n",      CCSN_Name      );
-      Aux_Message( stdout, "  initial profile                         = %s\n",      CCSN_Prof_File );
+      Aux_Message( stdout, "  test problem ID                         = %d\n",      TESTPROB_ID           );
+      Aux_Message( stdout, "  target CCSN problem                     = %s\n",      CCSN_Name             );
+      Aux_Message( stdout, "  initial profile                         = %s\n",      CCSN_Prof_File        );
 #     ifdef MHD
-      Aux_Message( stdout, "  magnetic field profile                  = %d\n",      CCSN_Mag       );
-      Aux_Message( stdout, "  magnetic field strength                 = %13.7e\n",  CCSN_Mag_B0    );
-      Aux_Message( stdout, "  dependence of magnetic field on density = %13.7e\n",  CCSN_Mag_np    );
-      Aux_Message( stdout, "  characteristic radius of magnetic field = %13.7e\n",  CCSN_Mag_R0    );
+      Aux_Message( stdout, "  magnetic field profile                  = %d\n",      CCSN_Mag              );
+      Aux_Message( stdout, "  magnetic field strength                 = %13.7e\n",  CCSN_Mag_B0           );
+      Aux_Message( stdout, "  dependence of magnetic field on density = %13.7e\n",  CCSN_Mag_np           );
+      Aux_Message( stdout, "  characteristic radius of magnetic field = %13.7e\n",  CCSN_Mag_R0           );
 #     endif
-      Aux_Message( stdout, "  Mode for obtaining internal energy      = %d\n",      CCSN_Eint_Mode );
+      Aux_Message( stdout, "  output GW signals                       = %d\n",      CCSN_GW_OUTPUT        );
+      Aux_Message( stdout, "  sampling interval of GW signals         = %13.7e\n",  CCSN_GW_DT            );
+      Aux_Message( stdout, "  mode for obtaining internal energy      = %d\n",      CCSN_Eint_Mode        );
+      Aux_Message( stdout, "  radial factor for maximum refine level  = %13.7e\n",  CCSN_MaxRefine_RadFac );
+      Aux_Message( stdout, "  scaling factor for lightbulb dt         = %13.7e\n",  CCSN_LB_TimeFac       );
       Aux_Message( stdout, "=============================================================================\n" );
    }
 
@@ -231,7 +253,7 @@ void SetGridIC( real fluid[], const double x, const double y, const double z, co
    const double x0 = x - BoxCenter[0];
    const double y0 = y - BoxCenter[1];
    const double z0 = z - BoxCenter[2];
-   const double r  = SQRT(  SQR( x0 ) + SQR( y0 ) + SQR( z0 )  );
+   const double r  = sqrt(  SQR( x0 ) + SQR( y0 ) + SQR( z0 )  );
 
    double Dens, Velr, Pres, Momx, Momy, Momz, Eint, Etot, Ye, Temp, Entr;
 
@@ -274,7 +296,7 @@ void SetGridIC( real fluid[], const double x, const double y, const double z, co
    real *Passive = NULL;
 #  endif
 
-   if ( CCSN_Eint_Mode == 0 )   // Temperature Mode
+   if ( CCSN_Eint_Mode == 1 )   // Temperature Mode
    {
 #     if ( NUC_TABLE_MODE == NUC_TABLE_MODE_TEMP )
       const int  NTarget = 1;
@@ -374,10 +396,10 @@ void SetBFieldIC_Liu2008( real magnetic[], const double x, const double y, const
    double r_yp, dens_yp, pres_yp;
    double r_zp, dens_zp, pres_zp;
 
-   r    = SQRT(  SQR( x0         ) + SQR( y0         ) + SQR( z0         )  );
-   r_xp = SQRT(  SQR( x0 + delta ) + SQR( y0         ) + SQR( z0         )  );
-   r_yp = SQRT(  SQR( x0         ) + SQR( y0 + delta ) + SQR( z0         )  );
-   r_zp = SQRT(  SQR( x0         ) + SQR( y0         ) + SQR( z0 + delta )  );
+   r    = sqrt(  SQR( x0         ) + SQR( y0         ) + SQR( z0         )  );
+   r_xp = sqrt(  SQR( x0 + delta ) + SQR( y0         ) + SQR( z0         )  );
+   r_yp = sqrt(  SQR( x0         ) + SQR( y0 + delta ) + SQR( z0         )  );
+   r_zp = sqrt(  SQR( x0         ) + SQR( y0         ) + SQR( z0 + delta )  );
 
    dens    = Mis_InterpolateFromTable( CCSN_Prof_NBin, Table_R, Table_Dens, r    );
    dens_xp = Mis_InterpolateFromTable( CCSN_Prof_NBin, Table_R, Table_Dens, r_xp );
@@ -457,7 +479,7 @@ void SetBFieldIC_Suwa2007( real magnetic[], const double x, const double y, cons
    const double x0 = x - BoxCenter[0];
    const double y0 = y - BoxCenter[1];
    const double z0 = z - BoxCenter[2];
-   const double r  = SQRT(  SQR( x0 ) + SQR( y0 ) + SQR( z0 )  );
+   const double r  = sqrt(  SQR( x0 ) + SQR( y0 ) + SQR( z0 )  );
 
    const double B0     = CCSN_Mag_B0 / UNIT_B;
    const double R0     = CCSN_Mag_R0 / UNIT_L;
@@ -506,138 +528,48 @@ void Load_IC_Prof_CCSN()
 
 
 //-------------------------------------------------------------------------------------------------------
-// Function    :  Record_CCSN_CentralDens
-// Description :  Record the maximum density
-//-------------------------------------------------------------------------------------------------------
-void Record_CCSN_CentralDens()
-{
-
-   const char   filename_central_dens[] = "Record__CentralDens";
-   const double BoxCenter[3]            = { amr->BoxCenter[0], amr->BoxCenter[1], amr->BoxCenter[2] };
-
-// allocate memory for per-thread arrays
-#  ifdef OPENMP
-   const int NT = OMP_NTHREAD;   // number of OpenMP threads
-#  else
-   const int NT = 1;
-#  endif
-
-   double DataCoord[4] = { -__DBL_MAX__ }, **OMP_DataCoord=NULL;
-   Aux_AllocateArray2D( OMP_DataCoord, NT, 4 );
-
-
-#  pragma omp parallel
-   {
-#     ifdef OPENMP
-      const int TID = omp_get_thread_num();
-#     else
-      const int TID = 0;
-#     endif
-
-//    initialize arrays
-      OMP_DataCoord[TID][0] = -__DBL_MAX__;
-      for (int b=1; b<4; b++)   OMP_DataCoord[TID][b] = 0.0;
-
-      for (int lv=0; lv<NLEVEL; lv++)
-      {
-         const double dh = amr->dh[lv];
-
-#        pragma omp for schedule( runtime )
-         for (int PID=0; PID<amr->NPatchComma[lv][1]; PID++)
-         {
-            if ( amr->patch[0][lv][PID]->son != -1 )  continue;
-
-            for (int k=0; k<PS1; k++)  {  const double z = amr->patch[0][lv][PID]->EdgeL[2] + (k+0.5)*dh;
-            for (int j=0; j<PS1; j++)  {  const double y = amr->patch[0][lv][PID]->EdgeL[1] + (j+0.5)*dh;
-            for (int i=0; i<PS1; i++)  {  const double x = amr->patch[0][lv][PID]->EdgeL[0] + (i+0.5)*dh;
-
-               const double dens = amr->patch[ amr->FluSg[lv] ][lv][PID]->fluid[DENS][k][j][i];
-
-               if ( dens > OMP_DataCoord[TID][0] )
-               {
-                  OMP_DataCoord[TID][0] = dens;
-                  OMP_DataCoord[TID][1] = x;
-                  OMP_DataCoord[TID][2] = y;
-                  OMP_DataCoord[TID][3] = z;
-               }
-
-            }}} // i,j,k
-         } // for (int PID=0; PID<amr->NPatchComma[lv][1]; PID++)
-      } // for (int lv=0; lv<NLEVEL; lv++)
-   } // OpenMP parallel region
-
-
-// find the maximum over all OpenMP threads
-   for (int TID=0; TID<NT; TID++)
-   {
-      if ( OMP_DataCoord[TID][0] > DataCoord[0] )
-         for (int b=0; b<4; b++)   DataCoord[b] = OMP_DataCoord[TID][b];
-   }
-
-// free per-thread arrays
-   Aux_DeallocateArray2D( OMP_DataCoord );
-
-
-// collect data from all ranks
-#  ifndef SERIAL
-   {
-      double DataCoord_All[4 * MPI_NRank];
-
-      MPI_Allgather( DataCoord, 4, MPI_DOUBLE, DataCoord_All, 4, MPI_DOUBLE, MPI_COMM_WORLD );
-
-      for (int i=0; i<MPI_NRank; i++)
-      {
-         if ( DataCoord_All[4 * i] > DataCoord[0] )
-            for (int b=0; b<4; b++)   DataCoord[b] = DataCoord_All[4 * i + b];
-      }
-   }
-#  endif // ifndef SERIAL
-
-
-// output to file
-   if ( MPI_Rank == 0 )
-   {
-
-      static bool FirstTime = true;
-
-//    output file header
-      if ( FirstTime )
-      {
-         if ( Aux_CheckFileExist(filename_central_dens) )
-         {
-             Aux_Message( stderr, "WARNING : file \"%s\" already exists !!\n", filename_central_dens );
-         }
-
-         else
-         {
-             FILE *file_max_dens = fopen( filename_central_dens, "w" );
-             fprintf( file_max_dens, "#%14s %12s %16s %16s %16s %16s\n",
-                                     "Time [sec]", "Step", "Dens [g/cm^3]", "PosX [cm]", "PosY [cm]", "PosZ [cm]" );
-             fclose( file_max_dens );
-         }
-
-         FirstTime = false;
-      }
-
-      FILE *file_max_dens = fopen( filename_central_dens, "a" );
-      fprintf( file_max_dens, "%15.7e %12ld %16.7e %16.7e %16.7e %16.7e\n",
-               Time[0]*UNIT_T, Step, DataCoord[0]*UNIT_D, DataCoord[1]*UNIT_L, DataCoord[2]*UNIT_L, DataCoord[3]*UNIT_L );
-      fclose( file_max_dens );
-
-   } // if ( MPI_Rank == 0 )
-
-} // FUNCTION : Record_CCSN_CentralDens()
-
-
-
-//-------------------------------------------------------------------------------------------------------
 // Function    :  Record_CCSN
-// Description :  Interface for calling multiple record functions
+// Description :  Interface for invoking multiple record functions
 //-------------------------------------------------------------------------------------------------------
 void Record_CCSN()
 {
 
-   Record_CCSN_CentralDens();   // record the maximum density
+// (1) maximum density
+   Record_CCSN_CentralDens();
+
+
+// (2) GW signal
+#  ifdef GRAVITY
+   if ( CCSN_GW_OUTPUT )
+   {
+      static real DumpTime_CCSN = NULL_REAL;
+
+//    set the first dump time
+      if ( DumpTime_CCSN == NULL_REAL )
+      {
+         if ( OPT__INIT != INIT_BY_RESTART  ||  OPT__RESTART_RESET )
+            DumpTime_CCSN = Time[0];
+
+         else
+         {
+            DumpTime_CCSN = ( int(Time[0]/CCSN_GW_DT) + 1.0 )*CCSN_GW_DT;
+
+//          be careful about round-off errors
+            if (   (  DumpTime_CCSN <= Time[0]  )                                         ||
+                   (  Time[0] != 0.0 && fabs( (Time[0]-CCSN_GW_DT)/Time[0] ) < 1.0e-8  )  ||
+                   (  Time[0] == 0.0 && fabs(  Time[0]-CCSN_GW_DT          ) < 1.0e-12 )      )
+               DumpTime_CCSN += CCSN_GW_DT;
+         }
+      }
+
+//    output data if the elasped time > CCSN_GW_DT
+      if ( Time[0] > DumpTime_CCSN )
+      {
+         Record_CCSN_GWSignal();
+         DumpTime_CCSN += CCSN_GW_DT;
+      }
+   }
+#  endif
 
 } // FUNCTION : Record_CCSN()
 
@@ -649,7 +581,7 @@ void Record_CCSN()
 //
 // Note        :  1. Invoked by "Flag_Check" using the function pointer "Flag_User_Ptr"
 //                   --> The function pointer may be reset by various test problem initializers, in which case
-//                       this funtion will become useless
+//                       this function will become useless
 //                2. Enabled by the runtime option "OPT__FLAG_USER"
 //
 // Parameter   :  i,j,k       : Indices of the target element in the patch ptr[ amr->FluSg[lv] ][lv][PID]
@@ -676,13 +608,24 @@ bool Flag_User_CCSN( const int i, const int j, const int k, const int lv, const 
    const double dx = Center[0] - Pos[0];
    const double dy = Center[1] - Pos[1];
    const double dz = Center[2] - Pos[2];
-   const double r  = SQRT(  SQR( dx ) + SQR( dy ) + SQR( dz )  );
+   const double r  = sqrt(  SQR( dx ) + SQR( dy ) + SQR( dz )  );
 
-   const real (*Rho )[PS1][PS1] = amr->patch[ amr->FluSg[lv] ][lv][PID]->fluid[DENS];  // density
-   const real dens = Rho[k][j][i];
+   const real (*Rho )[PS1][PS1] = amr->patch[ amr->FluSg[lv] ][lv][PID]->fluid[DENS];
 
-   if (  ( r > Threshold[0] )  &&  ( r < Threshold[1] )  &&  ( dens > Threshold[2] )  )
+
+// TODO: fine-tune the criteria
+// always allow the highest level can be reached in the region with r < 30 km
+   if ( r * UNIT_L < 3e6 )
+   {
       Flag = true;
+   }
+
+   else
+   {
+//    if density is larger than the threshold (equivalent to Input__Flag_Rho)
+//    and the cell width at lv+1 is larger than the threshold `r * CCSN_MaxRefine_RadFac` (equivalent to Flag_Region)
+      if (  ( Rho[k][j][i] > Threshold[0] )  &&  ( 0.5 * dh > r * CCSN_MaxRefine_RadFac )  )   Flag = true;
+   }
 
    return Flag;
 
@@ -747,6 +690,12 @@ void Init_TestProb_Hydro_CCSN()
    Flag_User_Ptr                  = Flag_User_CCSN;
    Aux_Record_User_Ptr            = Record_CCSN;
    End_User_Ptr                   = End_CCSN;
+
+// estimate the evolution time-step constrained by the lightbulb source term
+   if ( SrcTerms.Lightbulb )
+   {
+      Mis_GetTimeStep_User_Ptr    = Mis_GetTimeStep_User_Lightbulb;  // option: OPT__DT_USER;
+   }
 #  endif // #if ( MODEL == HYDRO )
 
 
