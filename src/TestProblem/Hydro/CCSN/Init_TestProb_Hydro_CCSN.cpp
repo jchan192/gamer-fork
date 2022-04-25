@@ -54,10 +54,10 @@ static double     CCSN_MaxRefine_RadFac;           // factor that determines the
 
 
 // problem-specific function prototypes
-void Record_CCSN_CentralDens();
-void Record_CCSN_GWSignal();
-void Detect_CoreBounce();
-void Mis_GetTimeStep_User_Lightbulb( const int lv, const double dTime_dt );
+void   Record_CCSN_CentralDens();
+void   Record_CCSN_GWSignal();
+void   Detect_CoreBounce();
+double Mis_GetTimeStep_Lightbulb( const int lv, const double dTime_dt );
 
 
 
@@ -179,9 +179,6 @@ void SetParameter()
       if ( CCSN_Prob == Migration_Test )
          Aux_Error( ERROR_INFO, "Temperature mode for initializing grids is not supported in Migration Test yet!!\n" );
    }
-
-   if (  OPT__DT_USER  &&  ( SrcTerms.Lightbulb == 0 )  )
-      Aux_Error( ERROR_INFO, "OPT__DT_USER only supports SRC_LIGHTBULB == 1 !!\n" );
 
 
 // (2) set the problem-specific derived parameters
@@ -609,6 +606,25 @@ void Record_CCSN()
 
 
 //-------------------------------------------------------------------------------------------------------
+// Function    :  Mis_GetTimeStep_CCSN
+// Description :  Interface for invoking several functions for estimating the evolution time-step
+//-------------------------------------------------------------------------------------------------------
+double Mis_GetTimeStep_CCSN( const int lv, const double dTime_dt )
+{
+
+   double dt_CCSN = HUGE_NUMBER;
+
+   if ( SrcTerms.Lightbulb )
+      dt_CCSN = MIN(  dt_CCSN, Mis_GetTimeStep_Lightbulb( lv, dTime_dt )  );
+
+
+   return dt_CCSN;
+
+} // FUNCTION : Mis_GetTimeStep_CCSN()
+
+
+
+//-------------------------------------------------------------------------------------------------------
 // Function    :  Flag_User_CCSN
 // Description :  Check if the element (i,j,k) of the input data satisfies the user-defined flag criteria
 //
@@ -723,12 +739,7 @@ void Init_TestProb_Hydro_CCSN()
    Flag_User_Ptr                  = Flag_User_CCSN;
    Aux_Record_User_Ptr            = Record_CCSN;
    End_User_Ptr                   = End_CCSN;
-
-// estimate the evolution time-step constrained by the lightbulb source term
-   if ( SrcTerms.Lightbulb )
-   {
-      Mis_GetTimeStep_User_Ptr    = Mis_GetTimeStep_User_Lightbulb;  // option: OPT__DT_USER;
-   }
+   Mis_GetTimeStep_User_Ptr       = Mis_GetTimeStep_CCSN;
 #  endif // #if ( MODEL == HYDRO )
 
 
