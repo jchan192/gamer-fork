@@ -44,12 +44,15 @@ static int        CCSN_Eint_Mode;                  // Mode of obtaining internal
 
 static double     CCSN_MaxRefine_RadFac;           // factor that determines the maximum refinement level based on distance from the box center
        double     CCSN_LB_TimeFac;                 // factor that scales the dt constrained by lightbulb scheme
+
+       bool       CCSN_Is_PostBounce = false;      // boolean that indicates whether core bounce have occurred
 // =======================================================================================
 
 
 // problem-specific function prototypes
 void Record_CCSN_CentralDens();
 void Record_CCSN_GWSignal();
+void Detect_CoreBounce();
 void Mis_GetTimeStep_User_Lightbulb( const int lv, const double dTime_dt );
 
 
@@ -133,6 +136,7 @@ void SetParameter()
    ReadPara->Add( "CCSN_Eint_Mode",        &CCSN_Eint_Mode,        2,             1,                2                 );
    ReadPara->Add( "CCSN_MaxRefine_RadFac", &CCSN_MaxRefine_RadFac, 0.15,          0.0,              NoMax_double      );
    ReadPara->Add( "CCSN_LB_TimeFac",       &CCSN_LB_TimeFac,       0.1,           Eps_double,       1.0               );
+   ReadPara->Add( "CCSN_Is_PostBounce",    &CCSN_Is_PostBounce,    false,         Useless_bool,     Useless_bool      );
 
 
    ReadPara->Read( FileName );
@@ -211,6 +215,7 @@ void SetParameter()
       Aux_Message( stdout, "  mode for obtaining internal energy      = %d\n",      CCSN_Eint_Mode        );
       Aux_Message( stdout, "  radial factor for maximum refine level  = %13.7e\n",  CCSN_MaxRefine_RadFac );
       Aux_Message( stdout, "  scaling factor for lightbulb dt         = %13.7e\n",  CCSN_LB_TimeFac       );
+      Aux_Message( stdout, "  has core bounce occurred                = %d\n",      CCSN_Is_PostBounce    );
       Aux_Message( stdout, "=============================================================================\n" );
    }
 
@@ -568,8 +573,30 @@ void Record_CCSN()
          Record_CCSN_GWSignal();
          DumpTime_CCSN += CCSN_GW_DT;
       }
-   }
+   } // if ( CCSN_GW_OUTPUT )
 #  endif
+
+
+// (3) Check whether the core bounce occurs
+   if ( !CCSN_Is_PostBounce )
+   {
+      Detect_CoreBounce();
+
+      if ( CCSN_Is_PostBounce )
+      {
+//       dump the bounce time in standard output
+         if ( MPI_Rank == 0 )   Aux_Message( stdout, "Bounce time = %13.7e !!\n", Time[0]*UNIT_T );
+
+//       disable the deleptonization scheme, and enable the lightbulb scheme
+         SrcTerms.Deleptonization = false;
+         SrcTerms.Lightbulb       = true;
+
+         Src_Init();
+
+//       forced output data at core bounce
+         Output_DumpData( 2 );
+      }
+   } // if ( !CCSN_Is_PostBounce )
 
 } // FUNCTION : Record_CCSN()
 

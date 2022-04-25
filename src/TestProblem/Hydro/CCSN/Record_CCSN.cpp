@@ -1,6 +1,11 @@
 #include "GAMER.h"
 
 
+static double CCSN_CentralDens;
+
+extern bool   CCSN_Is_PostBounce;
+
+
 
 //-------------------------------------------------------------------------------------------------------
 // Function    :  Record_CCSN_CentralDens
@@ -125,6 +130,10 @@ void Record_CCSN_CentralDens()
       fclose( file_max_dens );
 
    } // if ( MPI_Rank == 0 )
+
+
+// store the central density in cgs unit for detecting core bounces
+   CCSN_CentralDens = DataCoord[0] * UNIT_D;
 
 } // FUNCTION : Record_CCSN_CentralDens()
 
@@ -303,3 +312,103 @@ void Record_CCSN_GWSignal()
 
 } // FUNCTION : Record_CCSN_GWSignal()
 #endif // ifdef GRAVITY
+
+
+
+//-------------------------------------------------------------------------------------------------------
+// Function    :  Detect_CoreBounce
+// Description :  Check whether the core bounce occurs
+//
+// Note        :  1. Invoked by Record_CCSN()
+//             :  2. Based on two criteria:
+//                   --> (a) The central density is larger than 2e14
+//                       (b) Any cells within 30km has entropy larger than 3
+//-------------------------------------------------------------------------------------------------------
+void Detect_CoreBounce()
+{
+
+// (1) criterion 1: central density is larger than 2e14
+   if ( CCSN_CentralDens < 2e14 )   return;
+
+
+// (2) criterion 2: any cells within 30km has entropy larger than 3
+   const double BoxCenter[3] = { amr->BoxCenter[0], amr->BoxCenter[1], amr->BoxCenter[2] };
+
+// allocate memory for per-thread arrays
+#  ifdef OPENMP
+   const int NT = OMP_NTHREAD;
+#  else
+   const int NT = 1;
+#  endif
+
+   double MaxEntr = -__DBL_MAX__;
+   double OMP_MaxEntr[NT];
+
+
+#  pragma omp parallel
+   {
+#     ifdef OPENMP
+      const int TID = omp_get_thread_num();
+#     else
+      const int TID = 0;
+#     endif
+
+//    initialize arrays
+      OMP_MaxEntr[TID] = -__DBL_MAX__;
+
+      for (int lv=0; lv<NLEVEL; lv++)
+      {
+         const double dh = amr->dh[lv];
+
+#        pragma omp for schedule( runtime )
+         for (int PID=0; PID<amr->NPatchComma[lv][1]; PID++)
+         {
+            if ( amr->patch[0][lv][PID]->son != -1 )  continue;
+
+            for (int k=0; k<PS1; k++)  {  const double z = amr->patch[0][lv][PID]->EdgeL[2] + (k+0.5)*dh;
+            for (int j=0; j<PS1; j++)  {  const double y = amr->patch[0][lv][PID]->EdgeL[1] + (j+0.5)*dh;
+            for (int i=0; i<PS1; i++)  {  const double x = amr->patch[0][lv][PID]->EdgeL[0] + (i+0.5)*dh;
+
+               const double x0 = x - BoxCenter[0];
+               const double y0 = y - BoxCenter[1];
+               const double z0 = z - BoxCenter[2];
+               const double r  = sqrt(  SQR( x0 ) + SQR( y0 ) + SQR( z0 )  );
+
+//             ignore cells outside 30km
+               if ( r * UNIT_L > 3.0e6 )   continue;
+
+//             retrieve the entropy and store the maximum value
+               real u[NCOMP_TOTAL], Entr, Emag=NULL_REAL;
+
+               for (int v=0; v<NCOMP_TOTAL; v++)   u[v] = amr->patch[ amr->FluSg[lv] ][lv][PID]->fluid[v][k][j][i];
+
+#              ifdef MHD
+               Emag = MHD_GetCellCenteredBEnergyInPatch( lv, PID, i, j, k, amr->MagSg[lv] );
+#              endif
+
+               Entr = Hydro_Con2Entr( u[DENS], u[MOMX], u[MOMY], u[MOMZ], u[ENGY], u+NCOMP_FLUID,
+                                      false, NULL_REAL, Emag, EoS_DensEint2Entr_CPUPtr,
+                                      EoS_AuxArray_Flt, EoS_AuxArray_Int, h_EoS_Table );
+
+               OMP_MaxEntr[TID] = MAX( OMP_MaxEntr[TID], (double)Entr );
+
+            }}} // i,j,k
+         } // for (int PID=0; PID<amr->NPatchComma[lv][1]; PID++)
+      } // for (int lv=0; lv<NLEVEL; lv++)
+   } // OpenMP parallel region
+
+
+// find the maximum over all OpenMP threads
+   for (int TID=0; TID<NT; TID++)
+      MaxEntr = MAX( MaxEntr, OMP_MaxEntr[TID] );
+
+
+// collect data from all ranks
+#  ifndef SERIAL
+   MPI_Allreduce( MPI_IN_PLACE, &MaxEntr, 1, MPI_DOUBLE, MPI_MAX, MPI_COMM_WORLD );
+#  endif // ifndef SERIAL
+
+
+   if ( MaxEntr > 3.0 )   CCSN_Is_PostBounce = true;
+
+} // FUNCTION : Detect_CoreBounce()

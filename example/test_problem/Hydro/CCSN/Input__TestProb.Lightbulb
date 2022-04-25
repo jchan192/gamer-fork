@@ -21,3 +21,5 @@ CCSN_Eint_Mode   1                                 # Mode of obtaining internal 
 
 CCSN_MaxRefine_RadFac  0.15                        # factor that determines the maximum refinement level based on distance from the box center  [0.15]
 CCSN_LB_TimeFac        0.10                        # factor that scales the dt constrained by lightbulb scheme
+
+CCSN_Is_PostBounce     1                           # boolean that indicates whether core bounce have occurred
