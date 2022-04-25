@@ -482,7 +482,7 @@ void SetBFieldIC_Suwa2007( real magnetic[], const double x, const double y, cons
                            const int lv, double AuxArray[] )
 {
 
-   const double  BoxCenter[3] = { amr->BoxCenter[0], amr->BoxCenter[1], amr->BoxCenter[2] };
+   const double BoxCenter[3] = { amr->BoxCenter[0], amr->BoxCenter[1], amr->BoxCenter[2] };
 
    const double x0 = x - BoxCenter[0];
    const double y0 = y - BoxCenter[1];
@@ -537,7 +537,7 @@ void Load_IC_Prof_CCSN()
 
 //-------------------------------------------------------------------------------------------------------
 // Function    :  Record_CCSN
-// Description :  Interface for invoking multiple record functions
+// Description :  Interface for invoking several functions for recording data and detecting core bounce
 //-------------------------------------------------------------------------------------------------------
 void Record_CCSN()
 {
@@ -560,7 +560,7 @@ void Record_CCSN()
 
          else
          {
-            DumpTime_CCSN = ( int(Time[0]/CCSN_GW_DT) + 1.0 )*CCSN_GW_DT;
+            DumpTime_CCSN = (  int( Time[0] / CCSN_GW_DT ) + 1.0  ) * CCSN_GW_DT;
 
 //          be careful about round-off errors
             if (   (  DumpTime_CCSN <= Time[0]  )                                         ||
@@ -588,7 +588,7 @@ void Record_CCSN()
       if ( CCSN_Is_PostBounce )
       {
 //       dump the bounce time in standard output
-         if ( MPI_Rank == 0 )   Aux_Message( stdout, "Bounce time = %13.7e !!\n", Time[0]*UNIT_T );
+         if ( MPI_Rank == 0 )   Aux_Message( stdout, "Bounce time = %13.7e !!\n", Time[0] * UNIT_T );
 
 //       disable the deleptonization scheme, and enable the lightbulb scheme
          SrcTerms.Deleptonization = false;
@@ -625,7 +625,7 @@ double Mis_GetTimeStep_CCSN( const int lv, const double dTime_dt )
 
 
 //-------------------------------------------------------------------------------------------------------
-// Function    :  Flag_User_CCSN
+// Function    :  Flag_CCSN
 // Description :  Check if the element (i,j,k) of the input data satisfies the user-defined flag criteria
 //
 // Note        :  1. Invoked by "Flag_Check" using the function pointer "Flag_User_Ptr"
@@ -643,7 +643,7 @@ double Mis_GetTimeStep_CCSN( const int lv, const double dTime_dt )
 // Return      :  "true"  if the flag criteria are satisfied
 //                "false" if the flag criteria are not satisfied
 //-------------------------------------------------------------------------------------------------------
-bool Flag_User_CCSN( const int i, const int j, const int k, const int lv, const int PID, const double *Threshold )
+bool Flag_CCSN( const int i, const int j, const int k, const int lv, const int PID, const double *Threshold )
 {
 
    bool Flag = false;
@@ -678,7 +678,7 @@ bool Flag_User_CCSN( const int i, const int j, const int k, const int lv, const 
 
    return Flag;
 
-} // FUNCTION : Flag_User_CCSN
+} // FUNCTION : Flag_CCSN
 
 
 
@@ -728,18 +728,19 @@ void Init_TestProb_Hydro_CCSN()
    if ( OPT__INIT != INIT_BY_RESTART )   Load_IC_Prof_CCSN();
 
 // set the function pointers of various problem-specific routines
-   Init_Function_User_Ptr         = SetGridIC;
+   Init_Function_User_Ptr   = SetGridIC;
+   Flag_User_Ptr            = Flag_CCSN;
+   Aux_Record_User_Ptr      = Record_CCSN;
+   End_User_Ptr             = End_CCSN;
+   Mis_GetTimeStep_User_Ptr = Mis_GetTimeStep_CCSN;
+
 #  ifdef MHD
    switch ( CCSN_Mag )
    {
-      case Liu2008  : Init_Function_BField_User_Ptr  = SetBFieldIC_Liu2008;    break;
-      case Suwa2007 : Init_Function_BField_User_Ptr  = SetBFieldIC_Suwa2007;   break;
+      case Liu2008  : Init_Function_BField_User_Ptr = SetBFieldIC_Liu2008;    break;
+      case Suwa2007 : Init_Function_BField_User_Ptr = SetBFieldIC_Suwa2007;   break;
    }
-#  endif
-   Flag_User_Ptr                  = Flag_User_CCSN;
-   Aux_Record_User_Ptr            = Record_CCSN;
-   End_User_Ptr                   = End_CCSN;
-   Mis_GetTimeStep_User_Ptr       = Mis_GetTimeStep_CCSN;
+#  endif // #if MHD
 #  endif // #if ( MODEL == HYDRO )
 
 
