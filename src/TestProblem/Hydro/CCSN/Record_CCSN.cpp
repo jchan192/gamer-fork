@@ -8,27 +8,33 @@ extern bool   CCSN_Is_PostBounce;
 
 
 //-------------------------------------------------------------------------------------------------------
-// Function    :  Record_CCSN_CentralDens
-// Description :  Record the maximum density
+// Function    :  Record_CCSN_CentralQuant
+// Description :  Record quantities at the center
 //
 // Note        :  1. Invoked by Record_CCSN()
+//                2. The center here is defined as the cell with highest density
 //-------------------------------------------------------------------------------------------------------
-void Record_CCSN_CentralDens()
+void Record_CCSN_CentralQuant()
 {
 
-   const char   filename_central_dens[] = "Record__CentralDens";
-   const double BoxCenter[3]            = { amr->BoxCenter[0], amr->BoxCenter[1], amr->BoxCenter[2] };
+   const char   filename_central_quant[] = "Record__CentralQuant";
+   const double BoxCenter[3]             = { amr->BoxCenter[0], amr->BoxCenter[1], amr->BoxCenter[2] };
 
 // allocate memory for per-thread arrays
 #  ifdef OPENMP
-   const int NT = OMP_NTHREAD;   // number of OpenMP threads
+   const int NT = OMP_NTHREAD;
 #  else
    const int NT = 1;
 #  endif
 
-   double   DataCoord[4]  = { -__DBL_MAX__ };
-   double **OMP_DataCoord = NULL;
-   Aux_AllocateArray2D( OMP_DataCoord, NT, 4 );
+   const int      NData_Int = 6; // MPI_Rank, lv, PID, i, j, k
+   const int      NData_Flt = 4; // dens, x, y, z
+         int      Data_Int[NData_Int] = { 0 };
+         double   Data_Flt[NData_Flt] = { -__DBL_MAX__ };
+         int      OMP_Data_Int[NT][NData_Int];
+         double **OMP_Data_Flt = NULL;
+
+   Aux_AllocateArray2D( OMP_Data_Flt, NT, NData_Flt );
 
 
 #  pragma omp parallel
@@ -40,8 +46,8 @@ void Record_CCSN_CentralDens()
 #     endif
 
 //    initialize arrays
-      OMP_DataCoord[TID][0] = -__DBL_MAX__;
-      for (int b=1; b<4; b++)   OMP_DataCoord[TID][b] = 0.0;
+      for (int b=0; b<NData_Int; b++)   OMP_Data_Int[TID][b] = -1;
+      for (int b=0; b<NData_Flt; b++)   OMP_Data_Flt[TID][b] = -__DBL_MAX__;
 
       for (int lv=0; lv<NLEVEL; lv++)
       {
@@ -58,12 +64,19 @@ void Record_CCSN_CentralDens()
 
                const double dens = amr->patch[ amr->FluSg[lv] ][lv][PID]->fluid[DENS][k][j][i];
 
-               if ( dens > OMP_DataCoord[TID][0] )
+               if ( dens > OMP_Data_Flt[TID][0] )
                {
-                  OMP_DataCoord[TID][0] = dens;
-                  OMP_DataCoord[TID][1] = x;
-                  OMP_DataCoord[TID][2] = y;
-                  OMP_DataCoord[TID][3] = z;
+                  OMP_Data_Int[TID][0] = MPI_Rank;
+                  OMP_Data_Int[TID][1] = lv;
+                  OMP_Data_Int[TID][2] = PID;
+                  OMP_Data_Int[TID][3] = i;
+                  OMP_Data_Int[TID][4] = j;
+                  OMP_Data_Int[TID][5] = k;
+
+                  OMP_Data_Flt[TID][0] = dens;
+                  OMP_Data_Flt[TID][1] = x;
+                  OMP_Data_Flt[TID][2] = y;
+                  OMP_Data_Flt[TID][3] = z;
                }
 
             }}} // i,j,k
@@ -75,32 +88,40 @@ void Record_CCSN_CentralDens()
 // find the maximum over all OpenMP threads
    for (int TID=0; TID<NT; TID++)
    {
-      if ( OMP_DataCoord[TID][0] > DataCoord[0] )
-         for (int b=0; b<4; b++)   DataCoord[b] = OMP_DataCoord[TID][b];
+      if ( OMP_Data_Flt[TID][0] > Data_Flt[0] )
+      {
+         for (int b=0; b<NData_Int; b++)   Data_Int[b] = OMP_Data_Int[TID][b];
+         for (int b=0; b<NData_Flt; b++)   Data_Flt[b] = OMP_Data_Flt[TID][b];
+      }
    }
 
 // free per-thread arrays
-   Aux_DeallocateArray2D( OMP_DataCoord );
+   Aux_DeallocateArray2D( OMP_Data_Flt );
 
 
 // collect data from all ranks
 #  ifndef SERIAL
    {
-      double DataCoord_All[4 * MPI_NRank];
+      int    Data_Int_All[MPI_NRank * NData_Int];
+      double Data_Flt_All[MPI_NRank * NData_Flt];
 
-      MPI_Allgather( DataCoord, 4, MPI_DOUBLE, DataCoord_All, 4, MPI_DOUBLE, MPI_COMM_WORLD );
+      MPI_Allgather( Data_Int, NData_Int, MPI_INT,    Data_Int_All, NData_Int, MPI_INT,    MPI_COMM_WORLD );
+      MPI_Allgather( Data_Flt, NData_Flt, MPI_DOUBLE, Data_Flt_All, NData_Flt, MPI_DOUBLE, MPI_COMM_WORLD );
 
       for (int i=0; i<MPI_NRank; i++)
       {
-         if ( DataCoord_All[4 * i] > DataCoord[0] )
-            for (int b=0; b<4; b++)   DataCoord[b] = DataCoord_All[4 * i + b];
+         if ( Data_Flt_All[i * NData_Flt] > Data_Flt[0] )
+         {
+            for (int b=0; b<NData_Int; b++)   Data_Int[b] = Data_Int_All[i * NData_Int + b];
+            for (int b=0; b<NData_Flt; b++)   Data_Flt[b] = Data_Flt_All[i * NData_Flt + b];
+         }
       }
    }
 #  endif // ifndef SERIAL
 
 
-// write to the file "Record__CentralDens"
-   if ( MPI_Rank == 0 )
+// write to the file "Record__CentralQuant" by the MPI process which has the target patch
+   if ( MPI_Rank == Data_Int[0] )
    {
 
       static bool FirstTime = true;
@@ -108,34 +129,47 @@ void Record_CCSN_CentralDens()
 //    file header
       if ( FirstTime )
       {
-         if ( Aux_CheckFileExist(filename_central_dens) )
+         if ( Aux_CheckFileExist(filename_central_quant) )
          {
-             Aux_Message( stderr, "WARNING : file \"%s\" already exists !!\n", filename_central_dens );
+             Aux_Message( stderr, "WARNING : file \"%s\" already exists !!\n", filename_central_quant );
          }
 
          else
          {
-             FILE *file_max_dens = fopen( filename_central_dens, "w" );
-             fprintf( file_max_dens, "#%14s %12s %16s %16s %16s %16s\n",
-                                     "Time [sec]", "Step", "Dens [g/cm^3]", "PosX [cm]", "PosY [cm]", "PosZ [cm]" );
-             fclose( file_max_dens );
+             FILE *file_cent_quant = fopen( filename_central_quant, "w" );
+             fprintf( file_cent_quant, "#%14s %12s %16s %16s %16s %16s %16s\n",
+                                       "Time [sec]", "Step", "PosX [cm]", "PosY [cm]", "PosZ [cm]",
+                                       "Dens [g/cm^3]", "Ye" );
+             fclose( file_cent_quant );
          }
 
          FirstTime = false;
       }
 
-      FILE *file_max_dens = fopen( filename_central_dens, "a" );
-      fprintf( file_max_dens, "%15.7e %12ld %16.7e %16.7e %16.7e %16.7e\n",
-               Time[0]*UNIT_T, Step, DataCoord[0]*UNIT_D, DataCoord[1]*UNIT_L, DataCoord[2]*UNIT_L, DataCoord[3]*UNIT_L );
-      fclose( file_max_dens );
+//    output data
+      const int  lv  = Data_Int[1];
+      const int  PID = Data_Int[2];
+      const int  i   = Data_Int[3];
+      const int  j   = Data_Int[4];
+      const int  k   = Data_Int[5];
+            real u[NCOMP_TOTAL];
+
+      for (int v=0; v<NCOMP_TOTAL; v++)   u[v] = amr->patch[ amr->FluSg[lv] ][lv][PID]->fluid[v][k][j][i];
+
+
+      FILE *file_cent_quant = fopen( filename_central_quant, "a" );
+      fprintf( file_cent_quant, "%15.7e %12ld %16.7e %16.7e %16.7e %16.7e %16.7e\n",
+               Time[0]*UNIT_T, Step, Data_Flt[1]*UNIT_L, Data_Flt[2]*UNIT_L, Data_Flt[3]*UNIT_L,
+               u[DENS]*UNIT_D, u[YE] / u[DENS] );
+      fclose( file_cent_quant );
 
    } // if ( MPI_Rank == 0 )
 
 
 // store the central density in cgs unit for detecting core bounces
-   CCSN_CentralDens = DataCoord[0] * UNIT_D;
+   CCSN_CentralDens = Data_Flt[0] * UNIT_D;
 
-} // FUNCTION : Record_CCSN_CentralDens()
+} // FUNCTION : Record_CCSN_CentralQuant()
 
 
 

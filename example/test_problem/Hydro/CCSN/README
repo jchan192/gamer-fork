@@ -72,5 +72,5 @@ Note:
                    runs with higher values have better performance, but consume more memory
 
 6. Additional Record files:
-   --> Record__CentralDens : maximum density in the simulation box
-   --> Record__QuadMom_2nd : second-order time derivative of mass quadrupole moments
+   --> Record__CentralQuant : quantites at the center (cell with highest density)
+   --> Record__QuadMom_2nd  : second-order time derivative of mass quadrupole moments

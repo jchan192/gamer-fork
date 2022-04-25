@@ -54,7 +54,7 @@ static double     CCSN_MaxRefine_RadFac;           // factor that determines the
 
 
 // problem-specific function prototypes
-void   Record_CCSN_CentralDens();
+void   Record_CCSN_CentralQuant();
 void   Record_CCSN_GWSignal();
 void   Detect_CoreBounce();
 double Mis_GetTimeStep_Lightbulb( const int lv, const double dTime_dt );
@@ -542,8 +542,8 @@ void Load_IC_Prof_CCSN()
 void Record_CCSN()
 {
 
-// (1) maximum density
-   Record_CCSN_CentralDens();
+// (1) record quantities at the center
+   Record_CCSN_CentralQuant();
 
 
 // (2) GW signal
