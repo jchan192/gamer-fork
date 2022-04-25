@@ -24,9 +24,13 @@ static double    *CCSN_Prof = NULL;                // radial profile of initial 
 static int        CCSN_Prof_NBin;                  // number of radial bins in the input profile
 static int        CCSN_NCol;                       // number of columns read from the input profile
 static int       *CCSN_TargetCols = new int [7];   // index of columns read from the input profile
-static int        CCSN_ColIdx_Dens;                // column index of density in the input profile
-static int        CCSN_ColIdx_Pres;                // column index of pressure in the input profile
+static int        CCSN_ColIdx_R;                   // column index of radius          in the input profile
+static int        CCSN_ColIdx_Dens;                // column index of density         in the input profile
+static int        CCSN_ColIdx_Pres;                // column index of pressure        in the input profile
 static int        CCSN_ColIdx_Velr;                // column index of radial velocity in the input profile
+static int        CCSN_ColIdx_Ye;                  // column index of Ye              in the input profile
+static int        CCSN_ColIdx_Temp;                // column index of temperature     in the input profile
+static int        CCSN_ColIdx_Entr;                // column index of entropy         in the input profile
 
 #ifdef MHD
 static CCSN_Mag_t CCSN_Mag;                        // target magnetic field profile
@@ -149,14 +153,16 @@ void SetParameter()
       case Migration_Test : CCSN_NCol = 4;
                             CCSN_TargetCols[0] =  0;  CCSN_TargetCols[1] =  1;  CCSN_TargetCols[2] =  2;  CCSN_TargetCols[3] =  3;
                             CCSN_TargetCols[4] = -1;  CCSN_TargetCols[5] = -1;  CCSN_TargetCols[6] = -1;
-                            CCSN_ColIdx_Dens   =  2;  CCSN_ColIdx_Pres   =  3;  CCSN_ColIdx_Velr   =  1;
+                            CCSN_ColIdx_R      =  0;  CCSN_ColIdx_Dens   =  2;  CCSN_ColIdx_Pres   =  3;  CCSN_ColIdx_Velr   =  1;
+                            CCSN_ColIdx_Ye     = -1;  CCSN_ColIdx_Temp   = -1;  CCSN_ColIdx_Entr   = -1;
                             sprintf( CCSN_Name, "GREP migration test" );
                             break;
 
       case Post_Bounce    : CCSN_NCol = 7;
                             CCSN_TargetCols[0] =  0;  CCSN_TargetCols[1] =  2;  CCSN_TargetCols[2] =  3;  CCSN_TargetCols[3] =  4;
                             CCSN_TargetCols[4] =  5;  CCSN_TargetCols[5] =  6;  CCSN_TargetCols[6] =  7;
-                            CCSN_ColIdx_Dens   =  1;  CCSN_ColIdx_Pres   =  5;  CCSN_ColIdx_Velr   =  3;
+                            CCSN_ColIdx_R      =  0;  CCSN_ColIdx_Dens   =  1;  CCSN_ColIdx_Pres   =  5;  CCSN_ColIdx_Velr   =  3;
+                            CCSN_ColIdx_Ye     =  2;  CCSN_ColIdx_Temp   =  4;  CCSN_ColIdx_Entr   =  6;
                             sprintf( CCSN_Name, "Post bounce test" );
                             break;
 
@@ -250,7 +256,7 @@ void SetGridIC( real fluid[], const double x, const double y, const double z, co
 {
 
    const double  BoxCenter[3] = { amr->BoxCenter[0], amr->BoxCenter[1], amr->BoxCenter[2] };
-   const double *Table_R      = CCSN_Prof +                0*CCSN_Prof_NBin;
+   const double *Table_R      = CCSN_Prof + CCSN_ColIdx_R   *CCSN_Prof_NBin;
    const double *Table_Velr   = CCSN_Prof + CCSN_ColIdx_Velr*CCSN_Prof_NBin;
    const double *Table_Dens   = CCSN_Prof + CCSN_ColIdx_Dens*CCSN_Prof_NBin;
    const double *Table_Pres   = CCSN_Prof + CCSN_ColIdx_Pres*CCSN_Prof_NBin;
@@ -275,9 +281,9 @@ void SetGridIC( real fluid[], const double x, const double y, const double z, co
 
    if ( CCSN_Prob == Post_Bounce )
    {
-      Ye   = Mis_InterpolateFromTable( CCSN_Prof_NBin, Table_R, CCSN_Prof+2*CCSN_Prof_NBin, r );
-      Temp = Mis_InterpolateFromTable( CCSN_Prof_NBin, Table_R, CCSN_Prof+4*CCSN_Prof_NBin, r );  // in Kelvin
-      Entr = Mis_InterpolateFromTable( CCSN_Prof_NBin, Table_R, CCSN_Prof+6*CCSN_Prof_NBin, r );
+      Ye   = Mis_InterpolateFromTable( CCSN_Prof_NBin, Table_R, CCSN_Prof+CCSN_ColIdx_Ye  *CCSN_Prof_NBin, r );
+      Temp = Mis_InterpolateFromTable( CCSN_Prof_NBin, Table_R, CCSN_Prof+CCSN_ColIdx_Temp*CCSN_Prof_NBin, r );  // in Kelvin
+      Entr = Mis_InterpolateFromTable( CCSN_Prof_NBin, Table_R, CCSN_Prof+CCSN_ColIdx_Entr*CCSN_Prof_NBin, r );
 
       if ( Ye   == NULL_REAL )
          Aux_Error( ERROR_INFO, "interpolation failed for Ye at radius %13.7e !!\n", r );
@@ -381,7 +387,7 @@ void SetBFieldIC_Liu2008( real magnetic[], const double x, const double y, const
 {
 
    const double  BoxCenter[3] = { amr->BoxCenter[0], amr->BoxCenter[1], amr->BoxCenter[2] };
-   const double *Table_R      = CCSN_Prof +                0*CCSN_Prof_NBin;
+   const double *Table_R      = CCSN_Prof + CCSN_ColIdx_R   *CCSN_Prof_NBin;
    const double *Table_Dens   = CCSN_Prof + CCSN_ColIdx_Dens*CCSN_Prof_NBin;
    const double *Table_Pres   = CCSN_Prof + CCSN_ColIdx_Pres*CCSN_Prof_NBin;
 
@@ -515,7 +521,7 @@ void Load_IC_Prof_CCSN()
    CCSN_Prof_NBin = Aux_LoadTable( CCSN_Prof, CCSN_Prof_File, CCSN_NCol, CCSN_TargetCols, RowMajor_No, AllocMem_Yes );
 
 // convert radius, density, radial velocity, and pressure to code units
-   double *Table_R    = CCSN_Prof +                0*CCSN_Prof_NBin;
+   double *Table_R    = CCSN_Prof + CCSN_ColIdx_R   *CCSN_Prof_NBin;
    double *Table_Velr = CCSN_Prof + CCSN_ColIdx_Velr*CCSN_Prof_NBin;
    double *Table_Dens = CCSN_Prof + CCSN_ColIdx_Dens*CCSN_Prof_NBin;
    double *Table_Pres = CCSN_Prof + CCSN_ColIdx_Pres*CCSN_Prof_NBin;
