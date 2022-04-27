@@ -46,7 +46,7 @@ static int        CCSN_Eint_Mode;                  // Mode of obtaining internal
                                                    // ( 1=Temp Mode: Eint(dens, temp, [Ye])
                                                    //   2=Pres Mode: Eint(dens, pres, [Ye]) )
 
-static double     CCSN_MaxRefine_RadFac;           // factor that determines the maximum refinement level based on distance from the box center
+       double     CCSN_MaxRefine_RadFac;           // factor that determines the maximum refinement level based on distance from the box center
        double     CCSN_LB_TimeFac;                 // factor that scales the dt constrained by lightbulb scheme
 
        bool       CCSN_Is_PostBounce = false;      // boolean that indicates whether core bounce have occurred
@@ -58,6 +58,7 @@ void   Record_CCSN_CentralQuant();
 void   Record_CCSN_GWSignal();
 void   Detect_CoreBounce();
 double Mis_GetTimeStep_Lightbulb( const int lv, const double dTime_dt );
+bool   Flag_Lightbulb( const int i, const int j, const int k, const int lv, const int PID, const double *Threshold );
 
 
 
@@ -648,33 +649,12 @@ bool Flag_CCSN( const int i, const int j, const int k, const int lv, const int P
 
    bool Flag = false;
 
-   const double dh        = amr->dh[lv];
-   const double Center[3] = { amr->BoxCenter[0], amr->BoxCenter[1], amr->BoxCenter[2] };
-   const double Pos   [3] = { amr->patch[0][lv][PID]->EdgeL[0] + (i+0.5)*dh,
-                              amr->patch[0][lv][PID]->EdgeL[1] + (j+0.5)*dh,
-                              amr->patch[0][lv][PID]->EdgeL[2] + (k+0.5)*dh  };
-
-   const double dx = Center[0] - Pos[0];
-   const double dy = Center[1] - Pos[1];
-   const double dz = Center[2] - Pos[2];
-   const double r  = sqrt(  SQR( dx ) + SQR( dy ) + SQR( dz )  );
-
-   const real (*Rho )[PS1][PS1] = amr->patch[ amr->FluSg[lv] ][lv][PID]->fluid[DENS];
-
-
-// TODO: fine-tune the criteria
-// always allow the highest level can be reached in the region with r < 30 km
-   if ( r * UNIT_L < 3e6 )
+   if (  ( CCSN_Prob == Post_Bounce )  ||  SrcTerms.Lightbulb  )
    {
-      Flag = true;
+      Flag |= Flag_Lightbulb( i, j, k, lv, PID, Threshold );
+      if ( Flag )    return Flag;
    }
 
-   else
-   {
-//    if density is larger than the threshold (equivalent to Input__Flag_Rho)
-//    and the cell width at lv+1 is larger than the threshold `r * CCSN_MaxRefine_RadFac` (equivalent to Flag_Region)
-      if (  ( Rho[k][j][i] > Threshold[0] )  &&  ( 0.5 * dh > r * CCSN_MaxRefine_RadFac )  )   Flag = true;
-   }
 
    return Flag;
 
