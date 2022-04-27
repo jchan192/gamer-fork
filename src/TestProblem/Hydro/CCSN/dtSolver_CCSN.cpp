@@ -1,9 +1,6 @@
 #include "GAMER.h"
 #include "NuclearEoS.h"
 
-#if ( MODEL == HYDRO )
-
-
 
 extern double CCSN_LB_TimeFac;
 
@@ -160,7 +157,3 @@ double Mis_GetTimeStep_Lightbulb( const int lv, const double dTime_dt )
    return dt_LB;
 
 } // FUNCTION : Mis_GetTimeStep_Lightbulb
-
-
-
-#endif // if ( MODEL == HYDRO )

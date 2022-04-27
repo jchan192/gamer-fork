@@ -138,8 +138,8 @@ void Record_CCSN_CentralQuant()
          {
              FILE *file_cent_quant = fopen( filename_central_quant, "w" );
              fprintf( file_cent_quant, "#%14s %12s %16s %16s %16s %16s %16s\n",
-                                       "Time [sec]", "Step", "PosX [cm]", "PosY [cm]", "PosZ [cm]",
-                                       "Dens [g/cm^3]", "Ye" );
+                                       "1_Time [sec]", "2_Step", "3_PosX [cm]", "4_PosY [cm]", "5_PosZ [cm]",
+                                       "6_Dens [g/cm^3]", "7_Ye" );
              fclose( file_cent_quant );
          }
 
