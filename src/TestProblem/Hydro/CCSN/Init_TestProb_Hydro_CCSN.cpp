@@ -181,6 +181,13 @@ void SetParameter()
          Aux_Error( ERROR_INFO, "Temperature mode for initializing grids is not supported in Migration Test yet!!\n" );
    }
 
+// do not need to check core bounce in the migration test
+   if ( CCSN_Prob == Migration_Test )
+      CCSN_Is_PostBounce = 1;
+
+   if (  ( CCSN_Is_PostBounce == 0 )  &&  ( CCSN_Prob == Post_Bounce )  )
+      Aux_Error( ERROR_INFO, "Incorrect parameter %s = %d !!\n", "CCSN_Is_PostBounce", CCSN_Is_PostBounce );
+
 
 // (2) set the problem-specific derived parameters
 
@@ -217,9 +224,10 @@ void SetParameter()
       Aux_Message( stdout, "  output GW signals                       = %d\n",      CCSN_GW_OUTPUT        );
       Aux_Message( stdout, "  sampling interval of GW signals         = %13.7e\n",  CCSN_GW_DT            );
       Aux_Message( stdout, "  mode for obtaining internal energy      = %d\n",      CCSN_Eint_Mode        );
+      if ( CCSN_Prob != Migration_Test ) {
       Aux_Message( stdout, "  radial factor for maximum refine level  = %13.7e\n",  CCSN_MaxRefine_RadFac );
       Aux_Message( stdout, "  scaling factor for lightbulb dt         = %13.7e\n",  CCSN_LB_TimeFac       );
-      Aux_Message( stdout, "  has core bounce occurred                = %d\n",      CCSN_Is_PostBounce    );
+      Aux_Message( stdout, "  has core bounce occurred                = %d\n",      CCSN_Is_PostBounce    ); }
       Aux_Message( stdout, "=============================================================================\n" );
    }
 
@@ -589,7 +597,7 @@ void Record_CCSN()
       if ( CCSN_Is_PostBounce )
       {
 //       dump the bounce time in standard output
-         if ( MPI_Rank == 0 )   Aux_Message( stdout, "Bounce time = %13.7e !!\n", Time[0] * UNIT_T );
+         if ( MPI_Rank == 0 )   Aux_Message( stdout, "Bounce time = %13.7e seconds !!\n", Time[0] * UNIT_T );
 
 //       disable the deleptonization scheme, and enable the lightbulb scheme
          SrcTerms.Deleptonization = false;
