@@ -4,7 +4,7 @@ Enable : MODEL=HYDRO, GRAVITY, GREP, [MHD]
 Disable: UNSPLIT_GRAVITY
 
 EOS    : EOS_GAMMA    (GREP migration test)
-         EOS_NUCLEAR  (Post bounce test)
+         EOS_NUCLEAR  (Post bounce test and Lightbulb test)
 
 Default setup:
 ========================================
@@ -23,6 +23,9 @@ Default setup:
 
 3. For Post bounce:
    --> MAX_LEVEL = 8
+
+4. For Lightbulb:
+   --> OPT__DT_USER = 1
 
 Note:
 ========================================
