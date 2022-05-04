@@ -71,6 +71,8 @@ Note:
    --> num_chunk : number of chunk for computing the vector potential sequentially
                    runs with higher values have better performance, but consume more memory
 
-6. Additional Record files:
+6. The threshold values in Input__Flag_Rho and Input__Flag_User must be in the code units
+
+7. Additional Record files:
    --> Record__CentralQuant : quantites at the center (cell with highest density)
    --> Record__QuadMom_2nd  : second-order time derivative of mass quadrupole moments

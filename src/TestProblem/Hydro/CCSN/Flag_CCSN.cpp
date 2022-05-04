@@ -45,7 +45,7 @@ bool Flag_Lightbulb( const int i, const int j, const int k, const int lv, const 
 
 
 // TODO: fine-tune the criteria
-// always allow the highest level can be reached in the region with r < 30 km
+// (1) always refined to highest level in the region with r < 30 km
    if ( r * UNIT_L < 3e6 )
    {
       Flag = true;
@@ -53,9 +53,13 @@ bool Flag_Lightbulb( const int i, const int j, const int k, const int lv, const 
 
    else
    {
-//    if density is larger than the threshold (equivalent to Input__Flag_Rho)
-//    and the cell width at lv+1 is larger than the threshold `r * CCSN_MaxRefine_RadFac` (equivalent to Flag_Region)
-      if (  ( Rho[k][j][i] > Threshold[0] )  &&  ( 0.5 * dh > r * CCSN_MaxRefine_RadFac )  )   Flag = true;
+//    (2-a) density is larger than the threshold in Input__Flag_User
+      if ( Rho[k][j][i] < Threshold[0] )   return false;
+
+//    (2-b) the cell with at son level (lv+1) is larger than the threshold
+      const double Min_CellWidth = r * CCSN_MaxRefine_RadFac;
+
+      Flag = ( 0.5 * dh ) > Min_CellWidth;
    }
 
 
