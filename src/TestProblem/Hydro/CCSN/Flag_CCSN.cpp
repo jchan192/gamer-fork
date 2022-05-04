@@ -56,7 +56,7 @@ bool Flag_Lightbulb( const int i, const int j, const int k, const int lv, const 
 //    (2-a) density is larger than the threshold in Input__Flag_User
       if ( Rho[k][j][i] < Threshold[0] )   return false;
 
-//    (2-b) the cell with at son level (lv+1) is larger than the threshold
+//    (2-b) the cell width at son level (lv+1) is larger than the threshold
       const double Min_CellWidth = r * CCSN_MaxRefine_RadFac;
 
       Flag = ( 0.5 * dh ) > Min_CellWidth;
