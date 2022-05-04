@@ -375,8 +375,8 @@ void Detect_CoreBounce()
    const int NT = 1;
 #  endif
 
-   double MaxEntr = -__DBL_MAX__;
-   double OMP_MaxEntr[NT];
+   real MaxEntr = -HUGE_NUMBER;
+   real OMP_MaxEntr[NT];
 
 
 #  pragma omp parallel
@@ -388,7 +388,7 @@ void Detect_CoreBounce()
 #     endif
 
 //    initialize arrays
-      OMP_MaxEntr[TID] = -__DBL_MAX__;
+      OMP_MaxEntr[TID] = -HUGE_NUMBER;
 
       for (int lv=0; lv<NLEVEL; lv++)
       {
@@ -424,7 +424,7 @@ void Detect_CoreBounce()
                                       false, NULL_REAL, Emag, EoS_DensEint2Entr_CPUPtr,
                                       EoS_AuxArray_Flt, EoS_AuxArray_Int, h_EoS_Table );
 
-               OMP_MaxEntr[TID] = MAX( OMP_MaxEntr[TID], (double)Entr );
+               OMP_MaxEntr[TID] = FMAX( OMP_MaxEntr[TID], Entr );
 
             }}} // i,j,k
          } // for (int PID=0; PID<amr->NPatchComma[lv][1]; PID++)
@@ -434,12 +434,12 @@ void Detect_CoreBounce()
 
 // find the maximum over all OpenMP threads
    for (int TID=0; TID<NT; TID++)
-      MaxEntr = MAX( MaxEntr, OMP_MaxEntr[TID] );
+      MaxEntr = FMAX( MaxEntr, OMP_MaxEntr[TID] );
 
 
 // collect data from all ranks
 #  ifndef SERIAL
-   MPI_Allreduce( MPI_IN_PLACE, &MaxEntr, 1, MPI_DOUBLE, MPI_MAX, MPI_COMM_WORLD );
+   MPI_Allreduce( MPI_IN_PLACE, &MaxEntr, 1, MPI_GAMER_REAL, MPI_MAX, MPI_COMM_WORLD );
 #  endif // ifndef SERIAL
 
 

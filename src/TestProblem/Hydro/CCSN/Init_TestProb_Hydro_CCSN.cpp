@@ -49,7 +49,7 @@ static int        CCSN_Eint_Mode;                  // Mode of obtaining internal
        double     CCSN_MaxRefine_RadFac;           // factor that determines the maximum refinement level based on distance from the box center
        double     CCSN_LB_TimeFac;                 // factor that scales the dt constrained by lightbulb scheme
 
-       bool       CCSN_Is_PostBounce = false;      // boolean that indicates whether core bounce have occurred
+       bool       CCSN_Is_PostBounce = false;      // boolean that indicates whether core bounce has occurred
 // =======================================================================================
 
 
@@ -624,7 +624,11 @@ double Mis_GetTimeStep_CCSN( const int lv, const double dTime_dt )
    double dt_CCSN = HUGE_NUMBER;
 
    if ( SrcTerms.Lightbulb )
-      dt_CCSN = MIN(  dt_CCSN, Mis_GetTimeStep_Lightbulb( lv, dTime_dt )  );
+   {
+      const double dt_LB = Mis_GetTimeStep_Lightbulb( lv, dTime_dt );
+
+      dt_CCSN = fmin( dt_CCSN, dt_LB );
+   }
 
 
    return dt_CCSN;
