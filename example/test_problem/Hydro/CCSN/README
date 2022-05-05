@@ -4,7 +4,7 @@ Enable : MODEL=HYDRO, GRAVITY, GREP, [MHD]
 Disable: UNSPLIT_GRAVITY
 
 EOS    : EOS_GAMMA    (GREP migration test)
-         EOS_NUCLEAR  (Post bounce test)
+         EOS_NUCLEAR  (Post bounce test and Lightbulb test)
 
 Default setup:
 ========================================
@@ -23,6 +23,9 @@ Default setup:
 
 3. For Post bounce:
    --> MAX_LEVEL = 8
+
+4. For Lightbulb:
+   --> OPT__DT_USER = 1
 
 Note:
 ========================================
@@ -71,6 +74,8 @@ Note:
    --> num_chunk : number of chunk for computing the vector potential sequentially
                    runs with higher values have better performance, but consume more memory
 
-6. Additional Record files:
-   --> Record__CentralDens : maximum density in the simulation box
-   --> Record__QuadMom_2nd : second-order time derivative of mass quadrupole moments
+6. The threshold values in Input__Flag_Rho and Input__Flag_User must be in the code units
+
+7. Additional Record files:
+   --> Record__CentralQuant : quantites at the center (cell with highest density)
+   --> Record__QuadMom_2nd  : second-order time derivative of mass quadrupole moments

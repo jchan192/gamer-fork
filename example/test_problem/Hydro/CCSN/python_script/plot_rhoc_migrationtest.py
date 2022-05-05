@@ -20,8 +20,8 @@ fn_flash = "../ReferenceSolution/MigrationTest/flash_1d.dat"
 t_flash, rhoc_flash = np.genfromtxt(fn_flash, unpack = True)
 
 # GAMER
-fn_gamer = "../Record__CentralDens"
-t_gamer, rhoc_gamer = np.genfromtxt(fn_gamer, usecols = [0, 2], unpack = True)
+fn_gamer = "../Record__CentralQuant"
+t_gamer, rhoc_gamer = np.genfromtxt(fn_gamer, usecols = [0, 5], unpack = True)
 
 
 ### plot the evolution of central density

@@ -24,9 +24,13 @@ static double    *CCSN_Prof = NULL;                // radial profile of initial 
 static int        CCSN_Prof_NBin;                  // number of radial bins in the input profile
 static int        CCSN_NCol;                       // number of columns read from the input profile
 static int       *CCSN_TargetCols = new int [7];   // index of columns read from the input profile
-static int        CCSN_ColIdx_Dens;                // column index of density in the input profile
-static int        CCSN_ColIdx_Pres;                // column index of pressure in the input profile
+static int        CCSN_ColIdx_R;                   // column index of radius          in the input profile
+static int        CCSN_ColIdx_Dens;                // column index of density         in the input profile
+static int        CCSN_ColIdx_Pres;                // column index of pressure        in the input profile
 static int        CCSN_ColIdx_Velr;                // column index of radial velocity in the input profile
+static int        CCSN_ColIdx_Ye;                  // column index of Ye              in the input profile
+static int        CCSN_ColIdx_Temp;                // column index of temperature     in the input profile
+static int        CCSN_ColIdx_Entr;                // column index of entropy         in the input profile
 
 #ifdef MHD
 static CCSN_Mag_t CCSN_Mag;                        // target magnetic field profile
@@ -42,15 +46,19 @@ static int        CCSN_Eint_Mode;                  // Mode of obtaining internal
                                                    // ( 1=Temp Mode: Eint(dens, temp, [Ye])
                                                    //   2=Pres Mode: Eint(dens, pres, [Ye]) )
 
-static double     CCSN_MaxRefine_RadFac;           // factor that determines the maximum refinement level based on distance from the box center
+       double     CCSN_MaxRefine_RadFac;           // factor that determines the maximum refinement level based on distance from the box center
        double     CCSN_LB_TimeFac;                 // factor that scales the dt constrained by lightbulb scheme
+
+       bool       CCSN_Is_PostBounce = false;      // boolean that indicates whether core bounce has occurred
 // =======================================================================================
 
 
 // problem-specific function prototypes
-void Record_CCSN_CentralDens();
-void Record_CCSN_GWSignal();
-void Mis_GetTimeStep_User_Lightbulb( const int lv, const double dTime_dt );
+void   Record_CCSN_CentralQuant();
+void   Record_CCSN_GWSignal();
+void   Detect_CoreBounce();
+double Mis_GetTimeStep_Lightbulb( const int lv, const double dTime_dt );
+bool   Flag_Lightbulb( const int i, const int j, const int k, const int lv, const int PID, const double *Threshold );
 
 
 
@@ -81,6 +89,8 @@ void Validate()
    if ( !OPT__UNIT )
       Aux_Error( ERROR_INFO, "OPT__UNIT must be enabled !!\n" );
 
+   if ( !OPT__RECORD_USER )
+      Aux_Error( ERROR_INFO, "OPT__RECORD_USER must be enabled !!\n" );
 
    if ( MPI_Rank == 0 )    Aux_Message( stdout, "   Validating test problem %d ... done\n", TESTPROB_ID );
 
@@ -133,6 +143,7 @@ void SetParameter()
    ReadPara->Add( "CCSN_Eint_Mode",        &CCSN_Eint_Mode,        2,             1,                2                 );
    ReadPara->Add( "CCSN_MaxRefine_RadFac", &CCSN_MaxRefine_RadFac, 0.15,          0.0,              NoMax_double      );
    ReadPara->Add( "CCSN_LB_TimeFac",       &CCSN_LB_TimeFac,       0.1,           Eps_double,       1.0               );
+   ReadPara->Add( "CCSN_Is_PostBounce",    &CCSN_Is_PostBounce,    false,         Useless_bool,     Useless_bool      );
 
 
    ReadPara->Read( FileName );
@@ -145,14 +156,16 @@ void SetParameter()
       case Migration_Test : CCSN_NCol = 4;
                             CCSN_TargetCols[0] =  0;  CCSN_TargetCols[1] =  1;  CCSN_TargetCols[2] =  2;  CCSN_TargetCols[3] =  3;
                             CCSN_TargetCols[4] = -1;  CCSN_TargetCols[5] = -1;  CCSN_TargetCols[6] = -1;
-                            CCSN_ColIdx_Dens   =  2;  CCSN_ColIdx_Pres   =  3;  CCSN_ColIdx_Velr   =  1;
+                            CCSN_ColIdx_R      =  0;  CCSN_ColIdx_Dens   =  2;  CCSN_ColIdx_Pres   =  3;  CCSN_ColIdx_Velr   =  1;
+                            CCSN_ColIdx_Ye     = -1;  CCSN_ColIdx_Temp   = -1;  CCSN_ColIdx_Entr   = -1;
                             sprintf( CCSN_Name, "GREP migration test" );
                             break;
 
       case Post_Bounce    : CCSN_NCol = 7;
                             CCSN_TargetCols[0] =  0;  CCSN_TargetCols[1] =  2;  CCSN_TargetCols[2] =  3;  CCSN_TargetCols[3] =  4;
                             CCSN_TargetCols[4] =  5;  CCSN_TargetCols[5] =  6;  CCSN_TargetCols[6] =  7;
-                            CCSN_ColIdx_Dens   =  1;  CCSN_ColIdx_Pres   =  5;  CCSN_ColIdx_Velr   =  3;
+                            CCSN_ColIdx_R      =  0;  CCSN_ColIdx_Dens   =  1;  CCSN_ColIdx_Pres   =  5;  CCSN_ColIdx_Velr   =  3;
+                            CCSN_ColIdx_Ye     =  2;  CCSN_ColIdx_Temp   =  4;  CCSN_ColIdx_Entr   =  6;
                             sprintf( CCSN_Name, "Post bounce test" );
                             break;
 
@@ -170,8 +183,12 @@ void SetParameter()
          Aux_Error( ERROR_INFO, "Temperature mode for initializing grids is not supported in Migration Test yet!!\n" );
    }
 
-   if (  OPT__DT_USER  &&  ( SrcTerms.Lightbulb == 0 )  )
-      Aux_Error( ERROR_INFO, "OPT__DT_USER only supports SRC_LIGHTBULB == 1 !!\n" );
+// do not need to check core bounce in the migration test
+   if ( CCSN_Prob == Migration_Test )
+      CCSN_Is_PostBounce = 1;
+
+   if (  ( CCSN_Is_PostBounce == 0 )  &&  ( CCSN_Prob == Post_Bounce )  )
+      Aux_Error( ERROR_INFO, "Incorrect parameter %s = %d !!\n", "CCSN_Is_PostBounce", CCSN_Is_PostBounce );
 
 
 // (2) set the problem-specific derived parameters
@@ -209,8 +226,10 @@ void SetParameter()
       Aux_Message( stdout, "  output GW signals                       = %d\n",      CCSN_GW_OUTPUT        );
       Aux_Message( stdout, "  sampling interval of GW signals         = %13.7e\n",  CCSN_GW_DT            );
       Aux_Message( stdout, "  mode for obtaining internal energy      = %d\n",      CCSN_Eint_Mode        );
+      if ( CCSN_Prob != Migration_Test ) {
       Aux_Message( stdout, "  radial factor for maximum refine level  = %13.7e\n",  CCSN_MaxRefine_RadFac );
       Aux_Message( stdout, "  scaling factor for lightbulb dt         = %13.7e\n",  CCSN_LB_TimeFac       );
+      Aux_Message( stdout, "  has core bounce occurred                = %d\n",      CCSN_Is_PostBounce    ); }
       Aux_Message( stdout, "=============================================================================\n" );
    }
 
@@ -245,7 +264,7 @@ void SetGridIC( real fluid[], const double x, const double y, const double z, co
 {
 
    const double  BoxCenter[3] = { amr->BoxCenter[0], amr->BoxCenter[1], amr->BoxCenter[2] };
-   const double *Table_R      = CCSN_Prof +                0*CCSN_Prof_NBin;
+   const double *Table_R      = CCSN_Prof + CCSN_ColIdx_R   *CCSN_Prof_NBin;
    const double *Table_Velr   = CCSN_Prof + CCSN_ColIdx_Velr*CCSN_Prof_NBin;
    const double *Table_Dens   = CCSN_Prof + CCSN_ColIdx_Dens*CCSN_Prof_NBin;
    const double *Table_Pres   = CCSN_Prof + CCSN_ColIdx_Pres*CCSN_Prof_NBin;
@@ -270,9 +289,9 @@ void SetGridIC( real fluid[], const double x, const double y, const double z, co
 
    if ( CCSN_Prob == Post_Bounce )
    {
-      Ye   = Mis_InterpolateFromTable( CCSN_Prof_NBin, Table_R, CCSN_Prof+2*CCSN_Prof_NBin, r );
-      Temp = Mis_InterpolateFromTable( CCSN_Prof_NBin, Table_R, CCSN_Prof+4*CCSN_Prof_NBin, r );  // in Kelvin
-      Entr = Mis_InterpolateFromTable( CCSN_Prof_NBin, Table_R, CCSN_Prof+6*CCSN_Prof_NBin, r );
+      Ye   = Mis_InterpolateFromTable( CCSN_Prof_NBin, Table_R, CCSN_Prof+CCSN_ColIdx_Ye  *CCSN_Prof_NBin, r );
+      Temp = Mis_InterpolateFromTable( CCSN_Prof_NBin, Table_R, CCSN_Prof+CCSN_ColIdx_Temp*CCSN_Prof_NBin, r );  // in Kelvin
+      Entr = Mis_InterpolateFromTable( CCSN_Prof_NBin, Table_R, CCSN_Prof+CCSN_ColIdx_Entr*CCSN_Prof_NBin, r );
 
       if ( Ye   == NULL_REAL )
          Aux_Error( ERROR_INFO, "interpolation failed for Ye at radius %13.7e !!\n", r );
@@ -376,7 +395,7 @@ void SetBFieldIC_Liu2008( real magnetic[], const double x, const double y, const
 {
 
    const double  BoxCenter[3] = { amr->BoxCenter[0], amr->BoxCenter[1], amr->BoxCenter[2] };
-   const double *Table_R      = CCSN_Prof +                0*CCSN_Prof_NBin;
+   const double *Table_R      = CCSN_Prof + CCSN_ColIdx_R   *CCSN_Prof_NBin;
    const double *Table_Dens   = CCSN_Prof + CCSN_ColIdx_Dens*CCSN_Prof_NBin;
    const double *Table_Pres   = CCSN_Prof + CCSN_ColIdx_Pres*CCSN_Prof_NBin;
 
@@ -474,7 +493,7 @@ void SetBFieldIC_Suwa2007( real magnetic[], const double x, const double y, cons
                            const int lv, double AuxArray[] )
 {
 
-   const double  BoxCenter[3] = { amr->BoxCenter[0], amr->BoxCenter[1], amr->BoxCenter[2] };
+   const double BoxCenter[3] = { amr->BoxCenter[0], amr->BoxCenter[1], amr->BoxCenter[2] };
 
    const double x0 = x - BoxCenter[0];
    const double y0 = y - BoxCenter[1];
@@ -510,7 +529,7 @@ void Load_IC_Prof_CCSN()
    CCSN_Prof_NBin = Aux_LoadTable( CCSN_Prof, CCSN_Prof_File, CCSN_NCol, CCSN_TargetCols, RowMajor_No, AllocMem_Yes );
 
 // convert radius, density, radial velocity, and pressure to code units
-   double *Table_R    = CCSN_Prof +                0*CCSN_Prof_NBin;
+   double *Table_R    = CCSN_Prof + CCSN_ColIdx_R   *CCSN_Prof_NBin;
    double *Table_Velr = CCSN_Prof + CCSN_ColIdx_Velr*CCSN_Prof_NBin;
    double *Table_Dens = CCSN_Prof + CCSN_ColIdx_Dens*CCSN_Prof_NBin;
    double *Table_Pres = CCSN_Prof + CCSN_ColIdx_Pres*CCSN_Prof_NBin;
@@ -529,13 +548,13 @@ void Load_IC_Prof_CCSN()
 
 //-------------------------------------------------------------------------------------------------------
 // Function    :  Record_CCSN
-// Description :  Interface for invoking multiple record functions
+// Description :  Interface for invoking several functions for recording data and detecting core bounce
 //-------------------------------------------------------------------------------------------------------
 void Record_CCSN()
 {
 
-// (1) maximum density
-   Record_CCSN_CentralDens();
+// (1) record quantities at the center
+   Record_CCSN_CentralQuant();
 
 
 // (2) GW signal
@@ -552,7 +571,7 @@ void Record_CCSN()
 
          else
          {
-            DumpTime_CCSN = ( int(Time[0]/CCSN_GW_DT) + 1.0 )*CCSN_GW_DT;
+            DumpTime_CCSN = (  int( Time[0] / CCSN_GW_DT ) + 1.0  ) * CCSN_GW_DT;
 
 //          be careful about round-off errors
             if (   (  DumpTime_CCSN <= Time[0]  )                                         ||
@@ -568,15 +587,60 @@ void Record_CCSN()
          Record_CCSN_GWSignal();
          DumpTime_CCSN += CCSN_GW_DT;
       }
-   }
+   } // if ( CCSN_GW_OUTPUT )
 #  endif
+
+
+// (3) Check whether the core bounce occurs
+   if ( !CCSN_Is_PostBounce )
+   {
+      Detect_CoreBounce();
+
+      if ( CCSN_Is_PostBounce )
+      {
+//       dump the bounce time in standard output
+         if ( MPI_Rank == 0 )   Aux_Message( stdout, "Bounce time = %13.7e seconds !!\n", Time[0] * UNIT_T );
+
+//       disable the deleptonization scheme, and enable the lightbulb scheme
+         SrcTerms.Deleptonization = false;
+         SrcTerms.Lightbulb       = true;
+
+         Src_Init();
+
+//       forced output data at core bounce
+         Output_DumpData( 2 );
+      }
+   } // if ( !CCSN_Is_PostBounce )
 
 } // FUNCTION : Record_CCSN()
 
 
 
 //-------------------------------------------------------------------------------------------------------
-// Function    :  Flag_User_CCSN
+// Function    :  Mis_GetTimeStep_CCSN
+// Description :  Interface for invoking several functions for estimating the evolution time-step
+//-------------------------------------------------------------------------------------------------------
+double Mis_GetTimeStep_CCSN( const int lv, const double dTime_dt )
+{
+
+   double dt_CCSN = HUGE_NUMBER;
+
+   if ( SrcTerms.Lightbulb )
+   {
+      const double dt_LB = Mis_GetTimeStep_Lightbulb( lv, dTime_dt );
+
+      dt_CCSN = fmin( dt_CCSN, dt_LB );
+   }
+
+
+   return dt_CCSN;
+
+} // FUNCTION : Mis_GetTimeStep_CCSN()
+
+
+
+//-------------------------------------------------------------------------------------------------------
+// Function    :  Flag_CCSN
 // Description :  Check if the element (i,j,k) of the input data satisfies the user-defined flag criteria
 //
 // Note        :  1. Invoked by "Flag_Check" using the function pointer "Flag_User_Ptr"
@@ -594,42 +658,21 @@ void Record_CCSN()
 // Return      :  "true"  if the flag criteria are satisfied
 //                "false" if the flag criteria are not satisfied
 //-------------------------------------------------------------------------------------------------------
-bool Flag_User_CCSN( const int i, const int j, const int k, const int lv, const int PID, const double *Threshold )
+bool Flag_CCSN( const int i, const int j, const int k, const int lv, const int PID, const double *Threshold )
 {
 
    bool Flag = false;
 
-   const double dh        = amr->dh[lv];
-   const double Center[3] = { amr->BoxCenter[0], amr->BoxCenter[1], amr->BoxCenter[2] };
-   const double Pos   [3] = { amr->patch[0][lv][PID]->EdgeL[0] + (i+0.5)*dh,
-                              amr->patch[0][lv][PID]->EdgeL[1] + (j+0.5)*dh,
-                              amr->patch[0][lv][PID]->EdgeL[2] + (k+0.5)*dh  };
-
-   const double dx = Center[0] - Pos[0];
-   const double dy = Center[1] - Pos[1];
-   const double dz = Center[2] - Pos[2];
-   const double r  = sqrt(  SQR( dx ) + SQR( dy ) + SQR( dz )  );
-
-   const real (*Rho )[PS1][PS1] = amr->patch[ amr->FluSg[lv] ][lv][PID]->fluid[DENS];
-
-
-// TODO: fine-tune the criteria
-// always allow the highest level can be reached in the region with r < 30 km
-   if ( r * UNIT_L < 3e6 )
+   if (  ( CCSN_Prob == Post_Bounce )  ||  SrcTerms.Lightbulb  )
    {
-      Flag = true;
+      Flag |= Flag_Lightbulb( i, j, k, lv, PID, Threshold );
+      if ( Flag )    return Flag;
    }
 
-   else
-   {
-//    if density is larger than the threshold (equivalent to Input__Flag_Rho)
-//    and the cell width at lv+1 is larger than the threshold `r * CCSN_MaxRefine_RadFac` (equivalent to Flag_Region)
-      if (  ( Rho[k][j][i] > Threshold[0] )  &&  ( 0.5 * dh > r * CCSN_MaxRefine_RadFac )  )   Flag = true;
-   }
 
    return Flag;
 
-} // FUNCTION : Flag_User_CCSN
+} // FUNCTION : Flag_CCSN
 
 
 
@@ -679,23 +722,19 @@ void Init_TestProb_Hydro_CCSN()
    if ( OPT__INIT != INIT_BY_RESTART )   Load_IC_Prof_CCSN();
 
 // set the function pointers of various problem-specific routines
-   Init_Function_User_Ptr         = SetGridIC;
+   Init_Function_User_Ptr   = SetGridIC;
+   Flag_User_Ptr            = Flag_CCSN;
+   Aux_Record_User_Ptr      = Record_CCSN;
+   End_User_Ptr             = End_CCSN;
+   Mis_GetTimeStep_User_Ptr = Mis_GetTimeStep_CCSN;
+
 #  ifdef MHD
    switch ( CCSN_Mag )
    {
-      case Liu2008  : Init_Function_BField_User_Ptr  = SetBFieldIC_Liu2008;    break;
-      case Suwa2007 : Init_Function_BField_User_Ptr  = SetBFieldIC_Suwa2007;   break;
+      case Liu2008  : Init_Function_BField_User_Ptr = SetBFieldIC_Liu2008;    break;
+      case Suwa2007 : Init_Function_BField_User_Ptr = SetBFieldIC_Suwa2007;   break;
    }
-#  endif
-   Flag_User_Ptr                  = Flag_User_CCSN;
-   Aux_Record_User_Ptr            = Record_CCSN;
-   End_User_Ptr                   = End_CCSN;
-
-// estimate the evolution time-step constrained by the lightbulb source term
-   if ( SrcTerms.Lightbulb )
-   {
-      Mis_GetTimeStep_User_Ptr    = Mis_GetTimeStep_User_Lightbulb;  // option: OPT__DT_USER;
-   }
+#  endif // #if MHD
 #  endif // #if ( MODEL == HYDRO )
 
 

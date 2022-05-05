@@ -1,19 +1,13 @@
 #include "GAMER.h"
 #include "NuclearEoS.h"
 
-#if ( MODEL == HYDRO )
-
-
-
-// declare as static so that other functions cannot invoke it directly and must use the function pointer
-double Mis_GetTimeStep_User_Lightbulb( const int lv, const double dTime_dt );
 
 extern double CCSN_LB_TimeFac;
 
 
 
 //-------------------------------------------------------------------------------------------------------
-// Function    :  Mis_GetTimeStep_User_Lightbulb
+// Function    :  Mis_GetTimeStep_Lightbulb
 // Description :  estimate the evolution time-step constrained by the lightbulb source term
 //
 // Note        :  1. This function should be applied to both physical and comoving coordinates and always
@@ -31,7 +25,7 @@ extern double CCSN_LB_TimeFac;
 //
 // Return      :  dt
 //-------------------------------------------------------------------------------------------------------
-double Mis_GetTimeStep_User_Lightbulb( const int lv, const double dTime_dt )
+double Mis_GetTimeStep_Lightbulb( const int lv, const double dTime_dt )
 {
 
    const double BoxCenter[3] = { amr->BoxCenter[0], amr->BoxCenter[1], amr->BoxCenter[2] };
@@ -162,8 +156,4 @@ double Mis_GetTimeStep_User_Lightbulb( const int lv, const double dTime_dt )
 
    return dt_LB;
 
-} // FUNCTION : Mis_GetTimeStep_User_Lightbulb
-
-
-
-#endif // if ( MODEL == HYDRO )
+} // FUNCTION : Mis_GetTimeStep_Lightbulb
