@@ -158,9 +158,14 @@ void Record_CCSN_CentralQuant()
 
 
       FILE *file_cent_quant = fopen( filename_central_quant, "a" );
+#     ifdef YE
+      const real Ye = u[YE] / u[DENS];
+#     else
+      const real Ye = (real)0.0;
+#     endif
       fprintf( file_cent_quant, "%15.7e %12ld %16.7e %16.7e %16.7e %16.7e %16.7e\n",
                Time[0]*UNIT_T, Step, Data_Flt[1]*UNIT_L, Data_Flt[2]*UNIT_L, Data_Flt[3]*UNIT_L,
-               u[DENS]*UNIT_D, u[YE] / u[DENS] );
+               u[DENS]*UNIT_D, Ye );
       fclose( file_cent_quant );
 
    } // if ( MPI_Rank == 0 )
