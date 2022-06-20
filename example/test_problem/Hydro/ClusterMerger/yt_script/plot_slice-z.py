@@ -21,7 +21,7 @@ args=parser.parse_args()
 print( '\nCommand-line arguments:' )
 print( '-------------------------------------------------------------------' )
 for t in range( len(sys.argv) ):
-   print str(sys.argv[t]),
+   print( str(sys.argv[t]) )
 print( '' )
 print( '-------------------------------------------------------------------\n' )
 
@@ -40,11 +40,11 @@ dpi           = 150
 
 # define the particle filters for SMBH particles
 def smbh1( pfilter, data ):
-   filter = data[ "all", "ParType" ] == 100
+   filter = data[ "all", "ParType" ] == 4
    return filter
 
 def smbh2( pfilter, data ):
-   filter = data[ "all", "ParType" ] == 101
+   filter = data[ "all", "ParType" ] == 5
    return filter
 
 yt.add_particle_filter( "smbh1", function=smbh1, filtered_type="all", requires=["ParType"] )
@@ -52,7 +52,7 @@ yt.add_particle_filter( "smbh2", function=smbh2, filtered_type="all", requires=[
 
 
 yt.enable_parallelism()
-ts = yt.load( [ prefix+'/Data_%06d'%idx for idx in range(idx_start, idx_end+1, didx) ] )
+ts = yt.DatasetSeries( [ prefix+'/Data_%06d'%idx for idx in range(idx_start, idx_end+1, didx) ] )
 
 for ds in ts.piter():
 
