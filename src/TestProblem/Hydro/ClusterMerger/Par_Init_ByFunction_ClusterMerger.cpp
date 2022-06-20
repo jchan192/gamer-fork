@@ -6,8 +6,6 @@
 
 #include <string>
 
-#define PTYPE_CEN    100   // particle type for Merger_Coll_LabelCenter
-                           // --> the particle closest to the center of x-th cluster is labeled as "PTYPE_CEN + x"
 
 // floating-point type in the input particle file
 typedef double real_par_in;
@@ -356,7 +354,7 @@ void Par_Init_ByFunction_ClusterMerger( const long NPar_ThisRank, const long NPa
          int    NFound_ThisRank=0, NFound_AllRank;
          MPI_Allreduce( &min_r, &min_r_allrank, 1, MPI_DOUBLE, MPI_MIN, MPI_COMM_WORLD );
          if ( min_r == min_r_allrank ) {
-            AllAttribute[ParTypeIdx][min_pidx] = PTYPE_CEN + c;
+            ParType[min_pidx] = PTYPE_CEN + c;
             NFound_ThisRank = 1;
          }
 
@@ -696,7 +694,7 @@ void GetClusterCenter( double Cen[][3] )
    for (int c=0; c<Merger_Coll_NumHalos; c++) {
       double Cen_Tmp[3] = { -__FLT_MAX__, -__FLT_MAX__, -__FLT_MAX__ };   // set to -inf
       for (long p=0; p<amr->Par->NPar_AcPlusInac; p++) {
-         if ( amr->Par->Attribute[ParTypeIdx][p] == real(PTYPE_CEN+c) ) {
+         if ( amr->Par->Type[p] == real(PTYPE_CEN+c) ) {
             for (int d=0; d<3; d++) Cen_Tmp[d] = ParPos[d][p];
             break;
          }
