@@ -150,10 +150,11 @@ void Init_GREP()
 //                3. Add "#ifndef __CUDACC__" since this routine is only useful on CPU
 //
 // Parameter   :  AuxArray_Flt/Int : Floating-point/Integer arrays to be filled up
+//                Time             : Target physical time
 //
 // Return      :  AuxArray_Flt/Int[]
 //-------------------------------------------------------------------------------------------------------
-void SetExtPotAuxArray_GREP( double AuxArray_Flt[], int AuxArray_Int[] )
+void SetExtPotAuxArray_GREP( double AuxArray_Flt[], int AuxArray_Int[], const double Time )
 {
 
    const int Lv   = GREP_LvUpdate;
@@ -345,7 +346,7 @@ void SetCPUExtPot_GREP( ExtPot_t &CPUExtPot_Ptr )
 
 // local function prototypes
 void Init_GREP();
-void SetExtPotAuxArray_GREP( double [], int [] );
+void SetExtPotAuxArray_GREP( double [], int [], const double );
 void SetCPUExtPot_GREP( ExtPot_t & );
 #ifdef GPU
 void SetGPUExtPot_GREP( ExtPot_t & );
@@ -373,7 +374,7 @@ void Init_ExtPot_GREP()
    Poi_UserWorkBeforePoisson_Ptr = Poi_UserWorkBeforePoisson_GREP;
 
    Init_GREP();
-   SetExtPotAuxArray_GREP( ExtPot_AuxArray_Flt, ExtPot_AuxArray_Int );
+   SetExtPotAuxArray_GREP( ExtPot_AuxArray_Flt, ExtPot_AuxArray_Int, Time[0] );
    SetCPUExtPot_GREP( CPUExtPot_Ptr );
 #  ifdef GPU
    SetGPUExtPot_GREP( GPUExtPot_Ptr );

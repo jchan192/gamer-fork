@@ -6,7 +6,7 @@ static void Update_GREP_Profile( const int lv, const int Sg, const double PrepTi
 static void Combine_GREP_Profile( Profile_t *Prof[][2], const int lv, const int Sg, const double PrepTime,
                                   const bool RemoveEmpty );
 
-extern void SetExtPotAuxArray_GREP( double AuxArray_Flt[], int AuxArray_Int[] );
+extern void SetExtPotAuxArray_GREP( double AuxArray_Flt[], int AuxArray_Int[], const double Time );
 extern void SetTempIntPara( const int lv, const int Sg_Current, const double PrepTime, const double Time0, const double Time1,
                             bool &IntTime, int &Sg, int &Sg_IntT, real &Weighting, real &Weighting_IntT );
 
@@ -62,7 +62,7 @@ void Poi_UserWorkBeforePoisson_GREP( const double Time, const int lv )
 
 
 // update the auxiliary arrays for GREP
-   SetExtPotAuxArray_GREP( ExtPot_AuxArray_Flt, ExtPot_AuxArray_Int );
+   SetExtPotAuxArray_GREP( ExtPot_AuxArray_Flt, ExtPot_AuxArray_Int, Time );
 
 
 // copy GREP profiles to h_ExtPotGREP in datatype of real
