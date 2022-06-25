@@ -30,7 +30,7 @@ static double MassProf_Star( const double r );
 static void   RanVec_FixRadius( const double r, double RanVec[] );
 
 extern void (*Aux_Record_User_Ptr)();
-void SetExtPotAuxArray_EridanusII( double AuxArray_Flt[], int AuxArray_Int[] );
+void SetExtPotAuxArray_EridanusII( double AuxArray_Flt[], int AuxArray_Int[], const double Time );
 
 
 
@@ -283,7 +283,7 @@ void Init_User_EridanusII()
 
       Aux_Record_User_Ptr();
 
-      SetExtPotAuxArray_EridanusII( ExtPot_AuxArray_Flt, ExtPot_AuxArray_Int );
+      SetExtPotAuxArray_EridanusII( ExtPot_AuxArray_Flt, ExtPot_AuxArray_Int, Time[0] );
 #     ifdef GPU
       CUAPI_SetConstMemory_ExtAccPot();
 #     endif
