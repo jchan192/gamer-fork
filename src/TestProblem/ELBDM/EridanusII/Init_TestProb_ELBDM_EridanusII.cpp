@@ -68,13 +68,13 @@ static double Star_FreeT;           // free-fall time at Star_R0
 void Par_Init_ByFunction_EridanusII( const long NPar_ThisRank, const long NPar_AllRank,
                                      real *ParMass, real *ParPosX, real *ParPosY, real *ParPosZ,
                                      real *ParVelX, real *ParVelY, real *ParVelZ, real *ParTime,
-                                     real *AllAttribute[PAR_NATT_TOTAL] );
+                                     real *ParType, real *AllAttribute[PAR_NATT_TOTAL] );
 void Init_User_EridanusII();
 #endif
 
 // external potential routines
 void Init_ExtPot_EridanusII();
-void SetExtPotAuxArray_EridanusII( double AuxArray_Flt[], int AuxArray_Int[] );
+void SetExtPotAuxArray_EridanusII( double AuxArray_Flt[], int AuxArray_Int[], const double Time );
 
 
 
@@ -509,6 +509,7 @@ void GetCenterOfMass( const double CM_Old[], double CM_New[], const double CM_Ma
    const real   MinDens_No        = -1.0;
    const real   MinPres_No        = -1.0;
    const real   MinTemp_No        = -1.0;
+   const real   MinEntr_No        = -1.0;
    const bool   DE_Consistency_No = false;
 #  ifdef PARTICLE
    const bool   TimingSendPar_No  = false;
@@ -549,7 +550,7 @@ void GetCenterOfMass( const double CM_Old[], double CM_New[], const double CM_Ma
 
       Prepare_PatchData( lv, Time[lv], TotalDens[0][0][0], NULL, 0, amr->NPatchComma[lv][1]/8, PID0List, _TOTAL_DENS, _NONE,
                          OPT__RHO_INT_SCHEME, INT_NONE, UNIT_PATCH, NSIDE_00, IntPhase_No, OPT__BC_FLU, BC_POT_NONE,
-                         MinDens_No, MinPres_No, MinTemp_No, DE_Consistency_No );
+                         MinDens_No, MinPres_No, MinTemp_No, MinEntr_No, DE_Consistency_No );
 
       delete [] PID0List;
 
@@ -667,6 +668,7 @@ void Record_EridanusII()
    const real   MinDens_No        = -1.0;
    const real   MinPres_No        = -1.0;
    const real   MinTemp_No        = -1.0;
+   const real   MinEntr_No        = -1.0;
    const bool   DE_Consistency_No = false;
 #  ifdef PARTICLE
    const bool   TimingSendPar_No  = false;
@@ -701,7 +703,7 @@ void Record_EridanusII()
 
       Prepare_PatchData( lv, Time[lv], TotalDens[0][0][0], NULL, 0, amr->NPatchComma[lv][1]/8, PID0List, DensMode, _NONE,
                          OPT__RHO_INT_SCHEME, INT_NONE, UNIT_PATCH, NSIDE_00, IntPhase_No, OPT__BC_FLU, BC_POT_NONE,
-                         MinDens_No, MinPres_No, MinTemp_No, DE_Consistency_No );
+                         MinDens_No, MinPres_No, MinTemp_No, MinEntr_No, DE_Consistency_No );
 
       delete [] PID0List;
 
@@ -1001,7 +1003,7 @@ void Poi_UserWorkBeforePoisson_EridanusII( const double Time, const int lv )
 
    if ( OPT__EXT_POT )
    {
-      SetExtPotAuxArray_EridanusII( ExtPot_AuxArray_Flt, ExtPot_AuxArray_Int );
+      SetExtPotAuxArray_EridanusII( ExtPot_AuxArray_Flt, ExtPot_AuxArray_Int, Time );
 
 #     ifdef GPU
       CUAPI_SetConstMemory_ExtAccPot();
