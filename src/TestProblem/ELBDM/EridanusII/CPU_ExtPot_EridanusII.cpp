@@ -61,10 +61,11 @@ extern double  Tidal_CM[3];
 //                3. Add "#ifndef __CUDACC__" since this routine is only useful on CPU
 //
 // Parameter   :  AuxArray_Flt/Int : Floating-point/Integer arrays to be filled up
+//                Time             : Target physical time
 //
 // Return      :  AuxArray_Flt/Int[]
 //-------------------------------------------------------------------------------------------------------
-void SetExtPotAuxArray_EridanusII( double AuxArray_Flt[], int AuxArray_Int[] )
+void SetExtPotAuxArray_EridanusII( double AuxArray_Flt[], int AuxArray_Int[], const double Time )
 {
 
    if ( Tidal_RotatingFrame )
@@ -230,7 +231,7 @@ void SetCPUExtPot_EridanusII( ExtPot_t &CPUExtPot_Ptr )
 #ifndef __CUDACC__
 
 // local function prototypes
-void SetExtPotAuxArray_EridanusII( double [], int [] );
+void SetExtPotAuxArray_EridanusII( double [], int [], const double );
 void SetCPUExtPot_EridanusII( ExtPot_t & );
 #ifdef GPU
 void SetGPUExtPot_EridanusII( ExtPot_t & );
@@ -254,7 +255,7 @@ void SetGPUExtPot_EridanusII( ExtPot_t & );
 void Init_ExtPot_EridanusII()
 {
 
-   SetExtPotAuxArray_EridanusII( ExtPot_AuxArray_Flt, ExtPot_AuxArray_Int );
+   SetExtPotAuxArray_EridanusII( ExtPot_AuxArray_Flt, ExtPot_AuxArray_Int, Time[0] );
    SetCPUExtPot_EridanusII( CPUExtPot_Ptr );
 #  ifdef GPU
    SetGPUExtPot_EridanusII( GPUExtPot_Ptr );
