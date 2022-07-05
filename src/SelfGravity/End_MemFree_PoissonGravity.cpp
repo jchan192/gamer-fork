@@ -17,7 +17,7 @@ void End_MemFree_PoissonGravity()
    for (int t=0; t<2; t++)
    {
       delete [] h_Rho_Array_P     [t];  h_Rho_Array_P     [t] = NULL;
-      delete [] h_Pot_Array_P_In  [t];  h_Pot_Array_P_In  [t] = NULL;
+      delete [] h_Pot_Array_P_InC [t];  h_Pot_Array_P_InC [t] = NULL;
       delete [] h_Pot_Array_P_Out [t];  h_Pot_Array_P_Out [t] = NULL;
 #     ifdef UNSPLIT_GRAVITY
       delete [] h_Pot_Array_USG_G [t];  h_Pot_Array_USG_G [t] = NULL;

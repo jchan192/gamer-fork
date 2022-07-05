@@ -25,24 +25,24 @@
 //                                              comment );
 //
 //                const int TComp = 1;
-//                Output_PreparedPatch_Poisson( TLv, TPID, TComp, NULL, h_Pot_Array_P_In, NPG, PID0_List, lv,
+//                Output_PreparedPatch_Poisson( TLv, TPID, TComp, NULL, h_Pot_Array_P_InC, NPG, PID0_List, lv,
 //                                              comment);
 //
-// Paremeter   :  TLv              : Level you want to output the prepared patch
-//                TPID             : Target patch ID
-//                TComp            : Target component
-//                                    --> 0 : Output the prepared density   stored in Rho_Array_P
-//                                        1 : Output the prepared potential stored in Pot_Array_P_In
-//                h_Rho_Array_P    : Input host density array for the Poisson solver
-//                h_Pot_Array_P_In : Input host coarse-grid potential array for the Poisson solver
-//                NPG              : Number of patch groups to be prepared at a time
-//                PID0_List        : List recording the patch indices with LocalID==0 to be udpated
-//                CLv              : Level of data currently stored in the input arrays
-//                comment          : String to attach to the end of the file name
+// Paremeter   :  TLv               : Level you want to output the prepared patch
+//                TPID              : Target patch ID
+//                TComp             : Target component
+//                                     --> 0 : Output the prepared density   stored in Rho_Array_P[]
+//                                         1 : Output the prepared potential stored in Pot_Array_P_InC[]
+//                h_Rho_Array_P     : Input host density array for the Poisson solver
+//                h_Pot_Array_P_InC : Input host coarse-grid potential array for the Poisson solver
+//                NPG               : Number of patch groups to be prepared at a time
+//                PID0_List         : List recording the patch indices with LocalID==0 to be udpated
+//                CLv               : Level of data currently stored in the input arrays
+//                comment           : String to attach to the end of the file name
 //-------------------------------------------------------------------------------------------------------
 void Output_PreparedPatch_Poisson( const int TLv, const int TPID, const int TComp,
-                                   const real h_Rho_Array_P   [][RHO_NXT][RHO_NXT][RHO_NXT],
-                                   const real h_Pot_Array_P_In[][POT_NXT][POT_NXT][POT_NXT],
+                                   const real h_Rho_Array_P[][RHO_NXT][RHO_NXT][RHO_NXT],
+                                   const real h_Pot_Array_P_InC[][POT_NXTC][POT_NXTC][POT_NXTC],
                                    const int NPG, const int *PID0_List, const int CLv, const char *comment )
 {
 
@@ -128,11 +128,11 @@ void Output_PreparedPatch_Poisson( const int TLv, const int TPID, const int TCom
          case 1:
             fprintf( File, "(%3s,%3s,%3s )%16s\n", "i", "j", "k", "Potential_In" );
 
-            for (int k=0; k<POT_NXT; k++)    {  K = k - PotCGhost;
-            for (int j=0; j<POT_NXT; j++)    {  J = j - PotCGhost;
-            for (int i=0; i<POT_NXT; i++)    {  I = i - PotCGhost;
+            for (int k=0; k<POT_NXTC; k++)   {  K = k - PotCGhost;
+            for (int j=0; j<POT_NXTC; j++)   {  J = j - PotCGhost;
+            for (int i=0; i<POT_NXTC; i++)   {  I = i - PotCGhost;
 
-               fprintf( File, "(%3d,%3d,%3d )  %14.7e\n", I, J, K, h_Pot_Array_P_In[N][k][j][i] );
+               fprintf( File, "(%3d,%3d,%3d )  %14.7e\n", I, J, K, h_Pot_Array_P_InC[N][k][j][i] );
 
             }}}
             break;

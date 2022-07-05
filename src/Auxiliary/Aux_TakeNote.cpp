@@ -557,7 +557,8 @@ void Aux_TakeNote()
       fprintf( Note, "#define DER_GHOST_SIZE          %d\n",      DER_GHOST_SIZE        );
       fprintf( Note, "#define FLU_NXT                 %d\n",      FLU_NXT               );
 #     ifdef GRAVITY
-      fprintf( Note, "#define POT_NXT                 %d\n",      POT_NXT               );
+      fprintf( Note, "#define POT_NXTC                %d\n",      POT_NXTC              );
+      fprintf( Note, "#define POT_NXTF                %d\n",      POT_NXTF              );
       fprintf( Note, "#define RHO_NXT                 %d\n",      RHO_NXT               );
       fprintf( Note, "#define GRA_NXT                 %d\n",      GRA_NXT               );
 #     ifdef UNSPLIT_GRAVITY

@@ -665,16 +665,24 @@
 
 
 // size of GPU arrays (in one dimension)
-//###REVISE: support interpolation schemes requiring 2 ghost cells on each side for POT_NXT
+//###REVISE: support interpolation schemes requiring 2 ghost cells on each side for POT_NXTC
 #  define FLU_NXT       ( PS2 + 2*FLU_GHOST_SIZE )                // use patch group as the unit
 #  define FLU_NXT_P1    ( FLU_NXT + 1 )
 #ifdef GRAVITY
-#  define POT_NXT       ( PS1/2 + 2*( (POT_GHOST_SIZE+3)/2 ) )    // assuming interpolation ghost zone == 1
+#  define POT_NXTC      ( PS1/2 + 2*( (POT_GHOST_SIZE+3)/2 ) )    // size of h_Pot_Array_P_InC[] assuming one ghost zone
+# ifdef GPU
+#  define POT_NXTF      ( PS1 + 2*POT_GHOST_SIZE )                // size of h_Pot_Array_P_InF[]; unlike the CPU solver,
+                                                                  // the GPU Poisson solver excludes the useless ghost zone
+# else
+#  define POT_NXTF     ( (POT_NXTC-2)*2 )                         // CPU Poisson solver includes one extra useless ghost zone
+                                                                  // when POT_GHOST_SIZE is odd
+                                                                  // --> assuming one ghost zone
+# endif
 #  define RHO_NXT       ( PS1 + 2*RHO_GHOST_SIZE )                // POT/RHO/GRA_NXT use patch as the unit
 #  define GRA_NXT       ( PS1 + 2*GRA_GHOST_SIZE )
 #  ifdef UNSPLIT_GRAVITY
-#  define USG_NXT_F     ( PS2 + 2*USG_GHOST_SIZE_F )              // we use patch group as unit for the fluid   solver
-#  define USG_NXT_G     ( PS1 + 2*USG_GHOST_SIZE_G )              // we use patch       as unit for the gravity solver
+#  define USG_NXT_F     ( PS2 + 2*USG_GHOST_SIZE_F )              // we use patch group as the unit for the fluid   solver
+#  define USG_NXT_G     ( PS1 + 2*USG_GHOST_SIZE_G )              // we use patch       as the unit for the gravity solver
 #  else
 #  define USG_NXT_F     ( 1 )                                     // still define USG_NXT_F/G since many function prototypes
 #  define USG_NXT_G     ( 1 )                                     // require it

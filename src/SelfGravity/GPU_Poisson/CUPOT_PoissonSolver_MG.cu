@@ -5,13 +5,12 @@
 
 
 
-#define POT_NXT_F    ( PATCH_SIZE+2*POT_GHOST_SIZE )
 #define POT_NTHREAD  ( POT_BLOCK_SIZE_X            )
 #define POT_USELESS  ( POT_GHOST_SIZE%2            )
 
-#if   ( POT_NXT_F == 18 )
+#if   ( POT_NXTF == 18 )
 
-//    for POT_NXT_F == 18, we reuse the same shared memory array due to the lack of shared memory
+//    for POT_NXTF == 18, we reuse the same shared memory array due to the lack of shared memory
 #     define REUSE_SHARED
 
 #     define MAX_NLV             4U
@@ -20,32 +19,32 @@
 #     define NGRID_LV1           9U
 #     define NGRID_LV2           5U
 #     define NGRID_LV3           3U
-#elif ( POT_NXT_F == 16 )
+#elif ( POT_NXTF == 16 )
 #     define MAX_NLV             3U
 #     define NBOTTOM_SMOOTH      7U
 #     define NGRID_LV0          16U
 #     define NGRID_LV1           8U
 #     define NGRID_LV2           4U
-#elif ( POT_NXT_F == 14 )
+#elif ( POT_NXTF == 14 )
 #     define MAX_NLV             3U
 #     define NBOTTOM_SMOOTH      7U
 #     define NGRID_LV0          14U
 #     define NGRID_LV1           7U
 #     define NGRID_LV2           4U
-#elif ( POT_NXT_F == 12 )
+#elif ( POT_NXTF == 12 )
 #     define MAX_NLV             3U
 #     define NBOTTOM_SMOOTH      1U
 #     define NGRID_LV0          12U
 #     define NGRID_LV1           6U
 #     define NGRID_LV2           3U
-#elif ( POT_NXT_F == 10 )
+#elif ( POT_NXTF == 10 )
 #     define MAX_NLV             3U
 #     define NBOTTOM_SMOOTH      1U
 #     define NGRID_LV0          10U
 #     define NGRID_LV1           5U
 #     define NGRID_LV2           3U
 #else
-#error ERROR : not supported POT_NXT_F
+#error ERROR : not supported POT_NXTF
 #endif
 
 #if ( MAX_NLV != 3  &&  MAX_NLV != 4 )
@@ -74,13 +73,13 @@ static __device__ void EstimateError( const real *Sol, const real *RHS, const re
 // Function    :  CUPOT_PoissonSolver_MG
 // Description :  GPU Poisson solver using the multigrid scheme
 //
-// Note        :  a. Work for POT_GHOST_SIZE = 1, 2, 3, 4, 5 <--> POT_NXT_F = 10, 12, 14, 16, 18
+// Note        :  a. Work for POT_GHOST_SIZE = 1, 2, 3, 4, 5 <--> POT_NXTF = 10, 12, 14, 16, 18
 //                b. Prefix "g" for pointers pointing to the "Global" memory space
 //                   Prefix "s" for pointers pointing to the "Shared" memory space
 //                c. Reference : Numerical Recipes, Chapter 20.6
 //
 // Parameter   :  g_Rho_Array       : Global memory array storing the input density
-//                g_Pot_Array_In    : Global memory array storing the input "coarse-grid" potential for ]
+//                g_Pot_Array_InC   : Global memory array storing the input "coarse-grid" potential for ]
 //                                    interpolation
 //                g_Pot_Array_Out   : Global memory array to store the output potential
 //                dh_Min            : Grid size of the input data
@@ -95,7 +94,7 @@ static __device__ void EstimateError( const real *Sol, const real *RHS, const re
 //                                        INT_QUAD  : quadratic interpolation
 //---------------------------------------------------------------------------------------------------
 __global__ void CUPOT_PoissonSolver_MG( const real g_Rho_Array    [][ RHO_NXT*RHO_NXT*RHO_NXT ],
-                                        const real g_Pot_Array_In [][ POT_NXT*POT_NXT*POT_NXT ],
+                                        const real g_Pot_Array_InC[][ POT_NXTC*POT_NXTC*POT_NXTC ],
                                               real g_Pot_Array_Out[][ GRA_NXT*GRA_NXT*GRA_NXT ],
                                         const real dh_Min, const int Max_Iter, const int NPre_Smooth,
                                         const int NPost_Smooth, const real Tolerated_Error, const real Poi_Coeff,
@@ -104,8 +103,8 @@ __global__ void CUPOT_PoissonSolver_MG( const real g_Rho_Array    [][ RHO_NXT*RH
 
    const uint bid = blockIdx.x;
    const uint tid = threadIdx.x;
-   const uint dy  = POT_NXT_F;
-   const uint dz  = POT_NXT_F*POT_NXT_F;
+   const uint dy  = POT_NXTF;
+   const uint dz  = POT_NXTF*POT_NXTF;
 
    int  Iter;
    uint t, s_Idx;
@@ -221,9 +220,9 @@ __global__ void CUPOT_PoissonSolver_MG( const real g_Rho_Array    [][ RHO_NXT*RH
 // a. load the coarse-grid potential into shared memory
 // -----------------------------------------------------------------------------------------------------------
    t = tid;
-   while ( t < POT_NXT*POT_NXT*POT_NXT )
+   while ( t < POT_NXTC*POT_NXTC*POT_NXTC )
    {
-      s_CPot[t] = g_Pot_Array_In[bid][t];
+      s_CPot[t] = g_Pot_Array_InC[bid][t];
       t += POT_NTHREAD;
    }
    __syncthreads();
@@ -232,25 +231,25 @@ __global__ void CUPOT_PoissonSolver_MG( const real g_Rho_Array    [][ RHO_NXT*RH
 
 // b. evaluate the "fine-grid" potential by interpolation (as the initial guess and the B.C.)
 // -----------------------------------------------------------------------------------------------------------
-   const int N_CSlice = POT_NTHREAD / ( (POT_NXT-2)*(POT_NXT-2) );
+   const int N_CSlice = POT_NTHREAD / ( (POT_NXTC-2)*(POT_NXTC-2) );
 
-   if ( tid < N_CSlice*(POT_NXT-2)*(POT_NXT-2) )
+   if ( tid < N_CSlice*(POT_NXTC-2)*(POT_NXTC-2) )
    {
       const real Const_8   = 1.0/8.0;
       const real Const_64  = 1.0/64.0;
       const real Const_512 = 1.0/512.0;
 
       const int Cdx  = 1;
-      const int Cdy  = POT_NXT;
-      const int Cdz  = POT_NXT*POT_NXT;
-      const int CIDx = 1 + tid % ( POT_NXT-2 );
-      const int CIDy = 1 + (  tid % ( (POT_NXT-2)*(POT_NXT-2) )  ) / ( POT_NXT-2 );
-      const int CIDz = 1 + tid / ( (POT_NXT-2)*(POT_NXT-2) );
+      const int Cdy  = POT_NXTC;
+      const int Cdz  = POT_NXTC*POT_NXTC;
+      const int CIDx = 1 + tid % ( POT_NXTC-2 );
+      const int CIDy = 1 + (  tid % ( (POT_NXTC-2)*(POT_NXTC-2) )  ) / ( POT_NXTC-2 );
+      const int CIDz = 1 + tid / ( (POT_NXTC-2)*(POT_NXTC-2) );
       int       CID  = __mul24( CIDz, Cdz ) + __mul24( CIDy, Cdy ) + __mul24( CIDx, Cdx );
 
       const int Fdx  = 1;
-      const int Fdy  = POT_NXT_F;
-      const int Fdz  = POT_NXT_F*POT_NXT_F;
+      const int Fdy  = POT_NXTF;
+      const int Fdz  = POT_NXTF*POT_NXTF;
       const int FIDx = ( (CIDx-1)<<1 ) - POT_USELESS;
       const int FIDy = ( (CIDy-1)<<1 ) - POT_USELESS;
       int       FIDz = ( (CIDz-1)<<1 ) - POT_USELESS;
@@ -262,7 +261,7 @@ __global__ void CUPOT_PoissonSolver_MG( const real g_Rho_Array    [][ RHO_NXT*RH
       int Idx, Idy, Idz, ii, jj, kk;
 
 
-      for (int z=CIDz; z<POT_NXT-1; z+=N_CSlice)
+      for (int z=CIDz; z<POT_NXTC-1; z+=N_CSlice)
       {
          switch ( IntScheme )
          {
@@ -363,26 +362,26 @@ __global__ void CUPOT_PoissonSolver_MG( const real g_Rho_Array    [][ RHO_NXT*RH
 //       Poisson solver does, we have not yet tried to optimize this part
          if ( FIDz >= 0 )
          {
-            if ( FIDx >= 0            &&  FIDy >= 0           )   s_Sol_Lv0[FID            ] = TempFPot1;
-            if ( FIDx <= POT_NXT_F-2  &&  FIDy >= 0           )   s_Sol_Lv0[FID+Fdx        ] = TempFPot2;
-            if ( FIDx >= 0            &&  FIDy <= POT_NXT_F-2 )   s_Sol_Lv0[FID    +Fdy    ] = TempFPot3;
-            if ( FIDx <= POT_NXT_F-2  &&  FIDy <= POT_NXT_F-2 )   s_Sol_Lv0[FID+Fdx+Fdy    ] = TempFPot4;
+            if ( FIDx >= 0           &&  FIDy >= 0          )  s_Sol_Lv0[FID            ] = TempFPot1;
+            if ( FIDx <= POT_NXTF-2  &&  FIDy >= 0          )  s_Sol_Lv0[FID+Fdx        ] = TempFPot2;
+            if ( FIDx >= 0           &&  FIDy <= POT_NXTF-2 )  s_Sol_Lv0[FID    +Fdy    ] = TempFPot3;
+            if ( FIDx <= POT_NXTF-2  &&  FIDy <= POT_NXTF-2 )  s_Sol_Lv0[FID+Fdx+Fdy    ] = TempFPot4;
          }
 
-         if ( FIDz <= POT_NXT_F-2 )
+         if ( FIDz <= POT_NXTF-2 )
          {
-            if ( FIDx >= 0            &&  FIDy >= 0           )   s_Sol_Lv0[FID        +Fdz] = TempFPot5;
-            if ( FIDx <= POT_NXT_F-2  &&  FIDy >= 0           )   s_Sol_Lv0[FID+Fdx    +Fdz] = TempFPot6;
-            if ( FIDx >= 0            &&  FIDy <= POT_NXT_F-2 )   s_Sol_Lv0[FID    +Fdy+Fdz] = TempFPot7;
-            if ( FIDx <= POT_NXT_F-2  &&  FIDy <= POT_NXT_F-2 )   s_Sol_Lv0[FID+Fdx+Fdy+Fdz] = TempFPot8;
+            if ( FIDx >= 0           &&  FIDy >= 0          )  s_Sol_Lv0[FID        +Fdz] = TempFPot5;
+            if ( FIDx <= POT_NXTF-2  &&  FIDy >= 0          )  s_Sol_Lv0[FID+Fdx    +Fdz] = TempFPot6;
+            if ( FIDx >= 0           &&  FIDy <= POT_NXTF-2 )  s_Sol_Lv0[FID    +Fdy+Fdz] = TempFPot7;
+            if ( FIDx <= POT_NXTF-2  &&  FIDy <= POT_NXTF-2 )  s_Sol_Lv0[FID+Fdx+Fdy+Fdz] = TempFPot8;
          }
 
          CID  += __mul24(   N_CSlice, Cdz );
          FID  += __mul24( 2*N_CSlice, Fdz );
          FIDz += 2*N_CSlice;
 
-      } // for (int z=CIDz; z<POT_NXT-1; z+=N_CSlice)
-   } // if ( tid < N_CSlice*(POT_NXT-2)*(POT_NXT-2) )
+      } // for (int z=CIDz; z<POT_NXTC-1; z+=N_CSlice)
+   } // if ( tid < N_CSlice*(POT_NXTC-2)*(POT_NXTC-2) )
    __syncthreads();
 
 
@@ -548,7 +547,7 @@ __device__ void Smoothing( real *Sol, const real *RHS, const real dh, const uint
 
 //       update solution
 //###OPTIMIZATION: try to optimize out this conditional operation (for the case that NGrid is odd)
-#        if (  ( POT_NXT_F & (POT_NXT_F-1) ) != 0  )
+#        if (  ( POT_NXTF & (POT_NXTF-1) ) != 0  )
          if ( i <= NGrid_m2 )
 #        endif
          Sol[ijk] = One_Six*( Sol[kp] + Sol[km] + Sol[jp] + Sol[jm] + Sol[ip] + Sol[im] - dh2*RHS[ijk] );

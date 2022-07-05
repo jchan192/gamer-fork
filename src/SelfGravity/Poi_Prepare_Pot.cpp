@@ -7,7 +7,7 @@
 
 //-------------------------------------------------------------------------------------------------------
 // Function    :  Poi_Prepare_Pot
-// Description :  Fill up the h_Pot_Array_P_In array with the coarse-grid (lv-1) potential for the Poisson solver
+// Description :  Fill up h_Pot_Array_P_InC[] with the coarse-grid (lv-1) potential for the Poisson solver
 //
 // Note        :  1. We don't call Prepare_PatchData() since it always prepare data for a **patch group** but
 //                   here we may want to prepare data for a single **patch**
@@ -15,15 +15,15 @@
 //                   --> Temporal interpolation/extrapolation will be conducted automatically if PrepTime
 //                       is NOT equal to the time of data stored previously (i.e., PotSgTime[0/1])
 //                3. Use extrapolation to obtain data outside the non-periodic boundaries
-//                4. h_Pot_Array_P_In[] must **exclude external potential** since it is for the Poisson solver
+//                4. h_Pot_Array_P_InC[] must **exclude external potential** since it is for the Poisson solver
 //
-// Parameter   :  lv               : Target refinement level
-//                PrepTime         : Target physical time to prepare the coarse-grid data
-//                h_Pot_Array_P_In : Host array to store the prepared coarse-grid potential
-//                NPG              : Number of patch groups prepared at a time
-//                PID0_List        : List recording the patch indices with LocalID==0 to be udpated
+// Parameter   :  lv                : Target refinement level
+//                PrepTime          : Target physical time to prepare the coarse-grid data
+//                h_Pot_Array_P_InC : Host array to store the prepared coarse-grid potential
+//                NPG               : Number of patch groups prepared at a time
+//                PID0_List         : List recording the patch indices with LocalID==0 to be udpated
 //-------------------------------------------------------------------------------------------------------
-void Poi_Prepare_Pot( const int lv, const double PrepTime, real h_Pot_Array_P_In[][POT_NXT][POT_NXT][POT_NXT],
+void Poi_Prepare_Pot( const int lv, const double PrepTime, real h_Pot_Array_P_InC[][POT_NXTC][POT_NXTC][POT_NXTC],
                       const int NPG, const int *PID0_List )
 {
 
@@ -269,7 +269,7 @@ void Poi_Prepare_Pot( const int lv, const double PrepTime, real h_Pot_Array_P_In
          } // for (int sib=0; sib<26; sib++)
 
 
-//       c. copy data from CPot[] to h_Pot_Array_P_In[]
+//       c. copy data from CPot[] to h_Pot_Array_P_InC[]
 // ------------------------------------------------------------------------------------------------------------
          for (int LocalID=0; LocalID<8; LocalID++)
          {
@@ -277,10 +277,10 @@ void Poi_Prepare_Pot( const int lv, const double PrepTime, real h_Pot_Array_P_In
 
             for (int d=0; d<3; d++)    Idx_Start_In[d] = TABLE_02( LocalID, 'x'+d, 0, PS1/2 );
 
-            for (int ko=0, ki=Idx_Start_In[2]; ko<POT_NXT; ko++, ki++)
-            for (int jo=0, ji=Idx_Start_In[1]; jo<POT_NXT; jo++, ji++)
-            for (int io=0, ii=Idx_Start_In[0]; io<POT_NXT; io++, ii++)
-               h_Pot_Array_P_In[N][ko][jo][io] = CPot[ki][ji][ii];
+            for (int ko=0, ki=Idx_Start_In[2]; ko<POT_NXTC; ko++, ki++)
+            for (int jo=0, ji=Idx_Start_In[1]; jo<POT_NXTC; jo++, ji++)
+            for (int io=0, ii=Idx_Start_In[0]; io<POT_NXTC; io++, ii++)
+               h_Pot_Array_P_InC[N][ko][jo][io] = CPot[ki][ji][ii];
          }
       } // for (int TID=0; TID<NPG; TID++)
 

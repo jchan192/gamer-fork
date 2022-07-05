@@ -5,7 +5,7 @@
 
 
 extern real (*d_Rho_Array_P    )[ CUBE(RHO_NXT) ];
-extern real (*d_Pot_Array_P_In )[ CUBE(POT_NXT) ];
+extern real (*d_Pot_Array_P_InC)[ CUBE(POT_NXTC) ];
 extern real (*d_Pot_Array_P_Out)[ CUBE(GRA_NXT) ];
 #ifdef UNSPLIT_GRAVITY
 extern real (*d_Pot_Array_USG_G)[ CUBE(USG_NXT_G) ];
@@ -37,7 +37,7 @@ void CUAPI_MemAllocate_PoissonGravity( const int Pot_NPG )
 
    const long Pot_NP            = 8*Pot_NPG;
    const long Rho_MemSize_P     = sizeof(real  )*Pot_NP*CUBE(RHO_NXT);
-   const long Pot_MemSize_P_In  = sizeof(real  )*Pot_NP*CUBE(POT_NXT);
+   const long Pot_MemSize_P_InC = sizeof(real  )*Pot_NP*CUBE(POT_NXTC);
    const long Pot_MemSize_P_Out = sizeof(real  )*Pot_NP*CUBE(GRA_NXT);
 #  ifdef UNSPLIT_GRAVITY
    const long Pot_MemSize_USG_G = sizeof(real  )*Pot_NP*CUBE(USG_NXT_G);
@@ -57,7 +57,7 @@ void CUAPI_MemAllocate_PoissonGravity( const int Pot_NPG )
 
 
 // output the total memory requirement
-   long TotalSize = Rho_MemSize_P + Pot_MemSize_P_In + Pot_MemSize_P_Out + Flu_MemSize_G + Pot_MemSize_T;
+   long TotalSize = Rho_MemSize_P + Pot_MemSize_P_InC + Pot_MemSize_P_Out + Flu_MemSize_G + Pot_MemSize_T;
 #  ifdef UNSPLIT_GRAVITY
    TotalSize += Pot_MemSize_USG_G + Flu_MemSize_USG_G;
 #  endif
@@ -78,7 +78,7 @@ void CUAPI_MemAllocate_PoissonGravity( const int Pot_NPG )
 
 // allocate the device memory
    CUDA_CHECK_ERROR(  cudaMalloc( (void**) &d_Rho_Array_P,      Rho_MemSize_P     )  );
-   CUDA_CHECK_ERROR(  cudaMalloc( (void**) &d_Pot_Array_P_In,   Pot_MemSize_P_In  )  );
+   CUDA_CHECK_ERROR(  cudaMalloc( (void**) &d_Pot_Array_P_InC,  Pot_MemSize_P_InC )  );
    CUDA_CHECK_ERROR(  cudaMalloc( (void**) &d_Pot_Array_P_Out,  Pot_MemSize_P_Out )  );
 #  ifdef UNSPLIT_GRAVITY
    CUDA_CHECK_ERROR(  cudaMalloc( (void**) &d_Pot_Array_USG_G,  Pot_MemSize_USG_G )  );
@@ -109,7 +109,7 @@ void CUAPI_MemAllocate_PoissonGravity( const int Pot_NPG )
    for (int t=0; t<2; t++)
    {
       CUDA_CHECK_ERROR(  cudaMallocHost( (void**) &h_Rho_Array_P     [t], Rho_MemSize_P     )  );
-      CUDA_CHECK_ERROR(  cudaMallocHost( (void**) &h_Pot_Array_P_In  [t], Pot_MemSize_P_In  )  );
+      CUDA_CHECK_ERROR(  cudaMallocHost( (void**) &h_Pot_Array_P_InC [t], Pot_MemSize_P_InC )  );
       CUDA_CHECK_ERROR(  cudaMallocHost( (void**) &h_Pot_Array_P_Out [t], Pot_MemSize_P_Out )  );
 #     ifdef UNSPLIT_GRAVITY
       CUDA_CHECK_ERROR(  cudaMallocHost( (void**) &h_Pot_Array_USG_G [t], Pot_MemSize_USG_G )  );

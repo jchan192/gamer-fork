@@ -322,7 +322,7 @@ void Refine_Buffer( const int lv, const int *SonTable, const int *GrandTable );
 // SelfGravity
 #ifdef GRAVITY
 void CPU_PoissonGravitySolver( const real h_Rho_Array    [][RHO_NXT][RHO_NXT][RHO_NXT],
-                               const real h_Pot_Array_In [][POT_NXT][POT_NXT][POT_NXT],
+                               const real h_Pot_Array_InC[][POT_NXTC][POT_NXTC][POT_NXTC],
                                      real h_Pot_Array_Out[][GRA_NXT][GRA_NXT][GRA_NXT],
                                      real h_Flu_Array    [][GRA_NIN][PS1][PS1][PS1],
                                const double h_Corner_Array[][3],
@@ -375,8 +375,8 @@ void Init_MemAllocate_PoissonGravity( const int Pot_NPatchGroup );
 void Init_Set_Default_MG_Parameter( int &Max_Iter, int &NPre_Smooth, int &NPost_Smooth, double &Tolerated_Error );
 void Init_Set_Default_SOR_Parameter( double &SOR_Omega, int &SOR_Max_Iter, int &SOR_Min_Iter );
 void Output_PreparedPatch_Poisson( const int TLv, const int TPID, const int TComp,
-                                   const real h_Rho_Array_P   [][RHO_NXT][RHO_NXT][RHO_NXT],
-                                   const real h_Pot_Array_P_In[][POT_NXT][POT_NXT][POT_NXT],
+                                   const real h_Rho_Array_P    [][RHO_NXT][RHO_NXT][RHO_NXT],
+                                   const real h_Pot_Array_P_InC[][POT_NXTC][POT_NXTC][POT_NXTC],
                                    const int NPG, const int *PID0_List, const int CLv, const char *comment );
 void Poi_Close( const int lv, const int SaveSg, const real h_Pot_Array_P_Out[][GRA_NXT][GRA_NXT][GRA_NXT],
                 const int NPG, const int *PID0_List );
@@ -384,7 +384,7 @@ void Poi_BoundaryCondition_Extrapolation( real *Array, const int BC_Face, const 
                                           const int ArraySizeX, const int ArraySizeY, const int ArraySizeZ,
                                           const int Idx_Start[], const int Idx_End[] );
 void Poi_GetAverageDensity();
-void Poi_Prepare_Pot( const int lv, const double PrepTime, real h_Pot_Array_P_In[][POT_NXT][POT_NXT][POT_NXT],
+void Poi_Prepare_Pot( const int lv, const double PrepTime, real h_Pot_Array_P_InC[][POT_NXTC][POT_NXTC][POT_NXTC],
                       const int NPG, const int *PID0_List );
 void Poi_Prepare_Rho( const int lv, const double PrepTime, real h_Rho_Array_P[][RHO_NXT][RHO_NXT][RHO_NXT],
                       const int NPG, const int *PID0_List );
@@ -566,7 +566,7 @@ void CUAPI_Synchronize();
 #ifdef GRAVITY
 void CUAPI_SetConstMemory_ExtAccPot();
 void CUAPI_Asyn_PoissonGravitySolver( const real h_Rho_Array    [][RHO_NXT][RHO_NXT][RHO_NXT],
-                                      const real h_Pot_Array_In [][POT_NXT][POT_NXT][POT_NXT],
+                                      const real h_Pot_Array_InC[][POT_NXTC][POT_NXTC][POT_NXTC],
                                             real h_Pot_Array_Out[][GRA_NXT][GRA_NXT][GRA_NXT],
                                             real h_Flu_Array    [][GRA_NIN][PS1][PS1][PS1],
                                       const double h_Corner_Array[][3],

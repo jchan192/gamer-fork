@@ -305,7 +305,7 @@ extern real       (*h_Ele_Array      [2])[9][NCOMP_ELE][ PS2P1*PS2 ];
 
 #ifdef GRAVITY
 extern real       (*h_Rho_Array_P     [2])[RHO_NXT][RHO_NXT][RHO_NXT];
-extern real       (*h_Pot_Array_P_In  [2])[POT_NXT][POT_NXT][POT_NXT];
+extern real       (*h_Pot_Array_P_InC [2])[POT_NXTC][POT_NXTC][POT_NXTC];
 extern real       (*h_Pot_Array_P_Out [2])[GRA_NXT][GRA_NXT][GRA_NXT];
 extern real       (*h_Flu_Array_G     [2])[GRA_NIN][PS1][PS1][PS1];
 extern double     (*h_Corner_Array_PGT[2])[3];

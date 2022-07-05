@@ -325,7 +325,7 @@ void Preparation_Step( const Solver_t TSolver, const int lv, const double TimeNe
                         Timer_Poi_PreRho[lv]   );
 
          if ( OPT__SELF_GRAVITY )
-         TIMING_SYNC(   Poi_Prepare_Pot( lv, TimeNew, h_Pot_Array_P_In[ArrayID], NPG, PID0_List ),
+         TIMING_SYNC(   Poi_Prepare_Pot( lv, TimeNew, h_Pot_Array_P_InC[ArrayID], NPG, PID0_List ),
                         Timer_Poi_PrePot_C[lv]   );
 
 //       use the same timer "Timer_Poi_PreRho" as Poi_Prepare_Rho()
@@ -362,7 +362,7 @@ void Preparation_Step( const Solver_t TSolver, const int lv, const double TimeNe
                         Timer_Poi_PreRho[lv]   );
 
          if ( OPT__SELF_GRAVITY )
-         TIMING_SYNC(   Poi_Prepare_Pot( lv, TimeNew, h_Pot_Array_P_In[ArrayID], NPG, PID0_List ),
+         TIMING_SYNC(   Poi_Prepare_Pot( lv, TimeNew, h_Pot_Array_P_InC[ArrayID], NPG, PID0_List ),
                         Timer_Poi_PrePot_C[lv]   );
 
          TIMING_SYNC(   Gra_Prepare_Flu( lv, h_Flu_Array_G[ArrayID], h_DE_Array_G[ArrayID], h_Emag_Array_G[ArrayID],
@@ -568,7 +568,7 @@ void Solver( const Solver_t TSolver, const int lv, const double TimeNew, const d
       case POISSON_SOLVER :
 
 #        ifdef GPU
-         CUAPI_Asyn_PoissonGravitySolver( h_Rho_Array_P[ArrayID], h_Pot_Array_P_In[ArrayID],
+         CUAPI_Asyn_PoissonGravitySolver( h_Rho_Array_P[ArrayID], h_Pot_Array_P_InC[ArrayID],
                                           h_Pot_Array_P_Out[ArrayID], NULL, h_Corner_Array_PGT[ArrayID],
                                           NULL, NULL, NULL, NULL,
                                           NPG, dt, dh, SOR_MIN_ITER, SOR_MAX_ITER,
@@ -579,7 +579,7 @@ void Solver( const Solver_t TSolver, const int lv, const double TimeNew, const d
                                           TimeNew, TimeOld, NULL_REAL,
                                           GPU_NSTREAM );
 #        else
-         CPU_PoissonGravitySolver       ( h_Rho_Array_P[ArrayID], h_Pot_Array_P_In[ArrayID],
+         CPU_PoissonGravitySolver       ( h_Rho_Array_P[ArrayID], h_Pot_Array_P_InC[ArrayID],
                                           h_Pot_Array_P_Out[ArrayID], NULL, h_Corner_Array_PGT[ArrayID],
                                           NULL, NULL, NULL, NULL,
                                           NPG, dt, dh, SOR_MIN_ITER, SOR_MAX_ITER,
@@ -624,7 +624,7 @@ void Solver( const Solver_t TSolver, const int lv, const double TimeNew, const d
       case POISSON_AND_GRAVITY_SOLVER :
 
 #        ifdef GPU
-         CUAPI_Asyn_PoissonGravitySolver( h_Rho_Array_P[ArrayID], h_Pot_Array_P_In[ArrayID],
+         CUAPI_Asyn_PoissonGravitySolver( h_Rho_Array_P[ArrayID], h_Pot_Array_P_InC[ArrayID],
                                           h_Pot_Array_P_Out[ArrayID], h_Flu_Array_G[ArrayID], h_Corner_Array_PGT[ArrayID],
                                           h_Pot_Array_USG_G[ArrayID], h_Flu_Array_USG_G[ArrayID], h_DE_Array_G[ArrayID],
                                           h_Emag_Array_G[ArrayID],
@@ -636,7 +636,7 @@ void Solver( const Solver_t TSolver, const int lv, const double TimeNew, const d
                                           TimeNew, TimeOld, MIN_EINT,
                                           GPU_NSTREAM );
 #        else
-         CPU_PoissonGravitySolver       ( h_Rho_Array_P[ArrayID], h_Pot_Array_P_In[ArrayID],
+         CPU_PoissonGravitySolver       ( h_Rho_Array_P[ArrayID], h_Pot_Array_P_InC[ArrayID],
                                           h_Pot_Array_P_Out[ArrayID], h_Flu_Array_G[ArrayID], h_Corner_Array_PGT[ArrayID],
                                           h_Pot_Array_USG_G[ArrayID], h_Flu_Array_USG_G[ArrayID], h_DE_Array_G[ArrayID],
                                           h_Emag_Array_G[ArrayID],

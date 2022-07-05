@@ -2097,7 +2097,7 @@ void FillIn_SymConst( SymConst_t &SymConst )
    SymConst.Pot_GhostSize        = POT_GHOST_SIZE;
    SymConst.Gra_GhostSize        = GRA_GHOST_SIZE;
    SymConst.Rho_GhostSize        = RHO_GHOST_SIZE;
-   SymConst.Pot_Nxt              = POT_NXT;
+   SymConst.Pot_Nxt              = POT_NXTC;
    SymConst.Gra_Nxt              = GRA_NXT;
    SymConst.Rho_Nxt              = RHO_NXT;
 
