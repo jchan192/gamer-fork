@@ -69,7 +69,7 @@ Procedure for outputting new variables:
 
 
 //-------------------------------------------------------------------------------------------------------
-// Function    :  Output_DumpData_Total_HDF5 (FormatVersion = 2448)
+// Function    :  Output_DumpData_Total_HDF5 (FormatVersion = 2449)
 // Description :  Output all simulation data in the HDF5 format, which can be used as a restart file
 //                or loaded by YT
 //
@@ -219,6 +219,7 @@ Procedure for outputting new variables:
 //                2446 : 2022/05/10 --> output SUPPORT_LIBYT and LIBYT_USE_PATCH_GROUP
 //                2447 : 2022/05/11 --> output MASSIVE_PARTICLES, TRACER, PAR_NTYPE, GhostSizeTracer
 //                2448 : 2022/05/18 --> output PAR_IC_TYPE
+//                2449 : 2022/07/05 --> output POT_NXT_C/F
 //-------------------------------------------------------------------------------------------------------
 void Output_DumpData_Total_HDF5( const char *FileName )
 {
@@ -1724,7 +1725,7 @@ void FillIn_KeyInfo( KeyInfo_t &KeyInfo, const int NFieldStored )
 
    const time_t CalTime = time( NULL );   // calendar time
 
-   KeyInfo.FormatVersion        = 2448;
+   KeyInfo.FormatVersion        = 2449;
    KeyInfo.Model                = MODEL;
    KeyInfo.NLevel               = NLEVEL;
    KeyInfo.NCompFluid           = NCOMP_FLUID;
@@ -2097,7 +2098,8 @@ void FillIn_SymConst( SymConst_t &SymConst )
    SymConst.Pot_GhostSize        = POT_GHOST_SIZE;
    SymConst.Gra_GhostSize        = GRA_GHOST_SIZE;
    SymConst.Rho_GhostSize        = RHO_GHOST_SIZE;
-   SymConst.Pot_Nxt              = POT_NXTC;
+   SymConst.Pot_NxtC             = POT_NXTC;
+   SymConst.Pot_NxtF             = POT_NXTF;
    SymConst.Gra_Nxt              = GRA_NXT;
    SymConst.Rho_Nxt              = RHO_NXT;
 
@@ -2968,7 +2970,8 @@ void GetCompound_SymConst( hid_t &H5_TypeID )
    H5Tinsert( H5_TypeID, "Pot_GhostSize",        HOFFSET(SymConst_t,Pot_GhostSize       ), H5T_NATIVE_INT    );
    H5Tinsert( H5_TypeID, "Gra_GhostSize",        HOFFSET(SymConst_t,Gra_GhostSize       ), H5T_NATIVE_INT    );
    H5Tinsert( H5_TypeID, "Rho_GhostSize",        HOFFSET(SymConst_t,Rho_GhostSize       ), H5T_NATIVE_INT    );
-   H5Tinsert( H5_TypeID, "Pot_Nxt",              HOFFSET(SymConst_t,Pot_Nxt             ), H5T_NATIVE_INT    );
+   H5Tinsert( H5_TypeID, "Pot_NxtC",             HOFFSET(SymConst_t,Pot_NxtC            ), H5T_NATIVE_INT    );
+   H5Tinsert( H5_TypeID, "Pot_NxtF",             HOFFSET(SymConst_t,Pot_NxtF            ), H5T_NATIVE_INT    );
    H5Tinsert( H5_TypeID, "Gra_Nxt",              HOFFSET(SymConst_t,Gra_Nxt             ), H5T_NATIVE_INT    );
    H5Tinsert( H5_TypeID, "Rho_Nxt",              HOFFSET(SymConst_t,Rho_Nxt             ), H5T_NATIVE_INT    );
 #  ifdef UNSPLIT_GRAVITY

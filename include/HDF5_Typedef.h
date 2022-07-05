@@ -202,7 +202,8 @@ struct SymConst_t
    int    Pot_GhostSize;
    int    Gra_GhostSize;
    int    Rho_GhostSize;
-   int    Pot_Nxt;
+   int    Pot_NxtC;
+   int    Pot_NxtF;
    int    Gra_Nxt;
    int    Rho_Nxt;
 

@@ -1588,7 +1588,8 @@ void Check_SymConst( const char *FileName, const int FormatVersion )
    LoadField( "Pot_GhostSize",        &RS.Pot_GhostSize,        SID, TID, NonFatal, &RT.Pot_GhostSize,         1, NonFatal );
    LoadField( "Gra_GhostSize",        &RS.Gra_GhostSize,        SID, TID, NonFatal, &RT.Gra_GhostSize,         1, NonFatal );
    LoadField( "Rho_GhostSize",        &RS.Rho_GhostSize,        SID, TID, NonFatal, &RT.Rho_GhostSize,         1, NonFatal );
-   LoadField( "Pot_Nxt",              &RS.Pot_Nxt,              SID, TID, NonFatal, &RT.Pot_Nxt,               1, NonFatal );
+   LoadField( "Pot_NxtC",             &RS.Pot_NxtC,             SID, TID, NonFatal, &RT.Pot_NxtC,              1, NonFatal );
+   LoadField( "Pot_NxtF",             &RS.Pot_NxtF,             SID, TID, NonFatal, &RT.Pot_NxtF,              1, NonFatal );
    LoadField( "Gra_Nxt",              &RS.Gra_Nxt,              SID, TID, NonFatal, &RT.Gra_Nxt,               1, NonFatal );
    LoadField( "Rho_Nxt",              &RS.Rho_Nxt,              SID, TID, NonFatal, &RT.Rho_Nxt,               1, NonFatal );
 #  ifdef UNSPLIT_GRAVITY
