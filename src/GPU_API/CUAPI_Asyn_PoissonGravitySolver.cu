@@ -156,7 +156,7 @@ extern cudaStream_t *Stream;
 //-------------------------------------------------------------------------------------------------------
 void CUAPI_Asyn_PoissonGravitySolver( const real h_Rho_Array    [][RHO_NXT][RHO_NXT][RHO_NXT],
                                       const real h_Pot_Array_InC[][POT_NXTC][POT_NXTC][POT_NXTC],
-                                      const real h_Pot_Array_InF[][POT_NXTF][POT_NXTF][POT_NXTF],
+                                            real h_Pot_Array_InF[][POT_NXTF][POT_NXTF][POT_NXTF],
                                             real h_Pot_Array_Out[][GRA_NXT][GRA_NXT][GRA_NXT],
                                             real h_Flu_Array    [][GRA_NIN][PS1][PS1][PS1],
                                       const double h_Corner_Array[][3],
