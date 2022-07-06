@@ -8,17 +8,19 @@
 #if   ( POT_SCHEME == SOR )
 void CPU_PoissonSolver_SOR( const real Rho_Array    [][RHO_NXT][RHO_NXT][RHO_NXT],
                             const real Pot_Array_InC[][POT_NXTC][POT_NXTC][POT_NXTC],
+                                  real Pot_Array_InF[][POT_NXTF][POT_NXTF][POT_NXTF],
                                   real Pot_Array_Out[][GRA_NXT][GRA_NXT][GRA_NXT],
                             const int NPatchGroup, const real dh, const int Min_Iter, const int Max_Iter,
                             const real Omega, const real Poi_Coeff, const IntScheme_t IntScheme );
 
 #elif ( POT_SCHEME == MG  )
-void CPU_PoissonSolver_MG( const real Rho_Array    [][RHO_NXT][RHO_NXT][RHO_NXT],
-                           const real Pot_Array_InC[][POT_NXTC][POT_NXTC][POT_NXTC],
-                                 real Pot_Array_Out[][GRA_NXT][GRA_NXT][GRA_NXT],
-                           const int NPatchGroup, const real dh_Min, const int Max_Iter, const int NPre_Smooth,
-                           const int NPost_Smooth, const real Tolerated_Error, const real Poi_Coeff,
-                           const IntScheme_t IntScheme );
+void CPU_PoissonSolver_MG ( const real Rho_Array    [][RHO_NXT][RHO_NXT][RHO_NXT],
+                            const real Pot_Array_InC[][POT_NXTC][POT_NXTC][POT_NXTC],
+                                  real Pot_Array_InF[][POT_NXTF][POT_NXTF][POT_NXTF],
+                                  real Pot_Array_Out[][GRA_NXT][GRA_NXT][GRA_NXT],
+                            const int NPatchGroup, const real dh_Min, const int Max_Iter, const int NPre_Smooth,
+                            const int NPost_Smooth, const real Tolerated_Error, const real Poi_Coeff,
+                            const IntScheme_t IntScheme );
 #endif // POT_SCHEME
 
 void CPU_ExtPotSolver( real g_Pot_Array[][ CUBE(GRA_NXT) ],
@@ -67,7 +69,8 @@ void CPU_ELBDMGravitySolver(       real Flu_Array[][GRA_NIN][PATCH_SIZE][PATCH_S
 //                advance the fluid variables by the gravitational acceleration for a group of patches
 //
 // Parameter   :  h_Rho_Array        : Host array storing the input density
-//                h_Pot_Array_InC    : Host array storing the input "coarse-grid" potential for interpolation
+//                h_Pot_Array_InC    : Host array storing the input "coarse-grid" potential before interpolation
+//                h_Pot_Array_InF    : Host array to store the "fine-grid" potential after interpolation
 //                h_Pot_Array_Out    : Host array to store the output potential
 //                h_Flu_Array        : Host array to store the fluid variables for the Gravity solver
 //                h_Corner_Array     : Host array storing the physical corner coordinates of each patch
@@ -111,6 +114,7 @@ void CPU_ELBDMGravitySolver(       real Flu_Array[][GRA_NIN][PATCH_SIZE][PATCH_S
 //-------------------------------------------------------------------------------------------------------
 void CPU_PoissonGravitySolver( const real h_Rho_Array    [][RHO_NXT][RHO_NXT][RHO_NXT],
                                const real h_Pot_Array_InC[][POT_NXTC][POT_NXTC][POT_NXTC],
+                               const real h_Pot_Array_InF[][POT_NXTF][POT_NXTF][POT_NXTF],
                                      real h_Pot_Array_Out[][GRA_NXT][GRA_NXT][GRA_NXT],
                                      real h_Flu_Array    [][GRA_NIN][PS1][PS1][PS1],
                                const double h_Corner_Array[][3],
@@ -171,13 +175,13 @@ void CPU_PoissonGravitySolver( const real h_Rho_Array    [][RHO_NXT][RHO_NXT][RH
       {
 #        if   ( POT_SCHEME == SOR )
 
-         CPU_PoissonSolver_SOR( h_Rho_Array, h_Pot_Array_InC, h_Pot_Array_Out, NPatchGroup, dh,
+         CPU_PoissonSolver_SOR( h_Rho_Array, h_Pot_Array_InC, h_Pot_Array_InF, h_Pot_Array_Out, NPatchGroup, dh,
                                 SOR_Min_Iter, SOR_Max_Iter, SOR_Omega,
                                 Poi_Coeff, IntScheme );
 
 #        elif ( POT_SCHEME == MG  )
 
-         CPU_PoissonSolver_MG ( h_Rho_Array, h_Pot_Array_InC, h_Pot_Array_Out, NPatchGroup, dh,
+         CPU_PoissonSolver_MG ( h_Rho_Array, h_Pot_Array_InC, h_Pot_Array_InF, h_Pot_Array_Out, NPatchGroup, dh,
                                 MG_Max_Iter, MG_NPre_Smooth, MG_NPost_Smooth, MG_Tolerated_Error,
                                 Poi_Coeff, IntScheme );
 

@@ -105,15 +105,17 @@ __global__ void CUFLU_ELBDMSolver( real g_Fluid_In [][FLU_NIN ][ FLU_NXT*FLU_NXT
 
 // Poisson solver prototypes
 #if   ( POT_SCHEME == SOR )
-__global__ void CUPOT_PoissonSolver_SOR( const real g_Rho_Array    [][ RHO_NXT*RHO_NXT*RHO_NXT ],
-                                         const real g_Pot_Array_InC[][ POT_NXTC*POT_NXTC*POT_NXTC ],
-                                               real g_Pot_Array_Out[][ GRA_NXT*GRA_NXT*GRA_NXT ],
+__global__ void CUPOT_PoissonSolver_SOR( const real g_Rho_Array    [][ CUBE(RHO_NXT) ],
+                                         const real g_Pot_Array_InC[][ CUBE(POT_NXTC) ],
+                                               real g_Pot_Array_InF[][ CUBE(POT_NXTF) ],
+                                               real g_Pot_Array_Out[][ CUBE(GRA_NXT) ],
                                          const int Min_Iter, const int Max_Iter, const real Omega_6,
                                          const real Const, const IntScheme_t IntScheme );
 #elif ( POT_SCHEME == MG )
-__global__ void CUPOT_PoissonSolver_MG( const real g_Rho_Array    [][ RHO_NXT*RHO_NXT*RHO_NXT ],
-                                        const real g_Pot_Array_InC[][ POT_NXTC*POT_NXTC*POT_NXTC ],
-                                              real g_Pot_Array_Out[][ GRA_NXT*GRA_NXT*GRA_NXT ],
+__global__ void CUPOT_PoissonSolver_MG( const real g_Rho_Array    [][ CUBE(RHO_NXT) ],
+                                        const real g_Pot_Array_InC[][ CUBE(POT_NXTC) ],
+                                              real g_Pot_Array_InF[][ CUBE(POT_NXTF) ],
+                                              real g_Pot_Array_Out[][ CUBE(GRA_NXT) ],
                                         const real dh_Min, const int Max_Iter, const int NPre_Smooth,
                                         const int NPost_Smooth, const real Tolerated_Error, const real Poi_Coeff,
                                         const IntScheme_t IntScheme );

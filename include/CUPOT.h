@@ -136,6 +136,9 @@
 #     define SOR_CPOT_SHARED
 #  endif
 
+// load fine-grid potential into shared memory for higher performance
+#     define SOR_FPOT_SHARED
+
 
 
 // ###################

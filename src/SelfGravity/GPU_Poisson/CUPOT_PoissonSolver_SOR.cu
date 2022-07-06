@@ -88,8 +88,8 @@
 //
 //
 // Parameter   :  g_Rho_Array     : Global memory array to store the input density
-//                g_Pot_Array_InC : Global memory array storing the input "coarse-grid" potential for
-//                                  interpolation
+//                g_Pot_Array_InC : Global memory array storing the input "coarse-grid" potential before interpolation
+//                g_Pot_Array_InF : Global memory array to store the "fine-grid" potential after interpolation
 //                g_Pot_Array_Out : Global memory array to store the output potential
 //                Min_Iter        : Minimum # of iterations for SOR
 //                Max_Iter        : Maximum # of iterations for SOR
@@ -102,6 +102,7 @@
 //---------------------------------------------------------------------------------------------------
 __global__ void CUPOT_PoissonSolver_SOR( const real g_Rho_Array    [][ CUBE(RHO_NXT) ],
                                          const real g_Pot_Array_InC[][ CUBE(POT_NXTC) ],
+                                               real g_Pot_Array_InF[][ CUBE(POT_NXTF) ],
                                                real g_Pot_Array_Out[][ CUBE(GRA_NXT) ],
                                          const int Min_Iter, const int Max_Iter, const real Omega_6,
                                          const real Const, const IntScheme_t IntScheme )

@@ -295,6 +295,7 @@ real (*h_EC_Ele     )[NCOMP_MAG][ CUBE(N_EC_ELE)          ]        = NULL;
 // (3-2) Poisson and gravity solver
 real   (*h_Rho_Array_P     [2])[RHO_NXT][RHO_NXT][RHO_NXT]         = { NULL, NULL };
 real   (*h_Pot_Array_P_InC [2])[POT_NXTC][POT_NXTC][POT_NXTC]      = { NULL, NULL };
+real   (*h_Pot_Array_P_InF [2])[POT_NXTF][POT_NXTF][POT_NXTF]      = { NULL, NULL };
 real   (*h_Pot_Array_P_Out [2])[GRA_NXT][GRA_NXT][GRA_NXT]         = { NULL, NULL };
 real   (*h_Flu_Array_G     [2])[GRA_NIN][PS1][PS1][PS1]            = { NULL, NULL };
 double (*h_Corner_Array_PGT[2])[3]                                 = { NULL, NULL };
@@ -381,6 +382,7 @@ real (*d_EC_Ele     )[NCOMP_MAG][ CUBE(N_EC_ELE)          ]        = NULL;
 // (4-2) Poisson and gravity solver
 real   (*d_Rho_Array_P    )[ CUBE(RHO_NXT) ]                       = NULL;
 real   (*d_Pot_Array_P_InC)[ CUBE(POT_NXTC) ]                      = NULL;
+real   (*d_Pot_Array_P_InF)[ CUBE(POT_NXTF) ]                      = NULL;
 real   (*d_Pot_Array_P_Out)[ CUBE(GRA_NXT) ]                       = NULL;
 real   (*d_Flu_Array_G    )[GRA_NIN][ CUBE(PS1) ]                  = NULL;
 double (*d_Corner_Array_PGT)[3]                                    = NULL;

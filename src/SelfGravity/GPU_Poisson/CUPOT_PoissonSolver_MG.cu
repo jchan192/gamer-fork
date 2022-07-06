@@ -78,24 +78,25 @@ static __device__ void EstimateError( const real *Sol, const real *RHS, const re
 //                   Prefix "s" for pointers pointing to the "Shared" memory space
 //                c. Reference : Numerical Recipes, Chapter 20.6
 //
-// Parameter   :  g_Rho_Array       : Global memory array storing the input density
-//                g_Pot_Array_InC   : Global memory array storing the input "coarse-grid" potential for ]
-//                                    interpolation
-//                g_Pot_Array_Out   : Global memory array to store the output potential
-//                dh_Min            : Grid size of the input data
-//                Max_Iter          : Maximum number of iterations for multigrid
-//                NPre_Smooth       : Number of pre-smoothing steps for multigrid
-//                NPost_Smooth      : Number of post-smoothing steps for multigrid
-//                Tolerated_Error   : Maximum tolerated error for multigrid
-//                Poi_Coeff         : Coefficient in front of the RHS in the Poisson eq.
-//                IntScheme         : Interpolation scheme for potential
-//                                    --> currently supported schemes include
-//                                        INT_CQUAD : conservative quadratic interpolation
-//                                        INT_QUAD  : quadratic interpolation
+// Parameter   :  g_Rho_Array     : Global memory array storing the input density
+//                g_Pot_Array_InC : Global memory array storing the input "coarse-grid" potential before interpolation
+//                g_Pot_Array_InF : Global memory array to store the "fine-grid" potential after interpolation
+//                g_Pot_Array_Out : Global memory array to store the output potential
+//                dh_Min          : Grid size of the input data
+//                Max_Iter        : Maximum number of iterations for multigrid
+//                NPre_Smooth     : Number of pre-smoothing steps for multigrid
+//                NPost_Smooth    : Number of post-smoothing steps for multigrid
+//                Tolerated_Error : Maximum tolerated error for multigrid
+//                Poi_Coeff       : Coefficient in front of the RHS in the Poisson eq.
+//                IntScheme       : Interpolation scheme for potential
+//                                  --> currently supported schemes include
+//                                      INT_CQUAD : conservative quadratic interpolation
+//                                      INT_QUAD  : quadratic interpolation
 //---------------------------------------------------------------------------------------------------
-__global__ void CUPOT_PoissonSolver_MG( const real g_Rho_Array    [][ RHO_NXT*RHO_NXT*RHO_NXT ],
-                                        const real g_Pot_Array_InC[][ POT_NXTC*POT_NXTC*POT_NXTC ],
-                                              real g_Pot_Array_Out[][ GRA_NXT*GRA_NXT*GRA_NXT ],
+__global__ void CUPOT_PoissonSolver_MG( const real g_Rho_Array    [][ CUBE(RHO_NXT) ],
+                                        const real g_Pot_Array_InC[][ CUBE(POT_NXTC) ],
+                                              real g_Pot_Array_InF[][ CUBE(POT_NXTF) ],
+                                              real g_Pot_Array_Out[][ CUBE(GRA_NXT) ],
                                         const real dh_Min, const int Max_Iter, const int NPre_Smooth,
                                         const int NPost_Smooth, const real Tolerated_Error, const real Poi_Coeff,
                                         const IntScheme_t IntScheme )

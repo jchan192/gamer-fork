@@ -477,6 +477,12 @@ void Aux_TakeNote()
       fprintf( Note, "SOR_CPOT_SHARED                 OFF\n" );
 #     endif
 
+#     ifdef SOR_FPOT_SHARED
+      fprintf( Note, "SOR_FPOT_SHARED                 ON\n" );
+#     else
+      fprintf( Note, "SOR_FPOT_SHARED                 OFF\n" );
+#     endif
+
 #     ifdef SOR_USE_SHUFFLE
       fprintf( Note, "SOR_USE_SHUFFLE                 ON\n" );
 #     else

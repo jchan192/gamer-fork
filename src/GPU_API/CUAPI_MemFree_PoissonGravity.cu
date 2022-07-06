@@ -6,6 +6,7 @@
 
 extern real (*d_Rho_Array_P    )[ CUBE(RHO_NXT) ];
 extern real (*d_Pot_Array_P_InC)[ CUBE(POT_NXTC) ];
+extern real (*d_Pot_Array_P_InF)[ CUBE(POT_NXTF) ];
 extern real (*d_Pot_Array_P_Out)[ CUBE(GRA_NXT) ];
 #ifdef UNSPLIT_GRAVITY
 extern real (*d_Pot_Array_USG_F)[ CUBE(USG_NXT_F) ];
@@ -39,6 +40,7 @@ void CUAPI_MemFree_PoissonGravity()
 // free the device memory
    if ( d_Rho_Array_P      != NULL ) {  CUDA_CHECK_ERROR(  cudaFree( d_Rho_Array_P      )  );  d_Rho_Array_P      = NULL; }
    if ( d_Pot_Array_P_InC  != NULL ) {  CUDA_CHECK_ERROR(  cudaFree( d_Pot_Array_P_InC  )  );  d_Pot_Array_P_InC  = NULL; }
+   if ( d_Pot_Array_P_InF  != NULL ) {  CUDA_CHECK_ERROR(  cudaFree( d_Pot_Array_P_InF  )  );  d_Pot_Array_P_InF  = NULL; }
    if ( d_Pot_Array_P_Out  != NULL ) {  CUDA_CHECK_ERROR(  cudaFree( d_Pot_Array_P_Out  )  );  d_Pot_Array_P_Out  = NULL; }
 #  ifdef UNSPLIT_GRAVITY
    if ( d_Pot_Array_USG_F  != NULL ) {  CUDA_CHECK_ERROR(  cudaFree( d_Pot_Array_USG_F  )  );  d_Pot_Array_USG_F  = NULL; }
@@ -63,6 +65,7 @@ void CUAPI_MemFree_PoissonGravity()
    {
       if ( h_Rho_Array_P     [t] != NULL ) {  CUDA_CHECK_ERROR(  cudaFreeHost( h_Rho_Array_P     [t] )  );  h_Rho_Array_P     [t] = NULL; }
       if ( h_Pot_Array_P_InC [t] != NULL ) {  CUDA_CHECK_ERROR(  cudaFreeHost( h_Pot_Array_P_InC [t] )  );  h_Pot_Array_P_InC [t] = NULL; }
+      if ( h_Pot_Array_P_InF [t] != NULL ) {  CUDA_CHECK_ERROR(  cudaFreeHost( h_Pot_Array_P_InF [t] )  );  h_Pot_Array_P_InF [t] = NULL; }
       if ( h_Pot_Array_P_Out [t] != NULL ) {  CUDA_CHECK_ERROR(  cudaFreeHost( h_Pot_Array_P_Out [t] )  );  h_Pot_Array_P_Out [t] = NULL; }
 #     ifdef UNSPLIT_GRAVITY
       if ( h_Pot_Array_USG_F [t] != NULL ) {  CUDA_CHECK_ERROR(  cudaFreeHost( h_Pot_Array_USG_F [t] )  );  h_Pot_Array_USG_F [t] = NULL; }
