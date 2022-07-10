@@ -69,7 +69,7 @@ Procedure for outputting new variables:
 
 
 //-------------------------------------------------------------------------------------------------------
-// Function    :  Output_DumpData_Total_HDF5 (FormatVersion = 2451)
+// Function    :  Output_DumpData_Total_HDF5 (FormatVersion = 2452)
 // Description :  Output all simulation data in the HDF5 format, which can be used as a restart file
 //                or loaded by YT
 //
@@ -222,6 +222,7 @@ Procedure for outputting new variables:
 //                2449 : 2020/11/02 --> output NUC_TABLE
 //                2450 : 2020/12/06 --> output GREP runtime parameters and EXT_POT_GREP_NAUX_MAX
 //                2451 : 2020/10/29 --> output the parameters of external potential table
+//                2452 : 2022/07/08 --> output OPT__OUTPUT_RESTART
 //-------------------------------------------------------------------------------------------------------
 void Output_DumpData_Total_HDF5( const char *FileName )
 {
@@ -1727,7 +1728,7 @@ void FillIn_KeyInfo( KeyInfo_t &KeyInfo, const int NFieldStored )
 
    const time_t CalTime = time( NULL );   // calendar time
 
-   KeyInfo.FormatVersion        = 2451;
+   KeyInfo.FormatVersion        = 2452;
    KeyInfo.Model                = MODEL;
    KeyInfo.NLevel               = NLEVEL;
    KeyInfo.NCompFluid           = NCOMP_FLUID;
@@ -2686,6 +2687,7 @@ void FillIn_InputPara( InputPara_t &InputPara, const int NFieldStored, char Fiel
 #  endif // #if ( MODEL == HYDRO )
    InputPara.Opt__Output_UserField   = OPT__OUTPUT_USER_FIELD;
    InputPara.Opt__Output_Mode        = OPT__OUTPUT_MODE;
+   InputPara.Opt__Output_Restart     = OPT__OUTPUT_RESTART;
    InputPara.Opt__Output_Step        = OUTPUT_STEP;
    InputPara.Opt__Output_Dt          = OUTPUT_DT;
    InputPara.Output_PartX            = OUTPUT_PART_X;
@@ -3540,6 +3542,7 @@ void GetCompound_InputPara( hid_t &H5_TypeID, const int NFieldStored )
 #  endif // #if ( MODEL == HYDRO )
    H5Tinsert( H5_TypeID, "Opt__Output_UserField",   HOFFSET(InputPara_t,Opt__Output_UserField  ), H5T_NATIVE_INT              );
    H5Tinsert( H5_TypeID, "Opt__Output_Mode",        HOFFSET(InputPara_t,Opt__Output_Mode       ), H5T_NATIVE_INT              );
+   H5Tinsert( H5_TypeID, "Opt__Output_Restart",     HOFFSET(InputPara_t,Opt__Output_Restart    ), H5T_NATIVE_INT              );
    H5Tinsert( H5_TypeID, "Opt__Output_Step",        HOFFSET(InputPara_t,Opt__Output_Step       ), H5T_NATIVE_INT              );
    H5Tinsert( H5_TypeID, "Opt__Output_Dt",          HOFFSET(InputPara_t,Opt__Output_Dt         ), H5T_NATIVE_DOUBLE           );
    H5Tinsert( H5_TypeID, "Output_PartX",            HOFFSET(InputPara_t,Output_PartX           ), H5T_NATIVE_DOUBLE           );
