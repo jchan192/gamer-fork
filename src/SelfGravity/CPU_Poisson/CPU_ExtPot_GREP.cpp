@@ -1,6 +1,6 @@
 #include "CUPOT.h"
 #ifdef __CUDACC__
-#include "CUAPI.h"
+#include "CUDA_CheckError.h"
 #include "CUDA_ConstMemory.h"
 #else
 #include "GAMER.h"
