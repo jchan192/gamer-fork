@@ -9,6 +9,7 @@ typedef int CCSN_t;
 const CCSN_t
    Migration_Test = 0
   ,Post_Bounce    = 1
+  ,CoreCollapse   = 2
   ;
 
 typedef int CCSN_Mag_t;
@@ -58,6 +59,8 @@ void   Record_CCSN_CentralQuant();
 void   Record_CCSN_GWSignal();
 void   Detect_CoreBounce();
 double Mis_GetTimeStep_Lightbulb( const int lv, const double dTime_dt );
+double Mis_GetTimeStep_Deleptonization( const int lv, const double dTime_dt );
+bool   Flag_CoreCollapse( const int i, const int j, const int k, const int lv, const int PID, const double *Threshold );
 bool   Flag_Lightbulb( const int i, const int j, const int k, const int lv, const int PID, const double *Threshold );
 
 
@@ -130,7 +133,7 @@ void SetParameter()
 // ********************************************************************************************************************************
 // ReadPara->Add( "KEY_IN_THE_FILE",   &VARIABLE,              DEFAULT,       MIN,              MAX               );
 // ********************************************************************************************************************************
-   ReadPara->Add( "CCSN_Prob",             &CCSN_Prob,             -1,            0,                1                 );
+   ReadPara->Add( "CCSN_Prob",             &CCSN_Prob,             -1,            0,                2                 );
    ReadPara->Add( "CCSN_Prof_File",         CCSN_Prof_File,        Useless_str,   Useless_str,      Useless_str       );
 #  ifdef MHD
    ReadPara->Add( "CCSN_Mag",              &CCSN_Mag,              1,             0,                1                 );
@@ -167,6 +170,14 @@ void SetParameter()
                             CCSN_ColIdx_R      =  0;  CCSN_ColIdx_Dens   =  1;  CCSN_ColIdx_Pres   =  5;  CCSN_ColIdx_Velr   =  3;
                             CCSN_ColIdx_Ye     =  2;  CCSN_ColIdx_Temp   =  4;  CCSN_ColIdx_Entr   =  6;
                             sprintf( CCSN_Name, "Post bounce test" );
+                            break;
+
+      case CoreCollapse   : CCSN_NCol = 6;
+                            CCSN_TargetCols[0] =  0;  CCSN_TargetCols[1] =  1;  CCSN_TargetCols[2] =  2;  CCSN_TargetCols[3] =  3;
+                            CCSN_TargetCols[4] =  4;  CCSN_TargetCols[5] =  5;  CCSN_TargetCols[6] = -1;
+                            CCSN_ColIdx_R      =  0;  CCSN_ColIdx_Dens   =  1;  CCSN_ColIdx_Pres   =  5;  CCSN_ColIdx_Velr   =  3;
+                            CCSN_ColIdx_Ye     =  4;  CCSN_ColIdx_Temp   =  2;  CCSN_ColIdx_Entr   = -1;
+                            sprintf( CCSN_Name, "Core collapse test" );
                             break;
 
       default             : Aux_Error( ERROR_INFO, "unsupported CCSN problem (%d) !!\n", CCSN_Prob );
@@ -287,7 +298,7 @@ void SetGridIC( real fluid[], const double x, const double y, const double z, co
    if ( Pres == NULL_REAL )
       Aux_Error( ERROR_INFO, "interpolation failed for pressure at radius %13.7e !!\n", r );
 
-   if ( CCSN_Prob == Post_Bounce )
+   if ( CCSN_Prob == Post_Bounce ||  CCSN_Prob == CoreCollapse )
    {
       Ye   = Mis_InterpolateFromTable( CCSN_Prof_NBin, Table_R, CCSN_Prof+CCSN_ColIdx_Ye  *CCSN_Prof_NBin, r );
       Temp = Mis_InterpolateFromTable( CCSN_Prof_NBin, Table_R, CCSN_Prof+CCSN_ColIdx_Temp*CCSN_Prof_NBin, r );  // in Kelvin
@@ -310,7 +321,7 @@ void SetGridIC( real fluid[], const double x, const double y, const double z, co
 #  if ( EOS == EOS_NUCLEAR )
    real *Passive = new real [NCOMP_PASSIVE];
 
-   Passive[ YE - NCOMP_FLUID ] = Ye*Dens;
+   Passive[ YE      - NCOMP_FLUID ] = Ye*Dens;
 #  else
    real *Passive = NULL;
 #  endif
@@ -607,8 +618,12 @@ void Record_CCSN()
 
          Src_Init();
 
+         OUTPUT_DT = 2.0;
+         DT__MAX = 1.0e-2;
+
 //       forced output data at core bounce
          Output_DumpData( 2 );
+
       }
    } // if ( !CCSN_Is_PostBounce )
 
@@ -631,6 +646,9 @@ double Mis_GetTimeStep_CCSN( const int lv, const double dTime_dt )
 
       dt_CCSN = fmin( dt_CCSN, dt_LB );
    }
+
+   if ( !CCSN_Is_PostBounce )
+      dt_CCSN = MIN(  dt_CCSN, Mis_GetTimeStep_Deleptonization( lv, dTime_dt )  );
 
 
    return dt_CCSN;
@@ -662,6 +680,12 @@ bool Flag_CCSN( const int i, const int j, const int k, const int lv, const int P
 {
 
    bool Flag = false;
+
+   if (  ( CCSN_Prob == CoreCollapse )  &&  !CCSN_Is_PostBounce  )
+   {
+      Flag |= Flag_CoreCollapse( i, j, k, lv, PID, Threshold );
+      if ( Flag )    return Flag;
+   }
 
    if (  ( CCSN_Prob == Post_Bounce )  ||  SrcTerms.Lightbulb  )
    {
