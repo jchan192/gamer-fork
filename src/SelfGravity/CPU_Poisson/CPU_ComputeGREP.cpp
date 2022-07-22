@@ -122,7 +122,7 @@ void CPU_ComputeGREP( const Profile_t *DensAve, const Profile_t *EngyAve, const 
                    "Mass_NW", "Mass_TOV", "Mass_TOV_old", "Error_rel", "Gamma_TOV");
 
             for (int i=0; i<NBin; i++)
-               printf("%5d %9ld %22.15e %22.15e %22.15e %22.15e %22.15e %22.15e %22.15e %12.2e %22.15e %22.15e\n",
+               printf("%5d %9ld %22.15e %22.15e %22.15e %22.15e %22.15e %22.15e %22.15e %22.15e %22.15e %22.15e\n",
                       i, DensAve->NCell[i], Radius[i],
                       DensAve->Data[i], EngyAve->Data[i], VrAve->Data[i], PresAve->Data[i],
                       Mass_NW[i], Mass_TOV[i], Mass_TOV_USG[i],
