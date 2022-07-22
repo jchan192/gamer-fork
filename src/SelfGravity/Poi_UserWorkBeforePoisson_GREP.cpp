@@ -34,7 +34,7 @@ extern real *h_ExtPotGREP;
 // switch for when the temporal interpolation is applied
 //   true : in Aux_ComputeProfile()
 //   false: when combining the stored profiles
-static bool Do_TEMPINT_in_ComputeProfile = false;
+static bool GREP_OPT_TEMPINT = false;
 
 
 
@@ -56,18 +56,17 @@ void Poi_UserWorkBeforePoisson_GREP( const double Time, const int lv )
 // ignore level containing no patches
    if ( NPatchTotal[lv] == 0 )   return;
 
-// compute GREP
+// compute effective GR potential
    Poi_Prepare_GREP( Time, lv );
-
 
 // update the auxiliary arrays for GREP
    SetExtPotAuxArray_GREP( ExtPot_AuxArray_Flt, ExtPot_AuxArray_Int, Time );
 
 
-// copy GREP profiles to h_ExtPotGREP in datatype of real
-   const int Lv   = GREP_LvUpdate;
-   const int FaLv = ( Lv > 0 ) ? Lv - 1 : Lv;
-
+// store the profiles in the host arrays
+// --> note the typecasting from double to real
+   const int Lv      = GREP_LvUpdate;
+   const int FaLv    = ( Lv > 0 ) ? Lv - 1 : Lv;
    const int Sg_Lv   = GREPSg[Lv];
    const int Sg_FaLv = GREPSg[FaLv];
 
@@ -76,8 +75,8 @@ void Poi_UserWorkBeforePoisson_GREP( const double Time, const int lv )
    Profile_t *Phi_FaLv_Old = Phi_eff[ FaLv ][ 1 - Sg_FaLv ];
 
    for (int b=0; b<Phi_Lv_New->NBin; b++) {
-//    check if the number of bin exceeds EXT_POT_GREP_NAUX_MAX
-//    Phi_FaLv_New and Phi_FaLv_Old are skipped since they have been checked earlier
+//    check whether the number of bins exceeds EXT_POT_GREP_NAUX_MAX
+//    Phi_FaLv_New and Phi_FaLv_Old have been checked earlier and are skipped here
       if ( Phi_Lv_New->NBin > EXT_POT_GREP_NAUX_MAX )
          Aux_Error( ERROR_INFO, "Number of bins = %d > EXT_POT_GREP_NAUX_MAX = %d for GREP at lv = %d and SaveSg = %d !!\n",
                     Phi_Lv_New->NBin, EXT_POT_GREP_NAUX_MAX, Lv, Sg_Lv );
@@ -102,7 +101,7 @@ void Poi_UserWorkBeforePoisson_GREP( const double Time, const int lv )
 
 
 #  ifdef GPU
-// update the auxiliary GPU arrays
+// update the GPU auxiliary arrays
    CUAPI_SetConstMemory_ExtAccPot();
 
 // transfer GREP profiles to GPU
@@ -135,15 +134,14 @@ void Poi_Prepare_GREP( const double Time, const int lv )
    else                                                                         Sg = 1 - GREPSg[lv];
 
 
-// update the spherical-averaged profiles
-   if ( Do_TEMPINT_in_ComputeProfile )
+// update and combine the spherical-averaged profiles
+   if ( GREP_OPT_TEMPINT )
       Update_GREP_Profile( lv, Sg, Time );
 
    else
    {
       Update_GREP_Profile( lv, Sg, -1.0 );
 
-//    combine the profile at each level
       Combine_GREP_Profile( DensAve, lv, Sg, Time, true );
       Combine_GREP_Profile( EngyAve, lv, Sg, Time, true );
       Combine_GREP_Profile( VrAve,   lv, Sg, Time, true );
@@ -151,7 +149,7 @@ void Poi_Prepare_GREP( const double Time, const int lv )
    }
 
 
-// update the level, Sg, and SgTime
+// record the level, Sg, and SgTime
    GREP_LvUpdate      = lv;
    GREPSg    [lv]     = Sg;
    GREPSgTime[lv][Sg] = Time;
@@ -188,7 +186,7 @@ static void Update_GREP_Profile( const int lv, const int Sg, const double PrepTi
    Profile_t *Prof_NonLeaf [] = { DensAve[NLEVEL][Sg], VrAve[NLEVEL][Sg], PresAve[NLEVEL][Sg], EngyAve[NLEVEL][Sg] };
 
 
-   if ( Do_TEMPINT_in_ComputeProfile )
+   if ( GREP_OPT_TEMPINT )
    {
 //    contributions from the leaf patches on level <= lv and the non-leaf patches on level = lv
       Aux_ComputeProfile( Prof_NonLeaf, GREP_Prof_Center, GREP_Prof_MaxRadius, GREP_Prof_MinBinSize,
@@ -205,10 +203,11 @@ static void Update_GREP_Profile( const int lv, const int Sg, const double PrepTi
       Aux_ComputeProfile( Prof_NonLeaf, GREP_Prof_Center, GREP_Prof_MaxRadius, GREP_Prof_MinBinSize,
                           GREP_LOGBIN, GREP_LOGBINRATIO, false, TVar, 4, lv, lv, PATCH_NONLEAF, PrepTime );
 
-//    update the profiles of Vr and Eint contributed from leaf patch on father level
-//    to account the evolved Vr and Eint after the Gravity solver
-      if ( lv > 0  &&  lv != GREP_LvUpdate )
+//    update the profiles at the father level
+      if (  ( lv > 0 )  &&  ( lv != GREP_LvUpdate )  )
       {
+//       update Vr, Eint, and Pres at TimeNew
+//       accounts for the Poisson + gravity solver and source terms
          int        FaLv              = lv - 1;
          int        Sg_FaLv           = GREPSg[FaLv];
          double     Time              = GREPSgTime[FaLv][Sg_FaLv];
@@ -218,20 +217,21 @@ static void Update_GREP_Profile( const int lv, const int Sg, const double PrepTi
          Aux_ComputeProfile( Prof_Leaf_FaLv, GREP_Prof_Center, GREP_Prof_MaxRadius, GREP_Prof_MinBinSize,
                              GREP_LOGBIN, GREP_LOGBINRATIO, false, TVar_FaLv, 3, FaLv, FaLv, PATCH_LEAF, Time );
 
-//       accounts for the flux correction (not check yet)
-         if ( GREP_OPT_FIXUP  &&  GREPSgTime[FaLv][1 - Sg_FaLv] != -__FLT_MAX__ )
+//       update Dens, Vr, Eint, and Pres at TimeOld
+//       accounts for the flux correction and patch allocation/deallocation
+         if (  GREP_OPT_FIXUP  &&  ( GREPSgTime[FaLv][1 - Sg_FaLv] != -__FLT_MAX__ )  )
          {
-            int     Sg_FaLv_Old   = 1 - Sg_FaLv;
-            double  Time_Old      =  GREPSgTime[FaLv][Sg_FaLv_Old];
-            long    TVar_FaLv_Old         [] = {  _DENS, _VELR, _PRES, _EINT };
-            Profile_t *Prof_Leaf_FaLv_Old [] = { DensAve[FaLv][Sg_FaLv_Old], VrAve[FaLv][Sg_FaLv_Old],
+            int        Sg_FaLv_Old           = 1 - Sg_FaLv;
+            double     Time_Old              = GREPSgTime[FaLv][Sg_FaLv_Old];
+            long       TVar_FaLv_Old      [] = { _DENS, _VELR, _PRES, _EINT };
+            Profile_t *Prof_Leaf_FaLv_Old [] = { DensAve[FaLv][Sg_FaLv_Old], VrAve  [FaLv][Sg_FaLv_Old],
                                                  PresAve[FaLv][Sg_FaLv_Old], EngyAve[FaLv][Sg_FaLv_Old] };
 
             Aux_ComputeProfile( Prof_Leaf_FaLv_Old, GREP_Prof_Center, GREP_Prof_MaxRadius, GREP_Prof_MinBinSize,
                                 GREP_LOGBIN, GREP_LOGBINRATIO, false, TVar_FaLv_Old, 4, FaLv, FaLv, PATCH_LEAF, Time_Old );
          }
       }
-   }
+   } // if ( GREP_OPT_TEMPINT ) ... else ...
 
 } // FUNCTION : Update_GREP_Profile
 
@@ -239,8 +239,8 @@ static void Update_GREP_Profile( const int lv, const int Sg, const double PrepTi
 
 //-------------------------------------------------------------------------------------------------------
 // Function    :  Combine_GREP_Profile
-// Description :  Combine the separated spherical-averaged profiles
-//                and handling the empty bins in the combined profile
+// Description :  Combine the stored spherical-averaged profiles for each level
+//                and remove the empty bins in the combined profile
 //
 // Note        :  1. The total averaged profile is stored at QUANT[NLEVEL]
 //
@@ -256,18 +256,19 @@ void Combine_GREP_Profile( Profile_t *Prof[][2], const int lv, const int Sg, con
                            const bool RemoveEmpty )
 {
 
-   Profile_t *Prof_Leaf;
    Profile_t *Prof_NonLeaf = Prof[NLEVEL][Sg];
+   Profile_t *Prof_Leaf;
 
 
-// combine the contributions from the leaf and non-leaf patches on level = lv
-   Prof_Leaf = Prof[lv][Sg];
-
+// multiply the stored data by weigth to reduce round-off errors
    for (int b=0; b<Prof_NonLeaf->NBin; b++)
    {
       if ( Prof_NonLeaf->NCell[b] != 0L )   Prof_NonLeaf->Data[b] *= Prof_NonLeaf->Weight[b];
    }
 
+
+// combine the contributions from the leaf and non-leaf patches on level = lv
+   Prof_Leaf = Prof[lv][Sg];
 
    for (int b=0; b<Prof_Leaf->NBin; b++)
    {
@@ -282,13 +283,12 @@ void Combine_GREP_Profile( Profile_t *Prof[][2], const int lv, const int Sg, con
 // combine the contributions from the leaf patches on level < lv with temporal interpolation
    for (int level=0; level<lv; level++)
    {
-//    temporal interpolation parameters
       bool FluIntTime;
       int  FluSg, FluSg_IntT;
-      int  Sg_TMP = GREPSg[level];
+      int  Sg_Lv = GREPSg[level];
       real FluWeighting, FluWeighting_IntT;
 
-      SetTempIntPara( level, Sg_TMP, PrepTime, GREPSgTime[level][ Sg_TMP ], GREPSgTime[level][ 1-Sg_TMP ],
+      SetTempIntPara( level, Sg_Lv, PrepTime, GREPSgTime[level][Sg_Lv], GREPSgTime[level][1 - Sg_Lv],
                       FluIntTime, FluSg, FluSg_IntT, FluWeighting, FluWeighting_IntT );
 
                  Prof_Leaf      = Prof[level][FluSg];
@@ -296,6 +296,8 @@ void Combine_GREP_Profile( Profile_t *Prof[][2], const int lv, const int Sg, con
 
       for (int b=0; b<Prof_Leaf->NBin; b++)
       {
+//       note that when GREP_OPT_FIXUP is disabled
+//       the NCell in Prof_Leaf and Prof_Leaf_IntT could be different due to patch allocation/deallocation
          if ( Prof_Leaf->NCell[b] == 0L )  continue;
 
          Prof_NonLeaf->Data  [b] += ( FluIntTime )
@@ -308,16 +310,15 @@ void Combine_GREP_Profile( Profile_t *Prof[][2], const int lv, const int Sg, con
                                     + FluWeighting_IntT * Prof_Leaf_IntT->Weight[b]
                                   :                       Prof_Leaf     ->Weight[b];
 
-         Prof_NonLeaf->NCell [b] += Prof_Leaf   ->NCell [b];
-      } // for (int b=0; b<Prof_Leaf->NBin; b++)
-
-
-
+         Prof_NonLeaf->NCell [b] += Prof_Leaf->NCell [b];
+      }
    } // for (int level=0; level<=lv; level++)
 
+
+// divide the combined data by weight
    for (int b=0; b<Prof_NonLeaf->NBin; b++)
    {
-      if ( Prof_NonLeaf->NCell[b] != 0L )   Prof_NonLeaf->Data  [b] /= Prof_NonLeaf->Weight[b];
+      if ( Prof_NonLeaf->NCell[b] != 0L )   Prof_NonLeaf->Data[b] /= Prof_NonLeaf->Weight[b];
    }
 
 
