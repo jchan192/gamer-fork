@@ -207,7 +207,7 @@ static void Update_GREP_Profile( const int lv, const int Sg, const double PrepTi
       if (  ( lv > 0 )  &&  ( lv != GREP_LvUpdate )  )
       {
 //       update Vr, Eint, and Pres at TimeNew
-//       accounts for the Poisson + gravity solver and source terms
+//       accounts for the Poisson + gravity solvers and source terms (Step 4 and 6 in EvolveLevel)
          int        FaLv              = lv - 1;
          int        Sg_FaLv           = GREPSg[FaLv];
          double     Time              = GREPSgTime[FaLv][Sg_FaLv];
@@ -218,7 +218,7 @@ static void Update_GREP_Profile( const int lv, const int Sg, const double PrepTi
                              GREP_LOGBIN, GREP_LOGBINRATIO, false, TVar_FaLv, 3, FaLv, FaLv, PATCH_LEAF, Time );
 
 //       update Dens, Vr, Eint, and Pres at TimeOld
-//       accounts for the flux correction and patch allocation/deallocation
+//       accounts for the flux correction and patch allocation/deallocation (Step 10 and 11 in EvolveLevel)
          if (  GREP_OPT_FIXUP  &&  ( GREPSgTime[FaLv][1 - Sg_FaLv] != -__FLT_MAX__ )  )
          {
             int        Sg_FaLv_Old           = 1 - Sg_FaLv;
@@ -239,7 +239,7 @@ static void Update_GREP_Profile( const int lv, const int Sg, const double PrepTi
 
 //-------------------------------------------------------------------------------------------------------
 // Function    :  Combine_GREP_Profile
-// Description :  Combine the stored spherical-averaged profiles for each level
+// Description :  Combine the stored spherical-averaged profiles on each level
 //                and remove the empty bins in the combined profile
 //
 // Note        :  1. The total averaged profile is stored at QUANT[NLEVEL]
@@ -260,7 +260,7 @@ void Combine_GREP_Profile( Profile_t *Prof[][2], const int lv, const int Sg, con
    Profile_t *Prof_Leaf;
 
 
-// multiply the stored data by weigth to reduce round-off errors
+// multiply the stored data by weight to reduce round-off errors
    for (int b=0; b<Prof_NonLeaf->NBin; b++)
    {
       if ( Prof_NonLeaf->NCell[b] != 0L )   Prof_NonLeaf->Data[b] *= Prof_NonLeaf->Weight[b];
