@@ -298,7 +298,7 @@ void SetGridIC( real fluid[], const double x, const double y, const double z, co
    if ( Pres == NULL_REAL )
       Aux_Error( ERROR_INFO, "interpolation failed for pressure at radius %13.7e !!\n", r );
 
-   if ( CCSN_Prob == Post_Bounce ||  CCSN_Prob == CoreCollapse )
+   if ( CCSN_Prob == Post_Bounce )
    {
       Ye   = Mis_InterpolateFromTable( CCSN_Prof_NBin, Table_R, CCSN_Prof+CCSN_ColIdx_Ye  *CCSN_Prof_NBin, r );
       Temp = Mis_InterpolateFromTable( CCSN_Prof_NBin, Table_R, CCSN_Prof+CCSN_ColIdx_Temp*CCSN_Prof_NBin, r );  // in Kelvin
@@ -311,6 +311,16 @@ void SetGridIC( real fluid[], const double x, const double y, const double z, co
       if ( Entr == NULL_REAL )
          Aux_Error( ERROR_INFO, "interpolation failed for entropy at radius %13.7e !!\n", r );
    }
+   else if ( CCSN_Prob == CoreCollapse )
+   {
+      Ye   = Mis_InterpolateFromTable( CCSN_Prof_NBin, Table_R, CCSN_Prof+CCSN_ColIdx_Ye  *CCSN_Prof_NBin, r );
+      Temp = Mis_InterpolateFromTable( CCSN_Prof_NBin, Table_R, CCSN_Prof+CCSN_ColIdx_Temp*CCSN_Prof_NBin, r );  // in Kelvin
+
+      if ( Ye   == NULL_REAL )
+         Aux_Error( ERROR_INFO, "interpolation failed for Ye at radius %13.7e !!\n", r );
+      if ( Temp == NULL_REAL )
+         Aux_Error( ERROR_INFO, "interpolation failed for temperature at radius %13.7e !!\n", r );
+   }
 
 
    Momx = Dens*Velr*x0/r;
@@ -321,7 +331,7 @@ void SetGridIC( real fluid[], const double x, const double y, const double z, co
 #  if ( EOS == EOS_NUCLEAR )
    real *Passive = new real [NCOMP_PASSIVE];
 
-   Passive[ YE      - NCOMP_FLUID ] = Ye*Dens;
+   Passive[ YE - NCOMP_FLUID ] = Ye*Dens;
 #  else
    real *Passive = NULL;
 #  endif
@@ -618,8 +628,8 @@ void Record_CCSN()
 
          Src_Init();
 
-         OUTPUT_DT = 2.0;
-         DT__MAX = 1.0e-2;
+         OUTPUT_DT = 2.0;   // output data every 2.0 unit time
+         DT__MAX = 1.0e-2;  // forced the maximum allowed time-step on all level to be 1.0e-2
 
 //       forced output data at core bounce
          Output_DumpData( 2 );
