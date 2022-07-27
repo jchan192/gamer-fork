@@ -9,7 +9,7 @@ typedef int CCSN_t;
 const CCSN_t
    Migration_Test = 0
   ,Post_Bounce    = 1
-  ,Core_Collapse   = 2
+  ,Core_Collapse  = 2
   ;
 
 typedef int CCSN_Mag_t;
