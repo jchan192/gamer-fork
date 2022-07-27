@@ -58,9 +58,6 @@ bool Flag_CoreCollapse( const int i, const int j, const int k, const int lv, con
    if (  !MaxRefine  &&  ( r * UNIT_L < 3e6 )  )
       Flag = true;
 
-//   if ( r * UNIT_L < 3e6 )
-//   printf("lv = %d, r = %.4e, CCSN_CentralDens = %.4e, MaxRefine = %d, MAX_LEVEL = %d, Flag = %d\n",
-//          lv, r * UNIT_L, CCSN_CentralDens, MaxRefine, MAX_LEVEL, Flag );
 
    return Flag;
 
