@@ -34,10 +34,10 @@ alpha = 0.8
 ax.plot(t_gamer * 1e3, rhoc_gamer, label = "GAMER", alpha = alpha)
 ax.plot(t_flash * 1e3, rhoc_flash, label = "FLASH", alpha = alpha)
 
-ax.set_xlabel(r"$t_{pb}$ [ms]")
+ax.set_xlabel(r"$t$ [ms]")
 ax.set_ylabel(r"Central density [g cm$^{-3}$]")
 ax.set_yscale('log')
-ax.legend(loc = "upper right")
+ax.legend(loc = "upper left")
 
 fig.tight_layout()
 plt.savefig("Rhoc_CoreCollapse.png", dpi = 200)
