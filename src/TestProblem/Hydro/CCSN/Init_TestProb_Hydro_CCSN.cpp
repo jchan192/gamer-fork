@@ -9,7 +9,7 @@ typedef int CCSN_t;
 const CCSN_t
    Migration_Test = 0
   ,Post_Bounce    = 1
-  ,CoreCollapse   = 2
+  ,Core_Collapse   = 2
   ;
 
 typedef int CCSN_Mag_t;
@@ -172,7 +172,7 @@ void SetParameter()
                             sprintf( CCSN_Name, "Post bounce test" );
                             break;
 
-      case CoreCollapse   : CCSN_NCol = 6;
+      case Core_Collapse  : CCSN_NCol = 6;
                             CCSN_TargetCols[0] =  0;  CCSN_TargetCols[1] =  1;  CCSN_TargetCols[2] =  2;  CCSN_TargetCols[3] =  3;
                             CCSN_TargetCols[4] =  4;  CCSN_TargetCols[5] =  5;  CCSN_TargetCols[6] = -1;
                             CCSN_ColIdx_R      =  0;  CCSN_ColIdx_Dens   =  1;  CCSN_ColIdx_Pres   =  5;  CCSN_ColIdx_Velr   =  3;
@@ -311,7 +311,7 @@ void SetGridIC( real fluid[], const double x, const double y, const double z, co
       if ( Entr == NULL_REAL )
          Aux_Error( ERROR_INFO, "interpolation failed for entropy at radius %13.7e !!\n", r );
    }
-   else if ( CCSN_Prob == CoreCollapse )
+   else if ( CCSN_Prob == Core_Collapse )
    {
       Ye   = Mis_InterpolateFromTable( CCSN_Prof_NBin, Table_R, CCSN_Prof+CCSN_ColIdx_Ye  *CCSN_Prof_NBin, r );
       Temp = Mis_InterpolateFromTable( CCSN_Prof_NBin, Table_R, CCSN_Prof+CCSN_ColIdx_Temp*CCSN_Prof_NBin, r );  // in Kelvin
@@ -691,7 +691,7 @@ bool Flag_CCSN( const int i, const int j, const int k, const int lv, const int P
 
    bool Flag = false;
 
-   if (  ( CCSN_Prob == CoreCollapse )  &&  !CCSN_Is_PostBounce  )
+   if (  ( CCSN_Prob == Core_Collapse )  &&  !CCSN_Is_PostBounce  )
    {
       Flag |= Flag_CoreCollapse( i, j, k, lv, PID, Threshold );
       if ( Flag )    return Flag;
