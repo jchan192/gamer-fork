@@ -38,7 +38,7 @@ void Src_SetFunc_Deleptonization( SrcFunc_t & );
 void Src_SetConstMemory_Deleptonization( const double AuxArray_Flt[], const int AuxArray_Int[],
                                          double *&DevPtr_Flt, int *&DevPtr_Int );
 void Src_PassData2GPU_Deleptonization();
-void Src_End_Deleptonization;
+void Src_End_Deleptonization();
 
 #endif
 
@@ -179,6 +179,7 @@ static void Src_Deleptonization( real fluid[], const real B[],
    const real Dens_Code = fluid[DENS];
    const real Dens_CGS  = Dens_Code * Dens2CGS;
    const real Eint_Code = Hydro_Con2Eint( fluid[DENS], fluid[MOMX], fluid[MOMY], fluid[MOMZ], fluid[ENGY], true, MinEint, Emag );
+         real Eint_Update;
          real Entr;
 #  ifdef YE
          real Ye        = fluid[YE] / fluid[DENS];
@@ -266,7 +267,7 @@ static void Src_Deleptonization( real fluid[], const real B[],
 
 //    call Nuclear EoS with entropy mode
       EoS->General_FuncPtr( NUC_MODE_ENTR, Out2, In_Flt2, In_Int2, EoS->AuxArrayDevPtr_Flt, EoS->AuxArrayDevPtr_Int, EoS->Table );
-      const real Eint_Update = Out2[0];
+      Eint_Update = Out2[0];
       fluid[ENGY] = Hydro_ConEint2Etot( fluid[DENS], fluid[MOMX], fluid[MOMY], fluid[MOMZ], Eint_Update, Emag );
    }
    else
