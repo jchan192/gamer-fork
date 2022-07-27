@@ -281,7 +281,8 @@ static void Src_Deleptonization( real fluid[], const real B[],
 #  if GAMER_DEBUG
    if (  Hydro_CheckUnphysical( UNPHY_MODE_SING, &Eint_Update, "output internal energy density", ERROR_INFO, UNPHY_VERBOSE )  )
    {
-      printf( "   Dens=%13.7e code units, Eint=%13.7e code units, Entr=%13.7e kb/baryon, Ye=%13.7e, Del_Ye=%13.7e, Del_Entr=%13.7e\n kb/baryon", Dens_Code, Eint_Code, Entr, Ye, Del_Ye, Del_Entr );
+      printf( "   Dens=%13.7e code units, Eint=%13.7e code units,  Ye=%13.7e\n", Dens_Code, Eint_Code, Ye );
+      printf( "   Entr=%13.7e kb/baryon, Del_Ye=%13.7e, Del_Entr=%13.7e kb/baryon\n", Entr, Del_Ye, Del_Entr );
    }
 #  endif // GAMER_DEBUG
 
