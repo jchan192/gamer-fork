@@ -90,15 +90,15 @@ real YeOfRhoFunc( const real DENS_CGS, const real DELEP_RHO1, const real DELEP_R
 void Src_SetAuxArray_Deleptonization( double AuxArray_Flt[], int AuxArray_Int[] )
 {
 
-   AuxArray_Flt[SRC_AUX_DENS2CGS          ] = UNIT_D;
-   AuxArray_Flt[SRC_AUX_DELEP_ENU         ] = SrcTerms.Dlep_Enu;
-   AuxArray_Flt[SRC_AUX_DELEP_RHO1        ] = SrcTerms.Dlep_Rho1;
-   AuxArray_Flt[SRC_AUX_DELEP_RHO2        ] = SrcTerms.Dlep_Rho2;
-   AuxArray_Flt[SRC_AUX_DELEP_YE1         ] = SrcTerms.Dlep_Ye1;
-   AuxArray_Flt[SRC_AUX_DELEP_YE2         ] = SrcTerms.Dlep_Ye2;
-   AuxArray_Flt[SRC_AUX_DELEP_YEC         ] = SrcTerms.Dlep_Yec;
-   AuxArray_Flt[SRC_AUX_KELVIN2MEV        ] = Const_kB_eV*1.0e-6;
-   AuxArray_Flt[SRC_AUX_MINDENS_CGS       ] = 1.0e6; // [g/cm^3];
+   AuxArray_Flt[SRC_AUX_DENS2CGS   ] = UNIT_D;
+   AuxArray_Flt[SRC_AUX_DELEP_ENU  ] = SrcTerms.Dlep_Enu;
+   AuxArray_Flt[SRC_AUX_DELEP_RHO1 ] = SrcTerms.Dlep_Rho1;
+   AuxArray_Flt[SRC_AUX_DELEP_RHO2 ] = SrcTerms.Dlep_Rho2;
+   AuxArray_Flt[SRC_AUX_DELEP_YE1  ] = SrcTerms.Dlep_Ye1;
+   AuxArray_Flt[SRC_AUX_DELEP_YE2  ] = SrcTerms.Dlep_Ye2;
+   AuxArray_Flt[SRC_AUX_DELEP_YEC  ] = SrcTerms.Dlep_Yec;
+   AuxArray_Flt[SRC_AUX_KELVIN2MEV ] = Const_kB_eV*1.0e-6;
+   AuxArray_Flt[SRC_AUX_MINDENS_CGS] = 1.0e6; // [g/cm^3];
 
 } // FUNCTION : Src_SetAuxArray_Deleptonization
 #endif // #ifndef __CUDACC__
