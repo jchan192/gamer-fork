@@ -113,6 +113,68 @@ void Poi_UserWorkBeforePoisson_GREP( const double Time, const int lv )
 
 
 //-------------------------------------------------------------------------------------------------------
+// Function    :  Mis_UserWorkBeforeNextLevel_GREP
+// Description :  Update the spherical-averaged profiles before entering the next AMR level in EvolveLevel()
+//
+// Note        :  1. Invoked by EvolveLevel() using the function pointer "Mis_UserWorkBeforeNextLevel_Ptr"
+//                2. Update the radial velocity, internal energy, and pressure profiles
+//                   to account for the Poisson + gravity solvers and source terms
+//
+// Parameter   :  lv      : Target refinement level
+//                TimeNew : Target physical time to reach
+//                TimeOld : Physical time before update
+//                dt      : Time interval to advance solution (can be different from TimeNew-TimeOld in COMOVING)
+//-------------------------------------------------------------------------------------------------------
+void Mis_UserWorkBeforeNextLevel_GREP( const int lv, const double TimeNew, const double TimeOld, const double dt )
+{
+
+   if ( NPatchTotal[lv+1] == 0 )   return;
+
+
+   int        Sg           = GREPSg[lv];
+   long       TVar      [] = {         _VELR,           _PRES,           _EINT };
+   Profile_t *Prof_Leaf [] = { VrAve[lv][Sg], PresAve[lv][Sg], EngyAve[lv][Sg] };
+
+   Aux_ComputeProfile( Prof_Leaf, GREP_Prof_Center, GREP_Prof_MaxRadius, GREP_Prof_MinBinSize,
+                       GREP_LOGBIN, GREP_LOGBINRATIO, false, TVar, 3, lv, lv, PATCH_LEAF, -1.0 );
+
+} // FUNCTION : Mis_UserWorkBeforeNextLevel_GREP
+
+
+
+//-------------------------------------------------------------------------------------------------------
+// Function    :  Mis_UserWorkBeforeNextSubstep_GREP
+// Description :  Update the spherical-averaged profiles before proceeding to the next sub-step in EvolveLevel()
+//                --> After fix-up and grid refinement on lv
+//
+// Note        :  1. Invoked by EvolveLevel() using the function pointer "Mis_UserWorkBeforeNextSubstep_Ptr"
+//                2. Update the density, radial velocity, internal energy, and pressure profiles
+//                   to account for the flux correction and grid allocation/deallocation
+//
+// Parameter   :  lv      : Target refinement level
+//                TimeNew : Target physical time to reach
+//                TimeOld : Physical time before update
+//                dt      : Time interval to advance solution (can be different from TimeNew-TimeOld in COMOVING)
+//-------------------------------------------------------------------------------------------------------
+void Mis_UserWorkBeforeNextSubstep_GREP( const int lv, const double TimeNew, const double TimeOld, const double dt )
+{
+
+   if ( !GREP_OPT_FIXUP        )   return;
+   if ( NPatchTotal[lv+1] == 0 )   return;
+
+
+   int        Sg           = GREPSg[lv];
+   long       TVar      [] = {           _DENS,         _VELR,           _PRES,           _EINT };
+   Profile_t *Prof_Leaf [] = { DensAve[lv][Sg], VrAve[lv][Sg], PresAve[lv][Sg], EngyAve[lv][Sg] };
+
+   Aux_ComputeProfile( Prof_Leaf, GREP_Prof_Center, GREP_Prof_MaxRadius, GREP_Prof_MinBinSize,
+                       GREP_LOGBIN, GREP_LOGBINRATIO, false, TVar, 4, lv, lv, PATCH_LEAF, -1.0 );
+
+} // FUNCTION : Mis_UserWorkBeforeNextSubstep_GREP
+
+
+
+//-------------------------------------------------------------------------------------------------------
 // Function    :  Poi_Prepare_GREP
 // Description :  Compute the spherical-averaged profiles and GR effective potential.
 //
@@ -202,36 +264,7 @@ static void Update_GREP_Profile( const int lv, const int Sg, const double PrepTi
 //    contributions from the non-leaf patches on level = lv
       Aux_ComputeProfile( Prof_NonLeaf, GREP_Prof_Center, GREP_Prof_MaxRadius, GREP_Prof_MinBinSize,
                           GREP_LOGBIN, GREP_LOGBINRATIO, false, TVar, 4, lv, lv, PATCH_NONLEAF, PrepTime );
-
-//    update the profiles at the father level
-      if (  ( lv > 0 )  &&  ( lv != GREP_LvUpdate )  )
-      {
-//       update Vr, Eint, and Pres at TimeNew
-//       accounts for the Poisson + gravity solvers and source terms (Step 4 and 6 in EvolveLevel)
-         int        FaLv              = lv - 1;
-         int        Sg_FaLv           = GREPSg[FaLv];
-         double     Time              = GREPSgTime[FaLv][Sg_FaLv];
-         long       TVar_FaLv      [] = { _VELR, _PRES, _EINT };
-         Profile_t *Prof_Leaf_FaLv [] = { VrAve[FaLv][Sg_FaLv], PresAve[FaLv][Sg_FaLv], EngyAve[FaLv][Sg_FaLv] };
-
-         Aux_ComputeProfile( Prof_Leaf_FaLv, GREP_Prof_Center, GREP_Prof_MaxRadius, GREP_Prof_MinBinSize,
-                             GREP_LOGBIN, GREP_LOGBINRATIO, false, TVar_FaLv, 3, FaLv, FaLv, PATCH_LEAF, Time );
-
-//       update Dens, Vr, Eint, and Pres at TimeOld
-//       accounts for the flux correction and patch allocation/deallocation (Step 10 and 11 in EvolveLevel)
-         if (  GREP_OPT_FIXUP  &&  ( GREPSgTime[FaLv][1 - Sg_FaLv] != -__FLT_MAX__ )  )
-         {
-            int        Sg_FaLv_Old           = 1 - Sg_FaLv;
-            double     Time_Old              = GREPSgTime[FaLv][Sg_FaLv_Old];
-            long       TVar_FaLv_Old      [] = { _DENS, _VELR, _PRES, _EINT };
-            Profile_t *Prof_Leaf_FaLv_Old [] = { DensAve[FaLv][Sg_FaLv_Old], VrAve  [FaLv][Sg_FaLv_Old],
-                                                 PresAve[FaLv][Sg_FaLv_Old], EngyAve[FaLv][Sg_FaLv_Old] };
-
-            Aux_ComputeProfile( Prof_Leaf_FaLv_Old, GREP_Prof_Center, GREP_Prof_MaxRadius, GREP_Prof_MinBinSize,
-                                GREP_LOGBIN, GREP_LOGBINRATIO, false, TVar_FaLv_Old, 4, FaLv, FaLv, PATCH_LEAF, Time_Old );
-         }
-      }
-   } // if ( GREP_OPT_TEMPINT ) ... else ...
+   }
 
 } // FUNCTION : Update_GREP_Profile
 
