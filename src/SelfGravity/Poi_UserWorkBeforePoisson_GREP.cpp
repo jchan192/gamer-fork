@@ -159,8 +159,9 @@ void Mis_UserWorkBeforeNextLevel_GREP( const int lv, const double TimeNew, const
 void Mis_UserWorkBeforeNextSubstep_GREP( const int lv, const double TimeNew, const double TimeOld, const double dt )
 {
 
-   if ( !GREP_OPT_FIXUP        )   return;
-   if ( NPatchTotal[lv+1] == 0 )   return;
+   if (  ( !GREP_OPT_FIXUP                        )  ||
+         ( NPatchTotal[lv+1] == 0                 )  ||
+         ( AdvanceCounter[lv] % REGRID_COUNT != 0 )     )   return;
 
 
    int        Sg           = GREPSg[lv];
