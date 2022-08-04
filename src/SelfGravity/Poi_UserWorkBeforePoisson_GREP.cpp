@@ -34,7 +34,7 @@ extern real *h_ExtPotGREP;
 // switch for when the temporal interpolation is applied
 //   true : in Aux_ComputeProfile()
 //   false: when combining the stored profiles
-static bool GREP_OPT_TEMPINT = false;
+static bool GREP_OPT_TIMEINTERP = false;
 
 
 
@@ -198,7 +198,7 @@ void Poi_Prepare_GREP( const double Time, const int lv )
 
 
 // update and combine the spherical-averaged profiles
-   if ( GREP_OPT_TEMPINT )
+   if ( GREP_OPT_TIMEINTERP )
       Update_GREP_Profile( lv, Sg, Time );
 
    else
@@ -249,7 +249,7 @@ static void Update_GREP_Profile( const int lv, const int Sg, const double PrepTi
    Profile_t *Prof_NonLeaf [] = { DensAve[NLEVEL][Sg], VrAve[NLEVEL][Sg], PresAve[NLEVEL][Sg], EngyAve[NLEVEL][Sg] };
 
 
-   if ( GREP_OPT_TEMPINT )
+   if ( GREP_OPT_TIMEINTERP )
    {
 //    contributions from the leaf patches on level <= lv and the non-leaf patches on level = lv
       Aux_ComputeProfile( Prof_NonLeaf, GREP_Prof_Center, GREP_Prof_MaxRadius, GREP_Prof_MinBinSize,

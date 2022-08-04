@@ -40,7 +40,6 @@ extern void Poi_UserWorkBeforePoisson_GREP( const double Time, const int lv );
 extern void Mis_UserWorkBeforeNextLevel_GREP( const int lv, const double TimeNew, const double TimeOld, const double dt );
 extern void Mis_UserWorkBeforeNextSubstep_GREP( const int lv, const double TimeNew, const double TimeOld, const double dt );
 
-
 #endif // #ifdef __CUDACC__ ... else ...
 
 
@@ -379,7 +378,6 @@ void Init_ExtPot_GREP()
    Poi_UserWorkBeforePoisson_Ptr     = Poi_UserWorkBeforePoisson_GREP;
    Mis_UserWorkBeforeNextLevel_Ptr   = Mis_UserWorkBeforeNextLevel_GREP;
    Mis_UserWorkBeforeNextSubstep_Ptr = Mis_UserWorkBeforeNextSubstep_GREP;
-
 
    Init_GREP();
    SetExtPotAuxArray_GREP( ExtPot_AuxArray_Flt, ExtPot_AuxArray_Int, Time[0] );
