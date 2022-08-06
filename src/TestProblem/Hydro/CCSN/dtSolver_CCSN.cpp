@@ -8,7 +8,7 @@ extern double CCSN_LB_TimeFac;
 
 //-------------------------------------------------------------------------------------------------------
 // Function    :  Mis_GetTimeStep_Lightbulb
-// Description :  estimate the evolution time-step constrained by the lightbulb source term
+// Description :  Estimate the evolution time-step constrained by the lightbulb source term
 //
 // Note        :  1. This function should be applied to both physical and comoving coordinates and always
 //                   return the evolution time-step (dt) actually used in various solvers
@@ -27,10 +27,6 @@ extern double CCSN_LB_TimeFac;
 //-------------------------------------------------------------------------------------------------------
 double Mis_GetTimeStep_Lightbulb( const int lv, const double dTime_dt )
 {
-
-   const double BoxCenter[3] = { amr->BoxCenter[0], amr->BoxCenter[1], amr->BoxCenter[2] };
-   const double Kelvin2MeV   = Const_kB_eV*1.0e-6;
-   const double sEint2Code   = 1.0 / SQR( UNIT_V );
 
 // allocate memory for per-thread arrays
 #  ifdef OPENMP
@@ -61,21 +57,19 @@ double Mis_GetTimeStep_Lightbulb( const int lv, const double dTime_dt )
 #     pragma omp for schedule( runtime )
       for (int PID=0; PID<amr->NPatchComma[lv][1]; PID++)
       {
-         for (int k=0; k<PS1; k++)  {  const double z0 = amr->patch[0][lv][PID]->EdgeL[2] + (k+0.5)*dh - BoxCenter[2];
-         for (int j=0; j<PS1; j++)  {  const double y0 = amr->patch[0][lv][PID]->EdgeL[1] + (j+0.5)*dh - BoxCenter[1];
-         for (int i=0; i<PS1; i++)  {  const double x0 = amr->patch[0][lv][PID]->EdgeL[0] + (i+0.5)*dh - BoxCenter[0];
+         for (int k=0; k<PS1; k++)  {  const double z = amr->patch[0][lv][PID]->EdgeL[2] + (k+0.5)*dh;
+         for (int j=0; j<PS1; j++)  {  const double y = amr->patch[0][lv][PID]->EdgeL[1] + (j+0.5)*dh;
+         for (int i=0; i<PS1; i++)  {  const double x = amr->patch[0][lv][PID]->EdgeL[0] + (i+0.5)*dh;
 
-            const double r2_CGS = SQR( UNIT_L ) * (  SQR( x0 ) + SQR( y0 ) + SQR( z0 )  );
-
-            const real Dens   = amr->patch[ amr->FluSg[lv] ][lv][PID]->fluid[DENS][k][j][i];
-            const real Momx   = amr->patch[ amr->FluSg[lv] ][lv][PID]->fluid[MOMX][k][j][i];
-            const real Momy   = amr->patch[ amr->FluSg[lv] ][lv][PID]->fluid[MOMY][k][j][i];
-            const real Momz   = amr->patch[ amr->FluSg[lv] ][lv][PID]->fluid[MOMZ][k][j][i];
-            const real Engy   = amr->patch[ amr->FluSg[lv] ][lv][PID]->fluid[ENGY][k][j][i];
-#           ifdef YE
-            const real YeDens = amr->patch[ amr->FluSg[lv] ][lv][PID]->fluid[YE  ][k][j][i];
+            const real Dens       = amr->patch[ amr->FluSg[lv] ][lv][PID]->fluid[DENS][k][j][i];
+            const real Momx       = amr->patch[ amr->FluSg[lv] ][lv][PID]->fluid[MOMX][k][j][i];
+            const real Momy       = amr->patch[ amr->FluSg[lv] ][lv][PID]->fluid[MOMY][k][j][i];
+            const real Momz       = amr->patch[ amr->FluSg[lv] ][lv][PID]->fluid[MOMZ][k][j][i];
+            const real Engy       = amr->patch[ amr->FluSg[lv] ][lv][PID]->fluid[ENGY][k][j][i];
+#           ifdef DELE
+                  real dEint_Code = amr->patch[ amr->FluSg[lv] ][lv][PID]->fluid[DELE][k][j][i];
 #           else
-            const real YeDens = NULL_REAL;
+                  real dEint_Code = NULL_REAL;
 #           endif
 
 #           ifdef MHD
@@ -87,45 +81,34 @@ double Mis_GetTimeStep_Lightbulb( const int lv, const double dTime_dt )
             const real Emag = NULL_REAL;
 #           endif
 
-            const real Dens_Code = Dens;
             const real Eint_Code = Hydro_Con2Eint( Dens, Momx, Momy, Momz, Engy, true, MIN_EINT, Emag );
-            const real Ye        = YeDens / Dens;
 
 
-//          compute the neutrino heating rate
-#           if ( NUC_TABLE_MODE == NUC_TABLE_MODE_TEMP )
-            const int  NTarget = 2;
-#           else
-            const int  NTarget = 3;
-#           endif
-                  int  In_Int[NTarget+1];
-                  real In_Flt[3], Out[NTarget+1];
+//          call Src_Lightbulb() to get the heating/cooling rate if not computed yet
+            if ( dEint_Code == NULL_REAL )
+            {
+//             get the input arrays
+               real fluid[FLU_NIN_S];
 
-            In_Flt[0] = Dens_Code;
-            In_Flt[1] = Eint_Code;
-            In_Flt[2] = Ye;
+               for (int v=0; v<FLU_NIN_S; v++)  fluid[v] = amr->patch[ amr->FluSg[lv] ][lv][PID]->fluid[v][k][j][i];
 
-            In_Int[0] = NTarget;
-            In_Int[1] = NUC_VAR_IDX_XN;
-            In_Int[2] = NUC_VAR_IDX_XP;
-#           if ( NUC_TABLE_MODE == NUC_TABLE_MODE_ENGY )
-            In_Int[3] = NUC_VAR_IDX_EORT;
-#           endif
+#              ifdef MHD
+               real B[NCOMP_MAG] = { Emag, 0.0, 0.0 };
+#              else
+               real *B = NULL;
+#              endif
 
-            EoS_General_CPUPtr( NUC_MODE_ENGY, Out, In_Flt, In_Int, EoS_AuxArray_Flt, EoS_AuxArray_Int, h_EoS_Table );
 
-            const real Xn       = Out[0];               // neutron mass fraction
-            const real Xp       = Out[1];               // proton  mass fraction
-            const real Temp_MeV = Out[2] * Kelvin2MeV;  // temperature in MeV
+               SrcTerms.Lightbulb_FuncPtr( fluid, B, &SrcTerms, NULL_REAL, dh, x, y, z, NULL_REAL, NULL_REAL,
+                                           MIN_DENS, MIN_PRES, MIN_EINT, &EoS,
+                                           SrcTerms.Lightbulb_AuxArrayDevPtr_Flt, SrcTerms.Lightbulb_AuxArrayDevPtr_Int );
 
-            const double rate_heating = 1.544e20 * ( SrcTerms.Lightbulb_Lnue / 1.0e52 ) * ( 1.0e14 / r2_CGS )
-                                      * SQR( 0.25 * SrcTerms.Lightbulb_Tnue );
-            const double rate_cooling = 1.399e20 * CUBE(  SQR( 0.5 * Temp_MeV )  );
+#              ifdef DELE
+               dEint_Code = fluid[DELE];
+#              endif
+            } // if ( dEint_Code == NULL_REAL )
 
-            const double tau      = 1.0e-11 * Dens_Code * UNIT_D;
-            const double rate_CGS = ( rate_heating - rate_cooling ) * ( Xn + Xp ) * exp( -tau );
 
-            const double dEint_Code  = rate_CGS * UNIT_T * sEint2Code * Dens_Code;  // dEint per UNIT_T
             const double _Eint_Ratio = fabs( dEint_Code / Eint_Code );
 
 //          compare the inverse of ratio to avoid zero division, and store the maximum value

@@ -166,8 +166,15 @@
 #  define NCOMP_PASSIVE_BUILTIN2    0
 # endif
 
+// neutrino heating/cooling rate
+# if ( EOS == EOS_NUCLEAR )
+#  define NCOMP_PASSIVE_BUILTIN3    1
+# else
+#  define NCOMP_PASSIVE_BUILTIN3    0
+# endif
+
 // total number of built-in scalars
-#  define NCOMP_PASSIVE_BUILTIN     ( NCOMP_PASSIVE_BUILTIN0 + NCOMP_PASSIVE_BUILTIN1 + NCOMP_PASSIVE_BUILTIN2 )
+#  define NCOMP_PASSIVE_BUILTIN     ( NCOMP_PASSIVE_BUILTIN0 + NCOMP_PASSIVE_BUILTIN1 + NCOMP_PASSIVE_BUILTIN2 + NCOMP_PASSIVE_BUILTIN3 )
 
 #endif // #if ( MODEL == HYDRO )
 
@@ -270,6 +277,13 @@
 #  define PASSIVE_NEXT_IDX3   ( PASSIVE_NEXT_IDX2 )
 # endif
 
+# if ( EOS == EOS_NUCLEAR )
+#  define DELE                ( PASSIVE_NEXT_IDX3 )
+#  define PASSIVE_NEXT_IDX4   ( DELE - 1          )
+# else
+#  define PASSIVE_NEXT_IDX4   ( PASSIVE_NEXT_IDX3 )
+# endif
+
 #endif // #if ( NCOMP_PASSIVE > 0 )
 
 // field indices of magnetic --> element of [0 ... NCOMP_MAG-1]
@@ -313,6 +327,13 @@
 #  define FLUX_NEXT_IDX3   ( FLUX_NEXT_IDX2  )
 # endif
 
+# if ( EOS == EOS_NUCLEAR )
+#  define FLUX_DELE        ( FLUX_NEXT_IDX3  )
+#  define FLUX_NEXT_IDX4   ( FLUX_DELE - 1   )
+# else
+#  define FLUX_NEXT_IDX4   ( FLUX_NEXT_IDX3  )
+# endif
+
 #endif // #if ( NCOMP_PASSIVE > 0 )
 
 // bitwise field indices
@@ -337,6 +358,7 @@
 
 # if ( EOS == EOS_NUCLEAR )
 #  define _YE                 ( 1L << YE   )
+#  define _DELE               ( 1L << DELE )
 # endif
 
 #endif // #if ( NCOMP_PASSIVE > 0 )
@@ -370,6 +392,7 @@
 
 # if ( EOS == EOS_NUCLEAR )
 #  define _FLUX_YE            ( 1L << FLUX_YE   )
+#  define _FLUX_DELE          ( 1L << FLUX_DELE )
 # endif
 
 #endif // #if ( NFLUX_PASSIVE > 0 )

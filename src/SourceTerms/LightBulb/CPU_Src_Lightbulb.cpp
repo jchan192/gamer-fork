@@ -194,6 +194,9 @@ static void Src_Lightbulb( real fluid[], const real B[],
    const real Eint_Update = Eint_Code + dEint_Code;
 
    fluid[ENGY] = Hydro_ConEint2Etot( fluid[DENS], fluid[MOMX], fluid[MOMY], fluid[MOMZ], Eint_Update, Emag );
+#  ifdef DELE
+   fluid[DELE] = rate_Code * Dens_Code;
+#  endif
 
 
 // final check
