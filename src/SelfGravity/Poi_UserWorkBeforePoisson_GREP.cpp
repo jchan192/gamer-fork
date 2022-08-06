@@ -2,7 +2,6 @@
 
 
 static void Poi_Prepare_GREP( const double Time, const int lv );
-static void Update_GREP_Profile( const int lv, const int Sg, const double PrepTime );
 static void Combine_GREP_Profile( Profile_t *Prof[][2], const int lv, const int Sg, const double PrepTime,
                                   const bool RemoveEmpty );
 
@@ -30,11 +29,6 @@ double GREPSgTime [NLEVEL][2];
 double GREP_Prof_Center   [3];
 
 extern real *h_ExtPotGREP;
-
-// switch for when the temporal interpolation is applied
-//   true : in Aux_ComputeProfile()
-//   false: when combining the stored profiles
-static bool GREP_OPT_TIMEINTERP = false;
 
 
 
@@ -134,7 +128,6 @@ void Mis_UserWorkBeforeNextLevel_GREP( const int lv, const double TimeNew, const
          ( AdvanceCounter[lv] + 1 ) % REGRID_COUNT != 0     )   return;
 
 
-
    int        Sg           = GREPSg[lv];
    long       TVar      [] = {         _VELR,           _PRES,           _EINT };
    Profile_t *Prof_Leaf [] = { VrAve[lv][Sg], PresAve[lv][Sg], EngyAve[lv][Sg] };
@@ -182,11 +175,13 @@ void Mis_UserWorkBeforeNextSubstep_GREP( const int lv, const double TimeNew, con
 
 //-------------------------------------------------------------------------------------------------------
 // Function    :  Poi_Prepare_GREP
-// Description :  Compute the spherical-averaged profiles and GR effective potential.
+// Description :  Update the spherical-averaged profiles before Poisson and Gravity solvers,
+//                and compute the GR effective potential.
 //
-// Note        :  1. Enabled if macro GRAVITY and GREP are set
-//                2. Invoked by Poi_UserWorkBeforePoisson_GREP()
-//                3. The GREP evalutaed at each level is stored at Phi_eff[level]
+// Note        :  1. Invoked by Poi_UserWorkBeforePoisson_GREP()
+//                2. The contribution from     leaf patches on level = lv (<= lv) is stored QUANT[    lv]
+//                                         non-leaf patches on level = lv         is stored QUANT[NLEVEL]
+//                3. The GR effective potential is stored at Phi_eff[lv]
 //
 // Parameter   :  Time : Target physical time
 //                lv   : Target refinement level
@@ -203,13 +198,34 @@ void Poi_Prepare_GREP( const double Time, const int lv )
 
 
 // update and combine the spherical-averaged profiles
-   if ( GREP_OPT_TIMEINTERP )
-      Update_GREP_Profile( lv, Sg, Time );
+   long       TVar         [] = {               _DENS,             _VELR,               _PRES,               _EINT };
+   Profile_t *Prof_Leaf    [] = { DensAve[    lv][Sg], VrAve[    lv][Sg], PresAve[    lv][Sg], EngyAve[    lv][Sg] };
+   Profile_t *Prof_NonLeaf [] = { DensAve[NLEVEL][Sg], VrAve[NLEVEL][Sg], PresAve[NLEVEL][Sg], EngyAve[NLEVEL][Sg] };
+
+
+   if ( false ) {}
+   /*
+   if ( GREP_ALGO_SWITCH )
+   {
+//    contributions from the leaf patches on level <= lv and the non-leaf patches on level = lv
+      Aux_ComputeProfile( Prof_NonLeaf, GREP_Prof_Center, GREP_Prof_MaxRadius, GREP_Prof_MinBinSize,
+                          GREP_LOGBIN, GREP_LOGBINRATIO, true,  TVar, 4,  0, lv, PATCH_LEAF_PLUS_MAXNONLEAF, Time );
+   }
+   */
 
    else
    {
-      Update_GREP_Profile( lv, Sg, -1.0 );
+//    retain the empty bins to avoid inconsistent leaf- and non-leaft profiles during combining the profiles
 
+//    contributions from the leaf patches on level = lv
+      Aux_ComputeProfile( Prof_Leaf,    GREP_Prof_Center, GREP_Prof_MaxRadius, GREP_Prof_MinBinSize,
+                          GREP_LOGBIN, GREP_LOGBINRATIO, false, TVar, 4, lv, lv, PATCH_LEAF,    -1.0 );
+
+//    contributions from the non-leaf patches on level = lv
+      Aux_ComputeProfile( Prof_NonLeaf, GREP_Prof_Center, GREP_Prof_MaxRadius, GREP_Prof_MinBinSize,
+                          GREP_LOGBIN, GREP_LOGBINRATIO, false, TVar, 4, lv, lv, PATCH_NONLEAF, -1.0 );
+
+//    combine the profiles on each level
       Combine_GREP_Profile( DensAve, lv, Sg, Time, true );
       Combine_GREP_Profile( EngyAve, lv, Sg, Time, true );
       Combine_GREP_Profile( VrAve,   lv, Sg, Time, true );
@@ -228,51 +244,6 @@ void Poi_Prepare_GREP( const double Time, const int lv )
                     Phi_eff[lv]    [Sg] );
 
 } // FUNCTION : Poi_Prepare_GREP
-
-
-
-//-------------------------------------------------------------------------------------------------------
-// Function    :  Update_GREP_Profile
-// Description :  Update the spherical-averaged profiles
-//
-// Note        :  1. The contribution from     leaf patches on level = lv (<= lv) is stored QUANT[    lv]
-//                                         non-leaf patches on level = lv         is stored QUANT[NLEVEL]
-//                2. Apply temporal interpolation in Aux_ComputeProfile if PrepTime >= 0
-//                3. To avoid inconsistent leaf- and non-leaf profiles during combining,
-//                   we retain the empty bins in the profiles obtained here because
-//                   they could have different empty bins.
-//
-// Parameter   :  lv       : Target refinement level
-//                Sg       : Sandglass indicating which Profile_t object the data will be stored to
-//                PrepTime : Target physical time to prepare the spherical-averaged profiles
-//-------------------------------------------------------------------------------------------------------
-static void Update_GREP_Profile( const int lv, const int Sg, const double PrepTime )
-{
-
-   long       TVar         [] = {               _DENS,             _VELR,               _PRES,               _EINT };
-   Profile_t *Prof_Leaf    [] = { DensAve[    lv][Sg], VrAve[    lv][Sg], PresAve[    lv][Sg], EngyAve[    lv][Sg] };
-   Profile_t *Prof_NonLeaf [] = { DensAve[NLEVEL][Sg], VrAve[NLEVEL][Sg], PresAve[NLEVEL][Sg], EngyAve[NLEVEL][Sg] };
-
-
-   if ( GREP_OPT_TIMEINTERP )
-   {
-//    contributions from the leaf patches on level <= lv and the non-leaf patches on level = lv
-      Aux_ComputeProfile( Prof_NonLeaf, GREP_Prof_Center, GREP_Prof_MaxRadius, GREP_Prof_MinBinSize,
-                          GREP_LOGBIN, GREP_LOGBINRATIO, true,  TVar, 4,  0, lv, PATCH_LEAF_PLUS_MAXNONLEAF, PrepTime );
-   }
-
-   else
-   {
-//    contributions from the leaf patches on level = lv
-      Aux_ComputeProfile( Prof_Leaf,    GREP_Prof_Center, GREP_Prof_MaxRadius, GREP_Prof_MinBinSize,
-                          GREP_LOGBIN, GREP_LOGBINRATIO, false, TVar, 4, lv, lv, PATCH_LEAF,    PrepTime );
-
-//    contributions from the non-leaf patches on level = lv
-      Aux_ComputeProfile( Prof_NonLeaf, GREP_Prof_Center, GREP_Prof_MaxRadius, GREP_Prof_MinBinSize,
-                          GREP_LOGBIN, GREP_LOGBINRATIO, false, TVar, 4, lv, lv, PATCH_NONLEAF, PrepTime );
-   }
-
-} // FUNCTION : Update_GREP_Profile
 
 
 
@@ -335,8 +306,6 @@ void Combine_GREP_Profile( Profile_t *Prof[][2], const int lv, const int Sg, con
 
       for (int b=0; b<Prof_Leaf->NBin; b++)
       {
-//       note that when GREP_OPT_FIXUP is disabled
-//       the NCell in Prof_Leaf and Prof_Leaf_IntT could be different due to patch allocation/deallocation
          if ( Prof_Leaf->NCell[b] == 0L )  continue;
 
          Prof_NonLeaf->Data  [b] += ( FluIntTime )
