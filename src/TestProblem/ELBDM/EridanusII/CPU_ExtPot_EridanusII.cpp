@@ -46,6 +46,7 @@
 extern bool    Tidal_RotatingFrame;
 extern double  Tidal_Mass;
 extern double  Tidal_R;
+extern double  Tidal_Soften;
 extern double  Tidal_Angle0;
 extern bool    Tidal_FixedPos;
 extern bool    Tidal_Centrifugal;
@@ -82,13 +83,14 @@ void SetExtPotAuxArray_EridanusII( double AuxArray_Flt[], int AuxArray_Int[], co
       AuxArray_Flt[2] = amr->BoxCenter[2];
    }
 
-   AuxArray_Flt[3] = NEWTON_G*Tidal_Mass;
-   AuxArray_Flt[4] = Tidal_R;
-   AuxArray_Flt[5] = Tidal_Vrot;
-   AuxArray_Flt[6] = ( Tidal_FixedPos ) ? +1.0 : -1.0;
-   AuxArray_Flt[7] = ( Tidal_Centrifugal ) ? +1.0 : -1.0;
-   AuxArray_Flt[8] = Tidal_Angle0;
-   AuxArray_Flt[9] = ( Tidal_RotatingFrame ) ? +1.0 : -1.0;
+   AuxArray_Flt[ 3] = NEWTON_G*Tidal_Mass;
+   AuxArray_Flt[ 4] = Tidal_R;
+   AuxArray_Flt[ 5] = Tidal_Vrot;
+   AuxArray_Flt[ 6] = ( Tidal_FixedPos ) ? +1.0 : -1.0;
+   AuxArray_Flt[ 7] = ( Tidal_Centrifugal ) ? +1.0 : -1.0;
+   AuxArray_Flt[ 8] = Tidal_Angle0;
+   AuxArray_Flt[ 9] = ( Tidal_RotatingFrame ) ? +1.0 : -1.0;
+   AuxArray_Flt[10] = Tidal_Soften;
 
 } // FUNCTION : SetExtPotAuxArray_EridanusII
 #endif // #ifndef __CUDACC__
@@ -174,7 +176,8 @@ static real ExtPot_EridanusII( const double x, const double y, const double z, c
       const real   dx     = (real)(x - Cen[0]);
       const real   dy     = (real)(y - Cen[1]);
       const real   dz     = (real)(z - Cen[2]);
-      const real   _r     = 1.0/SQRT( SQR(dx) + SQR(dy) + SQR(dz) );
+      const real   eps    = (real)UserArray_Flt[10];
+      const real   _r     = (real)1.0/SQRT( SQR(dx) + SQR(dy) + SQR(dz) + SQR(eps) );
 
       return -GM*_r;
    } // if ( RotatingFrame ) ... else ...
