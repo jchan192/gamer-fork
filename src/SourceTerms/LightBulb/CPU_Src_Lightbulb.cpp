@@ -175,7 +175,11 @@ static void Src_Lightbulb( real fluid[], const real B[],
 #  endif
 
 
+#  ifdef __CUDACC__
    EoS->General_FuncPtr( NUC_MODE_ENGY, Out, In_Flt, In_Int, EoS->AuxArrayDevPtr_Flt, EoS->AuxArrayDevPtr_Int, EoS->Table );
+#  else
+   EoS_General_CPUPtr  ( NUC_MODE_ENGY, Out, In_Flt, In_Int, EoS_AuxArray_Flt,        EoS_AuxArray_Int,        h_EoS_Table );
+#  endif
 
    const real Xn       = Out[0];               // neutron mass fraction
    const real Xp       = Out[1];               // proton  mass fraction
@@ -198,7 +202,7 @@ static void Src_Lightbulb( real fluid[], const real B[],
 
    fluid[ENGY] = Hydro_ConEint2Etot( fluid[DENS], fluid[MOMX], fluid[MOMY], fluid[MOMZ], Eint_Update, Emag );
 #  ifdef DEDT_LB
-   fluid[DEDT_LB] = rate_Code * Dens_Code;
+   fluid[DEDT_LB] = FABS( rate_Code * Dens_Code );
 #  endif
 
 
