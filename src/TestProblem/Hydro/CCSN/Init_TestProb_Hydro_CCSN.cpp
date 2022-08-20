@@ -311,7 +311,7 @@ void SetGridIC( real fluid[], const double x, const double y, const double z, co
    real *Passive = new real [NCOMP_PASSIVE];
 
    Passive[ YE      - NCOMP_FLUID ] = Ye*Dens;
-   Passive[ DEDT_LB - NCOMP_FLUID ] = NULL_REAL;
+   Passive[ DEDT_LB - NCOMP_FLUID ] = DEDT_UNINITIALIZED;
 #  else
    real *Passive = NULL;
 #  endif

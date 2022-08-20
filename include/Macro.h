@@ -929,6 +929,10 @@
 #endif
 
 
+// values for uninitialized variables
+#define DEDT_UNINITIALIZED (real)0.0
+
+
 
 
 // ############
