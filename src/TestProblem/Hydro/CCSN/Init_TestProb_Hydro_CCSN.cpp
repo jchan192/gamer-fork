@@ -310,8 +310,8 @@ void SetGridIC( real fluid[], const double x, const double y, const double z, co
 #  if ( EOS == EOS_NUCLEAR )
    real *Passive = new real [NCOMP_PASSIVE];
 
-   Passive[ YE   - NCOMP_FLUID ] = Ye*Dens;
-   Passive[ DELE - NCOMP_FLUID ] = NULL_REAL;
+   Passive[ YE      - NCOMP_FLUID ] = Ye*Dens;
+   Passive[ DEDT_LB - NCOMP_FLUID ] = NULL_REAL;
 #  else
    real *Passive = NULL;
 #  endif

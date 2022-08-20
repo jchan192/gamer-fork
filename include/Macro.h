@@ -159,22 +159,15 @@
 #  define NCOMP_PASSIVE_BUILTIN1    0
 # endif
 
-// electron fraction (Ye)
+// electron fraction (Ye) and neutrino heating/cooling rate
 # if ( EOS == EOS_NUCLEAR )
-#  define NCOMP_PASSIVE_BUILTIN2    1
+#  define NCOMP_PASSIVE_BUILTIN2    2
 # else
 #  define NCOMP_PASSIVE_BUILTIN2    0
 # endif
 
-// neutrino heating/cooling rate
-# if ( EOS == EOS_NUCLEAR )
-#  define NCOMP_PASSIVE_BUILTIN3    1
-# else
-#  define NCOMP_PASSIVE_BUILTIN3    0
-# endif
-
 // total number of built-in scalars
-#  define NCOMP_PASSIVE_BUILTIN     ( NCOMP_PASSIVE_BUILTIN0 + NCOMP_PASSIVE_BUILTIN1 + NCOMP_PASSIVE_BUILTIN2 + NCOMP_PASSIVE_BUILTIN3 )
+#  define NCOMP_PASSIVE_BUILTIN     ( NCOMP_PASSIVE_BUILTIN0 + NCOMP_PASSIVE_BUILTIN1 + NCOMP_PASSIVE_BUILTIN2 )
 
 #endif // #if ( MODEL == HYDRO )
 
@@ -272,16 +265,10 @@
 
 # if ( EOS == EOS_NUCLEAR )
 #  define YE                  ( PASSIVE_NEXT_IDX2 )
-#  define PASSIVE_NEXT_IDX3   ( YE - 1            )
+#  define DEDT_LB             ( YE - 1            )
+#  define PASSIVE_NEXT_IDX3   ( YE - 2            )
 # else
 #  define PASSIVE_NEXT_IDX3   ( PASSIVE_NEXT_IDX2 )
-# endif
-
-# if ( EOS == EOS_NUCLEAR )
-#  define DELE                ( PASSIVE_NEXT_IDX3 )
-#  define PASSIVE_NEXT_IDX4   ( DELE - 1          )
-# else
-#  define PASSIVE_NEXT_IDX4   ( PASSIVE_NEXT_IDX3 )
 # endif
 
 #endif // #if ( NCOMP_PASSIVE > 0 )
@@ -322,16 +309,10 @@
 
 # if ( EOS == EOS_NUCLEAR )
 #  define FLUX_YE          ( FLUX_NEXT_IDX2  )
-#  define FLUX_NEXT_IDX3   ( FLUX_YE - 1     )
+#  define FLUX_DEDT_LB     ( FLUX_YE - 1     )
+#  define FLUX_NEXT_IDX3   ( FLUX_YE - 2     )
 # else
 #  define FLUX_NEXT_IDX3   ( FLUX_NEXT_IDX2  )
-# endif
-
-# if ( EOS == EOS_NUCLEAR )
-#  define FLUX_DELE        ( FLUX_NEXT_IDX3  )
-#  define FLUX_NEXT_IDX4   ( FLUX_DELE - 1   )
-# else
-#  define FLUX_NEXT_IDX4   ( FLUX_NEXT_IDX3  )
 # endif
 
 #endif // #if ( NCOMP_PASSIVE > 0 )
@@ -357,8 +338,8 @@
 # endif
 
 # if ( EOS == EOS_NUCLEAR )
-#  define _YE                 ( 1L << YE   )
-#  define _DELE               ( 1L << DELE )
+#  define _YE                 ( 1L << YE      )
+#  define _DEDT_LB            ( 1L << DEDT_LB )
 # endif
 
 #endif // #if ( NCOMP_PASSIVE > 0 )
@@ -391,8 +372,8 @@
 # endif
 
 # if ( EOS == EOS_NUCLEAR )
-#  define _FLUX_YE            ( 1L << FLUX_YE   )
-#  define _FLUX_DELE          ( 1L << FLUX_DELE )
+#  define _FLUX_YE            ( 1L << FLUX_YE      )
+#  define _FLUX_DEDT_LB       ( 1L << FLUX_DEDT_LB )
 # endif
 
 #endif // #if ( NFLUX_PASSIVE > 0 )

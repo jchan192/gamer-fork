@@ -111,21 +111,21 @@ void Init_Field()
 //    corresponding symbolic constants (e.g., DUAL/CRAY) defined in Macro.h
 //    --> as we still rely on these constants (e.g., DENS, DUAL) in the fluid solvers
 #  if ( EOS == EOS_NUCLEAR )
-   Idx_DelE = AddField( "DelE", NORMALIZE_NO, INTERP_FRAC_NO  );
-   if ( Idx_DelE != DELE )    Aux_Error( ERROR_INFO, "inconsistent Idx_DelE (%d != %d) !!\n", Idx_DelE, DELE );
+   Idx_dEdt_LB = AddField( "dEdt_LB", NORMALIZE_NO, INTERP_FRAC_NO  );
+   if ( Idx_dEdt_LB != DEDT_LB )    Aux_Error( ERROR_INFO, "inconsistent Idx_dEdt_LB (%d != %d) !!\n", Idx_dEdt_LB, DEDT_LB );
 
-   Idx_Ye   = AddField( "Ye",   NORMALIZE_NO, INTERP_FRAC_YES );
-   if ( Idx_Ye   != YE   )    Aux_Error( ERROR_INFO, "inconsistent Idx_Ye   (%d != %d) !!\n", Idx_Ye,   YE   );
+   Idx_Ye      = AddField( "Ye",      NORMALIZE_NO, INTERP_FRAC_YES );
+   if ( Idx_Ye      != YE      )    Aux_Error( ERROR_INFO, "inconsistent Idx_Ye      (%d != %d) !!\n", Idx_Ye,      YE   );
 #  endif
 
 #  ifdef COSMIC_RAY
-   Idx_CRay = AddField( "CRay", NORMALIZE_NO, INTERP_FRAC_NO );
-   if ( Idx_CRay != CRAY )    Aux_Error( ERROR_INFO, "inconsistent Idx_CRay (%d != %d) !!\n", Idx_CRay, CRAY );
+   Idx_CRay    = AddField( "CRay",    NORMALIZE_NO, INTERP_FRAC_NO );
+   if ( Idx_CRay    != CRAY    )    Aux_Error( ERROR_INFO, "inconsistent Idx_CRay    (%d != %d) !!\n", Idx_CRay,    CRAY );
 #  endif
 
 #  ifdef DUAL_ENERGY
-   Idx_Dual = AddField( "Dual", NORMALIZE_NO, INTERP_FRAC_NO );
-   if ( Idx_Dual != DUAL )    Aux_Error( ERROR_INFO, "inconsistent Idx_Dual (%d != %d) !!\n", Idx_Dual, DUAL );
+   Idx_Dual    = AddField( "Dual",    NORMALIZE_NO, INTERP_FRAC_NO );
+   if ( Idx_Dual    != DUAL    )    Aux_Error( ERROR_INFO, "inconsistent Idx_Dual    (%d != %d) !!\n", Idx_Dual,    DUAL );
 #  endif
 
 

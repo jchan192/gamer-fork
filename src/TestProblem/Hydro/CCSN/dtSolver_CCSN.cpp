@@ -66,8 +66,8 @@ double Mis_GetTimeStep_Lightbulb( const int lv, const double dTime_dt )
             const real Momy       = amr->patch[ amr->FluSg[lv] ][lv][PID]->fluid[MOMY][k][j][i];
             const real Momz       = amr->patch[ amr->FluSg[lv] ][lv][PID]->fluid[MOMZ][k][j][i];
             const real Engy       = amr->patch[ amr->FluSg[lv] ][lv][PID]->fluid[ENGY][k][j][i];
-#           ifdef DELE
-                  real dEint_Code = amr->patch[ amr->FluSg[lv] ][lv][PID]->fluid[DELE][k][j][i];
+#           ifdef DEDT_LB
+                  real dEint_Code = amr->patch[ amr->FluSg[lv] ][lv][PID]->fluid[DEDT_LB][k][j][i];
 #           else
                   real dEint_Code = NULL_REAL;
 #           endif
@@ -103,8 +103,8 @@ double Mis_GetTimeStep_Lightbulb( const int lv, const double dTime_dt )
                                            MIN_DENS, MIN_PRES, MIN_EINT, &EoS,
                                            SrcTerms.Lightbulb_AuxArrayDevPtr_Flt, SrcTerms.Lightbulb_AuxArrayDevPtr_Int );
 
-#              ifdef DELE
-               dEint_Code = fluid[DELE];
+#              ifdef DEDT_LB
+               dEint_Code = fluid[DEDT_LB];
 #              endif
             } // if ( dEint_Code == NULL_REAL )
 
