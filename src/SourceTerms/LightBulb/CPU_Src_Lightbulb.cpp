@@ -383,7 +383,7 @@ void Src_Init_Lightbulb()
 #  endif
 
 // set the major source-term function
-   Src_SetCPUFunc_Lightbulb( SrcTerms.Lightbulb_FuncPtr );
+   Src_SetCPUFunc_Lightbulb( SrcTerms.Lightbulb_CPUPtr );
 
 #  ifdef GPU
    Src_SetGPUFunc_Lightbulb( SrcTerms.Lightbulb_GPUPtr );
