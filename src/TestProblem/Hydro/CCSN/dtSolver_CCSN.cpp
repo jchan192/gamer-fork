@@ -93,7 +93,6 @@ double Mis_GetTimeStep_Lightbulb( const int lv, const double dTime_dt )
                const double x = amr->patch[0][lv][PID]->EdgeL[0] + (i+0.5)*dh;
 
 
-
 //             get the input arrays
                real fluid[FLU_NIN_S];
 
