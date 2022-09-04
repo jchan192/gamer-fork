@@ -79,14 +79,20 @@ double Mis_GetTimeStep_Lightbulb( const int lv, const double dTime_dt )
 
 
 #           ifdef DEDT_LB
-            real dEint_Code = amr->patch[ amr->FluSg[lv] ][lv][PID]->fluid[DEDT_LB][k][j][i];
+            real dEint_Code     = amr->patch[     amr->FluSg[lv] ][lv][PID]->fluid[DEDT_LB][k][j][i];
+            real dEint_Code_Old = amr->patch[ 1 - amr->FluSg[lv] ][lv][PID]->fluid[DEDT_LB][k][j][i];
 #           else
-            real dEint_Code = DEDT_UNINITIALIZED;
+            real dEint_Code     = DEDT_UNINITIALIZED;
+            real dEint_Code_Old = DEDT_UNINITIALIZED;
 #           endif
 
 
 //          call Src_Lightbulb() to compute the neutrino heating/cooling rate if not initialized yet
-            if ( dEint_Code == DEDT_UNINITIALIZED )
+//
+//          check DEDT_LB at both the Sg = 0 and 1
+//          since the sandglass Sg = amr->FluSg[lv] may not equal to that used during initialization
+            if ( dEint_Code     == DEDT_UNINITIALIZED ||
+                 dEint_Code_Old == DEDT_UNINITIALIZED    )
             {
                const double z = amr->patch[0][lv][PID]->EdgeL[2] + (k+0.5)*dh;
                const double y = amr->patch[0][lv][PID]->EdgeL[1] + (j+0.5)*dh;
@@ -128,7 +134,7 @@ double Mis_GetTimeStep_Lightbulb( const int lv, const double dTime_dt )
    for (int TID=0; TID<NT; TID++)   dt_LB_Inv = FMAX( dt_LB_Inv, OMP_dt_LB_Inv[TID] );
 
 // free per-thread arrays
-   free( OMP_dt_LB_Inv );
+   delete [] OMP_dt_LB_Inv;
 
 
 // find the maximum over all MPI processes

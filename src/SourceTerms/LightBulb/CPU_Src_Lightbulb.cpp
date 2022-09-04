@@ -175,6 +175,8 @@ static void Src_Lightbulb( real fluid[], const real B[],
 #  endif
 
 
+// note that EoS->General_FuncPtr binds to the GPU EoS driver when enabling GPU
+// here we call the CPU EoS driver instead if the CPU source term solvers are invoked
 #  ifdef __CUDACC__
    EoS->General_FuncPtr( NUC_MODE_ENGY, Out, In_Flt, In_Int, EoS->AuxArrayDevPtr_Flt, EoS->AuxArrayDevPtr_Int, EoS->Table );
 #  else
