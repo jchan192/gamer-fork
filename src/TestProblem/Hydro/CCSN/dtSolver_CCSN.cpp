@@ -154,7 +154,7 @@ double Mis_GetTimeStep_Lightbulb( const int lv, const double dTime_dt )
 
 //-------------------------------------------------------------------------------------------------------
 // Function    :  Mis_GetTimeStep_Deleptonization
-// Description :  estimate the evolution time-step constrained by the lightbulb source term
+// Description :  Estimate the evolution time-step constrained by the lightbulb source term
 //
 // Note        :  1. This function should be applied to both physical and comoving coordinates and always
 //                   return the evolution time-step (dt) actually used in various solvers
