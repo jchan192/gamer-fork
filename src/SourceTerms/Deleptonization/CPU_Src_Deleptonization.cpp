@@ -24,9 +24,6 @@
 #include "CUFLU_Shared_FluUtility.cu"
 #include "CUDA_ConstMemory.h"
 
-extern real (*d_SrcDlepProf_Data)[SRC_DLEP_PROF_NBINMAX];
-extern real  *d_SrcDlepProf_Radius;
-
 #endif // #ifdef __CUDACC__
 
 
@@ -40,7 +37,6 @@ void Src_SetGPUFunc_Deleptonization( SrcFunc_t & );
 #endif
 void Src_SetConstMemory_Deleptonization( const double AuxArray_Flt[], const int AuxArray_Int[],
                                          double *&DevPtr_Flt, int *&DevPtr_Int );
-void Src_PassData2GPU_Deleptonization();
 void Src_End_Deleptonization();
 
 #endif
@@ -82,7 +78,7 @@ real YeOfRhoFunc( const real DENS_CGS, const real DELEP_RHO1, const real DELEP_R
 // Description :  Set the auxiliary arrays AuxArray_Flt/Int[]
 //
 // Note        :  1. Invoked by Src_Init_Deleptonization()
-//                2. AuxArray_Flt/Int[] have the size of SRC_NAUX_DLEP defined in Macro.h (default = 7)
+//                2. AuxArray_Flt/Int[] have the size of SRC_NAUX_DLEP defined in Macro.h (default = 9)
 //                3. Add "#ifndef __CUDACC__" since this routine is only useful on CPU
 //
 // Parameter   :  AuxArray_Flt/Int : Floating-point/Integer arrays to be filled up
@@ -192,17 +188,17 @@ static void Src_Deleptonization( real fluid[], const real B[],
 
    if ( Dens_CGS <= Delep_minDens_CGS )
    {
-      Del_Ye = 0.0;
+      Del_Ye = (real)0.0;
    }
    else
    {
       Yout   = YeOfRhoFunc( Dens_CGS, DELEP_RHO1, DELEP_RHO2,
                             DELEP_YE1, DELEP_YE2, DELEP_YEC );
       Del_Ye = Yout - Ye;
-      Del_Ye = MIN( 0.0, Del_Ye ); // Deleptonization cannot increase Ye
+      Del_Ye = MIN( (real)0.0, Del_Ye ); // Deleptonization cannot increase Ye
    }
 
-   if ( Del_Ye < 0.0 )
+   if ( Del_Ye < (real)0.0 )
    {
 //    Nuclear EoS
 #     if ( NUC_TABLE_MODE == NUC_TABLE_MODE_TEMP )
@@ -237,7 +233,7 @@ static void Src_Deleptonization( real fluid[], const real B[],
 
       if (  ( mu_nu_MeV < DELEP_ENU )  ||  ( Dens_CGS >= 2.0e12 )  )
       {
-         Del_Entr = 0.0;
+         Del_Entr = (real)0.0;
       }
       else
       {
@@ -272,24 +268,18 @@ static void Src_Deleptonization( real fluid[], const real B[],
       EoS->General_FuncPtr( NUC_MODE_ENTR, Out2, In_Flt2, In_Int2, EoS->AuxArrayDevPtr_Flt, EoS->AuxArrayDevPtr_Int, EoS->Table );
       Eint_Update = Out2[0];
       fluid[ENGY] = Hydro_ConEint2Etot( fluid[DENS], fluid[MOMX], fluid[MOMY], fluid[MOMZ], Eint_Update, Emag );
-   }
-   else
-   {
-//    overwrite internal energy with input data
-      Eint_Update = Eint_Code;
-   } // if ( Del_Ye < 0.0 ) ... else ...
 
 
-// final check
-#  if GAMER_DEBUG
-   if (  Hydro_CheckUnphysical( UNPHY_MODE_SING, &Eint_Update, "output internal energy density", ERROR_INFO, UNPHY_VERBOSE )  )
-   {
-      printf( "   Dens=%13.7e code units, Eint=%13.7e code units,  Ye=%13.7e\n", Dens_Code, Eint_Code, Ye );
-      printf( "   Entr=%13.7e kb/baryon, Del_Ye=%13.7e, Del_Entr=%13.7e kb/baryon\n", Entr, Del_Ye, Del_Entr );
-   }
-#  endif // GAMER_DEBUG
+      // final check
+#     if GAMER_DEBUG
+      if (  Hydro_CheckUnphysical( UNPHY_MODE_SING, &Eint_Update, "output internal energy density", ERROR_INFO, UNPHY_VERBOSE )  )
+      {
+         printf( "   Dens=%13.7e code units, Eint=%13.7e code units,  Ye=%13.7e\n",      Dens_Code, Eint_Code, Ye       );
+         printf( "   Entr=%13.7e kb/baryon, Del_Ye=%13.7e, Del_Entr=%13.7e kb/baryon\n", Entr,      Del_Ye,    Del_Entr );
+      }
+#     endif // GAMER_DEBUG
 
-
+   } // if ( Del_Ye < (real)0.0 )
 
 } // FUNCTION : Src_Deleptonization
 
@@ -329,33 +319,6 @@ void Src_WorkBeforeMajorFunc_Deleptonization( const int lv, const double TimeNew
 
 } // FUNCTION : Src_WorkBeforeMajorFunc_Deleptonization
 #endif
-
-
-
-#ifdef __CUDACC__
-//-------------------------------------------------------------------------------------------------------
-// Function    :  Src_PassData2GPU_Deleptonization
-// Description :  Transfer data to GPU
-//
-// Note        :  1. Invoked by Src_WorkBeforeMajorFunc_Deleptonization()
-//                2. Use synchronous transfer
-//
-// Parameter   :  None
-//
-// Return      :  None
-//-------------------------------------------------------------------------------------------------------
-void Src_PassData2GPU_Deleptonization()
-{
-
-   const long Size_Data   = sizeof(real)*SRC_DLEP_PROF_NVAR*SRC_DLEP_PROF_NBINMAX;
-   const long Size_Radius = sizeof(real)*                   SRC_DLEP_PROF_NBINMAX;
-
-// use synchronous transfer
-   CUDA_CHECK_ERROR(  cudaMemcpy( d_SrcDlepProf_Data,   h_SrcDlepProf_Data,   Size_Data,   cudaMemcpyHostToDevice )  );
-   CUDA_CHECK_ERROR(  cudaMemcpy( d_SrcDlepProf_Radius, h_SrcDlepProf_Radius, Size_Radius, cudaMemcpyHostToDevice )  );
-
-} // FUNCTION : Src_PassData2GPU_Deleptonization
-#endif // #ifdef __CUDACC__
 
 
 
