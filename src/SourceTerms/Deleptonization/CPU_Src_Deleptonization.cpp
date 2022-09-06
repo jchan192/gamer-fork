@@ -11,7 +11,6 @@
 #define SRC_AUX_DELEP_YE2           5
 #define SRC_AUX_DELEP_YEC           6
 #define SRC_AUX_KELVIN2MEV          7
-#define SRC_AUX_MINDENS_CGS         8
 
 
 
@@ -42,8 +41,8 @@ void Src_End_Deleptonization();
 #endif
 
 GPU_DEVICE static
-real YeOfRhoFunc( const real DENS_CGS, const real DELEP_RHO1, const real DELEP_RHO2,
-                  const real DELEP_YE1, const real DELEP_YE2, const real DELEP_YEC );
+real yeofrhofunc( const real Dens_CGS, const real Delep_Rho1, const real Delep_Rho2,
+                  const real Delep_Ye1, const real Delep_Ye2, const real Delep_Yec );
 
 
 
@@ -78,7 +77,7 @@ real YeOfRhoFunc( const real DENS_CGS, const real DELEP_RHO1, const real DELEP_R
 // Description :  Set the auxiliary arrays AuxArray_Flt/Int[]
 //
 // Note        :  1. Invoked by Src_Init_Deleptonization()
-//                2. AuxArray_Flt/Int[] have the size of SRC_NAUX_DLEP defined in Macro.h (default = 9)
+//                2. AuxArray_Flt/Int[] have the size of SRC_NAUX_DLEP defined in Macro.h (default = 8)
 //                3. Add "#ifndef __CUDACC__" since this routine is only useful on CPU
 //
 // Parameter   :  AuxArray_Flt/Int : Floating-point/Integer arrays to be filled up
@@ -97,7 +96,6 @@ void Src_SetAuxArray_Deleptonization( double AuxArray_Flt[], int AuxArray_Int[] 
    AuxArray_Flt[SRC_AUX_DELEP_YE2  ] = SrcTerms.Dlep_Ye2;
    AuxArray_Flt[SRC_AUX_DELEP_YEC  ] = SrcTerms.Dlep_Yec;
    AuxArray_Flt[SRC_AUX_KELVIN2MEV ] = Const_kB_eV*1.0e-6;
-   AuxArray_Flt[SRC_AUX_MINDENS_CGS] = 1.0e6; // [g/cm^3];
 
 } // FUNCTION : Src_SetAuxArray_Deleptonization
 #endif // #ifndef __CUDACC__
@@ -150,14 +148,16 @@ static void Src_Deleptonization( real fluid[], const real B[],
 
 
    const real Dens2CGS          = AuxArray_Flt[SRC_AUX_DENS2CGS   ];
-   const real DELEP_ENU         = AuxArray_Flt[SRC_AUX_DELEP_ENU  ];
-   const real DELEP_RHO1        = AuxArray_Flt[SRC_AUX_DELEP_RHO1 ];
-   const real DELEP_RHO2        = AuxArray_Flt[SRC_AUX_DELEP_RHO2 ];
-   const real DELEP_YE1         = AuxArray_Flt[SRC_AUX_DELEP_YE1  ];
-   const real DELEP_YE2         = AuxArray_Flt[SRC_AUX_DELEP_YE2  ];
-   const real DELEP_YEC         = AuxArray_Flt[SRC_AUX_DELEP_YEC  ];
+   const real Delep_Enu         = AuxArray_Flt[SRC_AUX_DELEP_ENU  ];
+   const real Delep_Rho1        = AuxArray_Flt[SRC_AUX_DELEP_RHO1 ];
+   const real Delep_Rho2        = AuxArray_Flt[SRC_AUX_DELEP_RHO2 ];
+   const real Delep_Ye1         = AuxArray_Flt[SRC_AUX_DELEP_YE1  ];
+   const real Delep_Ye2         = AuxArray_Flt[SRC_AUX_DELEP_YE2  ];
+   const real Delep_Yec         = AuxArray_Flt[SRC_AUX_DELEP_YEC  ];
    const real Kelvin2MeV        = AuxArray_Flt[SRC_AUX_KELVIN2MEV ];
-   const real Delep_minDens_CGS = AuxArray_Flt[SRC_AUX_MINDENS_CGS];
+
+   const real Delep_minDens_CGS = 1.0e6; // [g/cm^3]
+
 
 #  ifdef MHD
    const real Emag       = (real)0.5*(  SQR( B[MAGX] ) + SQR( B[MAGY] ) + SQR( B[MAGZ] )  );
@@ -192,8 +192,8 @@ static void Src_Deleptonization( real fluid[], const real B[],
    }
    else
    {
-      Yout   = YeOfRhoFunc( Dens_CGS, DELEP_RHO1, DELEP_RHO2,
-                            DELEP_YE1, DELEP_YE2, DELEP_YEC );
+      Yout   = yeofrhofunc( Dens_CGS, Delep_Rho1, Delep_Rho2,
+                            Delep_Ye1, Delep_Ye2, Delep_Yec );
       Del_Ye = Yout - Ye;
       Del_Ye = MIN( (real)0.0, Del_Ye ); // Deleptonization cannot increase Ye
    }
@@ -231,13 +231,13 @@ static void Src_Deleptonization( real fluid[], const real B[],
       if ( mu_nu_MeV != mu_nu_MeV ) printf( "ERROR : couldn't get chemical potential munu (NaN) !!\n" );
 #     endif // GAMER_DEBUG
 
-      if (  ( mu_nu_MeV < DELEP_ENU )  ||  ( Dens_CGS >= 2.0e12 )  )
+      if (  ( mu_nu_MeV < Delep_Enu )  ||  ( Dens_CGS >= 2.0e12 )  )
       {
          Del_Entr = (real)0.0;
       }
       else
       {
-         Del_Entr = - Del_Ye * ( mu_nu_MeV - DELEP_ENU ) / Temp_MeV;
+         Del_Entr = - Del_Ye * ( mu_nu_MeV - Delep_Enu ) / Temp_MeV;
       }
 
 //    update entropy and Ye
@@ -463,36 +463,36 @@ void Src_End_Deleptonization()
 
 
 //-----------------------------------------------------------------------------------------
-// Function    :  YeOfRhoFunc
+// Function    :  yeofrhofunc
 // Description :  Calculate electron fraction Ye from the given density and
 //                deleptonization parameters
 //
 // Note        :  1. Invoked by Src_Deleptonization()
 //                2. Ref: M. Liebendoerfer, 2005, ApJ, 603, 1042-1051 (arXiv: astro-ph/0504072)
 //
-// Parameter   :  DENS_CGS  : density in CGS from which Ye is caculated
-//             :  DELEP_RHO1: parameter for the parameterized deleptonization fitting formula
-//             :  DELEP_RHO2: parameter for the parameterized deleptonization fitting formula
-//             :  DELEP_YE1 : parameter for the parameterized deleptonization fitting formula
-//             :  DELEP_YE2 : parameter for the parameterized deleptonization fitting formula
-//             :  DELEP_YEC : parameter for the parameterized deleptonization fitting formula
+// Parameter   :  Dens_CGS  : density in CGS from which Ye is caculated
+//             :  Delep_Rho1: parameter for the parameterized deleptonization fitting formula
+//             :  Delep_Rho2: parameter for the parameterized deleptonization fitting formula
+//             :  Delep_Ye1 : parameter for the parameterized deleptonization fitting formula
+//             :  Delep_Ye2 : parameter for the parameterized deleptonization fitting formula
+//             :  Delep_Yec : parameter for the parameterized deleptonization fitting formula
 //
-// Return      :  YeOfRhoFunc
+// Return      :  yeofrhofunc
 //-----------------------------------------------------------------------------------------
 GPU_DEVICE static
-real YeOfRhoFunc( const real DENS_CGS, const real DELEP_RHO1, const real DELEP_RHO2,
-                  const real DELEP_YE1, const real DELEP_YE2, const real DELEP_YEC )
+real yeofrhofunc( const real Dens_CGS, const real Delep_Rho1, const real Delep_Rho2,
+                  const real Delep_Ye1, const real Delep_Ye2, const real Delep_Yec )
 {
 
    real XofRho, Ye;
 
-   XofRho = (  2.0 * LOG10( DENS_CGS ) - LOG10( DELEP_RHO2 ) - LOG10( DELEP_RHO1 )  )
-          / (  LOG10( DELEP_RHO2 ) - LOG10( DELEP_RHO1 )  );
-   XofRho = MAX( -1.0, MIN( 1.0, XofRho ) );
+   XofRho = (real)2.0 * LOG10( Dens_CGS / Delep_Rho2 / Delep_Rho1 )
+          / LOG10( Delep_Rho2 / Delep_Rho1 );
+   XofRho = MAX( (real)-1.0, MIN( (real)1.0, XofRho ) );
 
-   Ye = 0.5 * ( DELEP_YE2 + DELEP_YE1 ) + 0.5 * XofRho * ( DELEP_YE2 - DELEP_YE1 )
-      + DELEP_YEC * (  1.0 - FABS( XofRho )
-      + 4.0 * FABS( XofRho ) * ( FABS( XofRho ) - 0.5 ) * ( FABS( XofRho ) - 1.0 )  );
+   Ye = (real)0.5 * ( Delep_Ye2 + Delep_Ye1 ) + 0.5 * XofRho * ( Delep_Ye2 - Delep_Ye1 )
+      + Delep_Yec * (  (real)1.0 - FABS( XofRho )
+      + (real)4.0 * FABS( XofRho ) * ( FABS( XofRho ) - (real)0.5 ) * ( FABS( XofRho ) - (real)1.0 )  );
 
 
    return Ye;
