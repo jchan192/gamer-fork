@@ -157,7 +157,7 @@ double Mis_GetTimeStep_Lightbulb( const int lv, const double dTime_dt )
 //-------------------------------------------------------------------------------------------------------
 // Function    :  Mis_GetTimeStep_CoreCollapse
 // Description :  Set the time-step to CCSN_CC_Red_DT during the core collape once the central 
-//                density reaches CCSN_CC_CentralDensFac (g/cm^3)
+//                density reaches CCSN_CC_CentralDensFac (g/cm^3) to get a more accurate bounce time
 //
 // Note        :  1. This function should be applied to both physical and comoving coordinates and always
 //                   return the evolution time-step (dt) actually used in various solvers
