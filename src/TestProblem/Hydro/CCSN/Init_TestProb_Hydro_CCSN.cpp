@@ -632,9 +632,6 @@ void Record_CCSN()
 
          Src_Init();
 
-         OUTPUT_DT = 2.0;   // output data every 2.0 unit time
-         DT__MAX = 1.0e-2;  // forced the maximum allowed time-step on all level to be 1.0e-2
-
 //       forced output data at core bounce
          Output_DumpData( 2 );
 
