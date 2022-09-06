@@ -204,6 +204,11 @@ void SetParameter()
    if (  ( CCSN_Is_PostBounce == 0 )  &&  ( CCSN_Prob == Post_Bounce )  )
       Aux_Error( ERROR_INFO, "Incorrect parameter %s = %d !!\n", "CCSN_Is_PostBounce", CCSN_Is_PostBounce );
 
+// CCSN_CC_Red_DT should be smaller than DT__MAX * UNIT_T
+   if (  ( CCSN_Prob == Core_Collapse )  &&  ( CCSN_CC_Red_DT > DT__MAX * UNIT_T )  )
+      Aux_Error( ERROR_INFO, "%s = %13.7e should be smaller than %s = %13.7e !!\n", "CCSN_CC_Red_DT", 
+                 CCSN_CC_Red_DT, "DT__MAX * UNIT_T", DT__MAX * UNIT_T );
+
 
 // (2) set the problem-specific derived parameters
 
