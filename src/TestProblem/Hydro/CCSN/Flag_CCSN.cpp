@@ -1,6 +1,12 @@
 #include "GAMER.h"
 
 
+extern bool   CCSN_MaxRefine_FLAG1;
+extern bool   CCSN_MaxRefine_FLAG2;
+extern int    CCSN_MaxRefine_LV1;
+extern int    CCSN_MaxRefine_LV2;
+extern double CCSN_MaxRefine_Dens1;
+extern double CCSN_MaxRefine_Dens2;
 extern double CCSN_MaxRefine_RadFac;
 extern double CCSN_CentralDens;
 
@@ -45,14 +51,14 @@ bool Flag_CoreCollapse( const int i, const int j, const int k, const int lv, con
    const double CentralDens = CCSN_CentralDens / UNIT_D;
 
 // (1) check if the allowed maximum level is reached
-   if ( CentralDens < 1e11 / UNIT_D )
+   if ( CCSN_MaxRefine_FLAG1  &&  CentralDens < CCSN_MaxRefine_Dens1 / UNIT_D )
    {
-      MaxRefine = dh * UNIT_L <= 2e5; // allowed finest resoultion of 2km
+      MaxRefine = lv >= CCSN_MaxRefine_LV1;
    }
 
-   else if ( CentralDens < 1e12 / UNIT_D )
+   else if ( CCSN_MaxRefine_FLAG2  &&  CCSN_MaxRefine_Dens2 < 1e12 / UNIT_D )
    {
-      MaxRefine = dh * UNIT_L <= 1e5; // allowed finest resoultion of 1km
+      MaxRefine = lv >= CCSN_MaxRefine_LV2;
    }
 
 
