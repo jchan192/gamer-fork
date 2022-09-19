@@ -61,8 +61,7 @@ Note:
    --> plot_profile.py            : compute and plot the spherically averaged profile
    --> plot_rhoc_migrationtest.py : plot the evolution of central density with FLASH data (for GREP migration)
    --> plot_rhoc_postbounce.py    : plot the evolution of central density with FLASH data (for Post bounce)
-   --> plot_rhoc_corecollapse.py  : plot the evolution of central density with FLASH data
-   (for Core collapse)
+   --> plot_rhoc_corecollapse.py  : plot the evolution of central density with FLASH data (for Core collapse)
    --> plot_slice.py              : slice plot for the specified quantity
 
 5. For MHD simulations, there are two magnetic field profiles supported:
