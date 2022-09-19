@@ -21,7 +21,7 @@ CCSN_Eint_Mode   1                                 # Mode of obtaining internal 
                                                    #   2=Pres Mode: Eint(dens, pres, [Ye]) )
 
 CCSN_CC_MaxRefine_Flag1   0                        # enable limiting maximum refinement level 1 [0]
-CCSN_CC_MaxRefine_Flag2   0                        # enable limiting maximum refinement level 2 [0] ( CCSN_MaxRefine_FLAG1 should be turn on first)
+CCSN_CC_MaxRefine_Flag2   0                        # enable limiting maximum refinement level 2 [0]
 CCSN_CC_MaxRefine_LV1     6                        # reduced maximum refinement level 1 to this value [MAX_LEVEL-2]
 CCSN_CC_MaxRefine_LV2     7                        # reduced maximum refinement level 2 to this value [MAX_LEVEL-1]
 CCSN_CC_MaxRefine_Dens1   1.0e11                   # central density threshold that reduces the maximum refinement level 1 [1.0e11]
