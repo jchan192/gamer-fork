@@ -23,6 +23,8 @@ Default setup:
 
 3. For Post bounce:
    --> MAX_LEVEL = 8
+   --> OPT__DT_USER = 1
+   --> OPT__FLAG_USER = 1
 
 4. For Lightbulb:
    --> OPT__DT_USER = 1
