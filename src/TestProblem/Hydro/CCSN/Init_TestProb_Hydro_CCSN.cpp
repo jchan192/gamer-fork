@@ -48,7 +48,7 @@ static int        CCSN_Eint_Mode;                  // Mode of obtaining internal
                                                    //   2=Pres Mode: Eint(dens, pres, [Ye]) )
 
        bool       CCSN_CC_MaxRefine_Flag1;         // flag for limiting maximum refinement level 1
-       bool       CCSN_CC_MaxRefine_Flag2;         // flag for limiting maximum refinement level 2 ( CCSN_CC_MaxRefine_Flag1 should be turn on first)
+       bool       CCSN_CC_MaxRefine_Flag2;         // flag for limiting maximum refinement level 2
        int        CCSN_CC_MaxRefine_LV1;           // reduced maximum refinement level 1 to this value
        int        CCSN_CC_MaxRefine_LV2;           // reduced maximum refinement level 2 to this value
        double     CCSN_CC_MaxRefine_Dens1;         // central density threshold that reduces the maximum refinement level 1
@@ -155,7 +155,7 @@ void SetParameter()
    ReadPara->Add( "CCSN_CC_MaxRefine_Flag1", &CCSN_CC_MaxRefine_Flag1, false,         Useless_bool,     Useless_bool      );
    ReadPara->Add( "CCSN_CC_MaxRefine_Flag2", &CCSN_CC_MaxRefine_Flag2, false,         Useless_bool,     Useless_bool      );
    ReadPara->Add( "CCSN_CC_MaxRefine_LV1",   &CCSN_CC_MaxRefine_LV1,   -1,            NoMin_int,        MAX_LEVEL-1       );
-   ReadPara->Add( "CCSN_CC_MaxRefine_LV2",   &CCSN_CC_MaxRefine_LV2,   -1,            NoMin_int,        MAX_LEVEL-2       );
+   ReadPara->Add( "CCSN_CC_MaxRefine_LV2",   &CCSN_CC_MaxRefine_LV2,   -1,            NoMin_int,        MAX_LEVEL-1       );
    ReadPara->Add( "CCSN_CC_MaxRefine_Dens1", &CCSN_CC_MaxRefine_Dens1, 1.0e11,        0.0,              NoMax_double      );
    ReadPara->Add( "CCSN_CC_MaxRefine_Dens2", &CCSN_CC_MaxRefine_Dens2, 1.0e12,        0.0,              NoMax_double      );
    ReadPara->Add( "CCSN_CC_CentralDensFac",  &CCSN_CC_CentralDensFac,  1.0e13,        Eps_double,       NoMax_double      );
@@ -225,35 +225,28 @@ void SetParameter()
                     CCSN_CC_Red_DT, "DT__MAX * UNIT_T", DT__MAX * UNIT_T );
 
       if ( CCSN_CC_MaxRefine_Flag1 ) {
-
 //       set CCSN_CC_MaxRefine_LV1 to default value
          if ( CCSN_CC_MaxRefine_LV1 < 0 ) {
             CCSN_CC_MaxRefine_LV1 = MAX_LEVEL-2;
             PRINT_WARNING( "CCSN_CC_MaxRefine_LV1", CCSN_CC_MaxRefine_LV1, FORMAT_LONG );
          }
-
-         if ( CCSN_CC_MaxRefine_Flag2 ) {
-//          set CCSN_CC_MaxRefine_LV2 to default value
-            if ( CCSN_CC_MaxRefine_LV2 < 0 ) {
-               CCSN_CC_MaxRefine_LV2 = MAX_LEVEL-1;
-               PRINT_WARNING( "CCSN_CC_MaxRefine_LV2", CCSN_CC_MaxRefine_LV2, FORMAT_INT );
-            } 
-
-//          CCSN_CC_MaxRefine_LV1 should be smaller than CCSN_CC_MaxRefine_LV2
-            if ( CCSN_CC_MaxRefine_LV2 <= CCSN_CC_MaxRefine_LV1 )
-               Aux_Error( ERROR_INFO, "%s = %d should be smaller than %s = %d !!\n", "CCSN_CC_MaxRefine_LV1",
-                          CCSN_CC_MaxRefine_LV1, "CCSN_CC_MaxRefine_LV2", CCSN_CC_MaxRefine_LV2   );
-
-//          CCSN_CC_MaxRefine_Dens2 should be larger than CCSN_CC_MaxRefine_Dens1
-            if ( CCSN_CC_MaxRefine_Dens2 <= CCSN_CC_MaxRefine_Dens1 )
-               Aux_Error( ERROR_INFO, "%s = %13.7e should be larger than $s = %13.7e !!\n", "CCSN_CC_MaxRefine_Dens2",
-                          CCSN_CC_MaxRefine_Dens2, "CCSN_CC_MaxRefine_Dens1", CCSN_CC_MaxRefine_Dens1 ); 
-         }
       }
 
-//    CCSN_CC_MaxRefine_LV2 cannot be used solely and CCSN_CC_MaxRefine_LV1 must be enable first to use CCSN_CC_MaxRefine_Flag2
-      else if ( CCSN_CC_MaxRefine_Flag2 )
-         Aux_Error( ERROR_INFO, "%s should be enabled first to use %s !!\n", "CCSN_CC_MaxRefine_LV1", "CCSN_CC_MaxRefine_LV2" ); 
+      if ( CCSN_CC_MaxRefine_Flag2 ) {
+//       set CCSN_CC_MaxRefine_LV2 to default value
+         if ( CCSN_CC_MaxRefine_LV2 < 0 ) {
+            CCSN_CC_MaxRefine_LV2 = MAX_LEVEL-1;
+            PRINT_WARNING( "CCSN_CC_MaxRefine_LV2", CCSN_CC_MaxRefine_LV2, FORMAT_INT );
+         }
+//       CCSN_CC_MaxRefine_LV1 should be smaller than CCSN_CC_MaxRefine_LV2
+         if (  CCSN_CC_MaxRefine_Flag1  &&  ( CCSN_CC_MaxRefine_LV2 <= CCSN_CC_MaxRefine_LV1 )  )
+            Aux_Error( ERROR_INFO, "%s = %d should be smaller than %s = %d !!\n", "CCSN_CC_MaxRefine_LV1",
+                       CCSN_CC_MaxRefine_LV1, "CCSN_CC_MaxRefine_LV2", CCSN_CC_MaxRefine_LV2   );
+//       CCSN_CC_MaxRefine_Dens2 should be larger than CCSN_CC_MaxRefine_Dens1
+         if (  CCSN_CC_MaxRefine_Flag1  &&  ( CCSN_CC_MaxRefine_Dens2 <= CCSN_CC_MaxRefine_Dens1 )  )
+            Aux_Error( ERROR_INFO, "%s = %13.7e should be larger than $s = %13.7e !!\n", "CCSN_CC_MaxRefine_Dens2",
+                       CCSN_CC_MaxRefine_Dens2, "CCSN_CC_MaxRefine_Dens1", CCSN_CC_MaxRefine_Dens1 );
+      }
 
 //    core bounce must be disabled for core collapse
       if ( CCSN_Is_PostBounce == 1 )
