@@ -56,7 +56,7 @@ bool Flag_CoreCollapse( const int i, const int j, const int k, const int lv, con
       MaxRefine = lv >= CCSN_MaxRefine_LV1;
    }
 
-   else if ( CCSN_MaxRefine_FLAG2  &&  CCSN_MaxRefine_Dens2 < 1e12 / UNIT_D )
+   else if ( CCSN_MaxRefine_FLAG2  &&  CentralDens < CCSN_MaxRefine_Dens2 / UNIT_D )
    {
       MaxRefine = lv >= CCSN_MaxRefine_LV2;
    }
