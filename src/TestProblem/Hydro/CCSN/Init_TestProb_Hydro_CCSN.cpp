@@ -717,7 +717,7 @@ double Mis_GetTimeStep_CCSN( const int lv, const double dTime_dt )
    }
 
    if ( !CCSN_Is_PostBounce  &&  SrcTerms.Deleptonization )
-      dt_CCSN = MIN(  dt_CCSN, Mis_GetTimeStep_CoreCollapse( lv, dTime_dt )  );
+      dt_CCSN = fmin(  dt_CCSN, Mis_GetTimeStep_CoreCollapse( lv, dTime_dt )  );
 
 
    return dt_CCSN;
