@@ -292,7 +292,7 @@ void SetParameter()
       if ( CCSN_Prob != Migration_Test ) {
       Aux_Message( stdout, "  radial factor for maximum refine level              = %13.7e\n", CCSN_MaxRefine_RadFac    );
       Aux_Message( stdout, "  scaling factor for lightbulb dt                     = %13.7e\n", CCSN_LB_TimeFac          );
-      Aux_Message( stdout, "  has core bounce occurred                            = %d\n",     CCSN_Is_PostBounce       ); }
+      Aux_Message( stdout, "  has core bounce occurred                            = %d\n",     CCSN_Is_PostBounce       );   }
       if ( CCSN_Prob == Core_Collapse ) {
       if ( CCSN_CC_MaxRefine_Flag1 ) {
       Aux_Message( stdout, "  reduced maxmimum refinement lv 1                    = %d\n",     CCSN_CC_MaxRefine_LV1    );
@@ -301,7 +301,7 @@ void SetParameter()
       Aux_Message( stdout, "  reduced maxmimum refinement lv 2                    = %d\n",     CCSN_CC_MaxRefine_LV2    );
       Aux_Message( stdout, "  central density threshold for CCSN_CC_MaxRefine_LV2 = %13.7e\n", CCSN_CC_MaxRefine_Dens2  ); }
       Aux_Message( stdout, "  central density factor for reducing dt              = %13.7e\n", CCSN_CC_CentralDensFac   );
-      Aux_Message( stdout, "  reduced dt near bounce                              = %13.7e\n", CCSN_CC_Red_DT           ); }
+      Aux_Message( stdout, "  reduced dt near bounce                              = %13.7e\n", CCSN_CC_Red_DT           );   }
       Aux_Message( stdout, "=======================================================================================\n"  );
    }
 
