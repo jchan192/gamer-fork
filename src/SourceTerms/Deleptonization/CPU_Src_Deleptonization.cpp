@@ -487,7 +487,7 @@ real YeOfRhoFunc( const real Dens_CGS, const real Delep_Rho1, const real Delep_R
 
    real XofRho, Ye;
 
-   XofRho = LOG10( SQR( Dens_CGS ) / Delep_Rho2 / Delep_Rho1 )
+   XofRho = LOG10(  SQR( Dens_CGS ) / ( Delep_Rho2 * Delep_Rho1 )  )
           / LOG10( Delep_Rho2 / Delep_Rho1 );
    XofRho = MAX( (real)-1.0, MIN( (real)1.0, XofRho ) );
 
