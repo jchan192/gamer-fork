@@ -224,7 +224,7 @@ Procedure for outputting new variables:
 //                2451 : 2020/10/29 --> output the parameters of external potential table
 //                2452 : 2022/07/08 --> output OPT__OUTPUT_RESTART
 //                2453 : 2022/07/13 --> output OPT__INT_PRIM
-//                2454 : 2022/09/25 --> remove SRC_DLEP_PROF_NVAR and SRC_DLEP_PROF_NBINMAX EP_Coeff that no longer exist
+//                2454 : 2022/09/25 --> remove SRC_DLEP_PROF_NVAR and SRC_DLEP_PROF_NBINMAX that no longer exist
 //-------------------------------------------------------------------------------------------------------
 void Output_DumpData_Total_HDF5( const char *FileName )
 {
