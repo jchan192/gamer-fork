@@ -609,8 +609,6 @@ void Aux_TakeNote()
       fprintf( Note, "#define EXT_POT_NGENE_MAX       %d\n",      EXT_POT_NGENE_MAX     );
 #     endif
       fprintf( Note, "#define SRC_NAUX_DLEP           %d\n",      SRC_NAUX_DLEP         );
-      fprintf( Note, "#define SRC_DLEP_PROF_NVAR      %d\n",      SRC_DLEP_PROF_NVAR    );
-      fprintf( Note, "#define SRC_DLEP_PROF_NBINMAX   %d\n",      SRC_DLEP_PROF_NBINMAX );
       fprintf( Note, "#define SRC_NAUX_LIGHTBULB      %d\n",      SRC_NAUX_LIGHTBULB    );
       fprintf( Note, "#define SRC_NAUX_USER           %d\n",      SRC_NAUX_USER         );
 #     ifdef GPU
@@ -895,6 +893,13 @@ void Aux_TakeNote()
       fprintf( Note, "SRC_ANY                         %d\n",      SrcTerms.Any              );
       fprintf( Note, "SRC_DELEPTONIZATION             %d\n",      SrcTerms.Deleptonization  );
       fprintf( Note, "SRC_LIGHTBULB                   %d\n",      SrcTerms.Lightbulb        );
+      if ( SrcTerms.Deleptonization ) {
+      fprintf( Note, "SRC_DELEP_ENU                   %13.7e\n",  SrcTerms.Dlep_Enu         );
+      fprintf( Note, "SRC_DELEP_RHO1                  %13.7e\n",  SrcTerms.Dlep_Rho1        ); 
+      fprintf( Note, "SRC_DELEP_RHO2                  %13.7e\n",  SrcTerms.Dlep_Rho2        );
+      fprintf( Note, "SRC_DELEP_YE1                   %13.7e\n",  SrcTerms.Dlep_Ye1         ); 
+      fprintf( Note, "SRC_DELEP_YE2                   %13.7e\n",  SrcTerms.Dlep_Ye2         ); 
+      fprintf( Note, "SRC_DELEP_YEC                   %13.7e\n",  SrcTerms.Dlep_Yec         ); }
       if ( SrcTerms.Lightbulb ) {
       fprintf( Note, "SRC_LIGHTBULB_LNUE              %13.7e\n",  SrcTerms.Lightbulb_Lnue   );
       fprintf( Note, "SRC_LIGHTBULB_TNUE              %13.7e\n",  SrcTerms.Lightbulb_Tnue   ); }
