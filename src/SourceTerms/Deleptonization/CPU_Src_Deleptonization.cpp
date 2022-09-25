@@ -41,7 +41,7 @@ void Src_End_Deleptonization();
 #endif
 
 GPU_DEVICE static
-real yeofrhofunc( const real Dens_CGS, const real Delep_Rho1, const real Delep_Rho2,
+real YeOfRhoFunc( const real Dens_CGS, const real Delep_Rho1, const real Delep_Rho2,
                   const real Delep_Ye1, const real Delep_Ye2, const real Delep_Yec );
 
 
@@ -192,7 +192,7 @@ static void Src_Deleptonization( real fluid[], const real B[],
    }
    else
    {
-      Yout   = yeofrhofunc( Dens_CGS, Delep_Rho1, Delep_Rho2,
+      Yout   = YeOfRhoFunc( Dens_CGS, Delep_Rho1, Delep_Rho2,
                             Delep_Ye1, Delep_Ye2, Delep_Yec );
       Del_Ye = Yout - Ye;
       Del_Ye = MIN( (real)0.0, Del_Ye ); // Deleptonization cannot increase Ye
@@ -464,7 +464,7 @@ void Src_End_Deleptonization()
 
 
 //-----------------------------------------------------------------------------------------
-// Function    :  yeofrhofunc
+// Function    :  YeOfRhoFunc
 // Description :  Calculate electron fraction Ye from the given density and
 //                deleptonization parameters
 //
@@ -478,10 +478,10 @@ void Src_End_Deleptonization()
 //             :  Delep_Ye2 : parameter for the parameterized deleptonization fitting formula
 //             :  Delep_Yec : parameter for the parameterized deleptonization fitting formula
 //
-// Return      :  yeofrhofunc
+// Return      :  YeOfRhoFunc
 //-----------------------------------------------------------------------------------------
 GPU_DEVICE static
-real yeofrhofunc( const real Dens_CGS, const real Delep_Rho1, const real Delep_Rho2,
+real YeOfRhoFunc( const real Dens_CGS, const real Delep_Rho1, const real Delep_Rho2,
                   const real Delep_Ye1, const real Delep_Ye2, const real Delep_Yec )
 {
 
@@ -498,7 +498,7 @@ real yeofrhofunc( const real Dens_CGS, const real Delep_Rho1, const real Delep_R
 
    return Ye;
 
-} // FUNCTION : yeofrhofunc
+} // FUNCTION : YeOfRhoFunc
 
 
 
