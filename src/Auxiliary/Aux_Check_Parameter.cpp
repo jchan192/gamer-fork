@@ -723,7 +723,7 @@ void Aux_Check_Parameter()
 #     endif
 #     if ( NUC_EOS_SOLVER == ORIG  ||  NUC_EOS_SOLVER == DIRECT )
 #        if ( NUC_TABLE_MODE == NUC_TABLE_MODE_ENGY )
-#           error : ERROR : ORIG/DIRECT nuclear EoS solver does not support energy-based table !!
+#           error : ERROR : ORIG/DIRECT nuclear EoS solver does not support energy-based tables !!
 #        endif
 #     endif
 #  endif // if ( EOS == EOS_NUCLEAR )
