@@ -84,6 +84,12 @@
 #define NUC_TABLE_MODE_ENGY 2
 
 
+// nuclear eos solver
+#define ORIG   1
+#define LUT    2
+#define DIRECT 3
+
+
 // neutrino updating schemes
 #define LIGHTBULB    1
 #define IDSA         2

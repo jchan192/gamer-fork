@@ -716,7 +716,17 @@ void Aux_Check_Parameter()
 #     elif ( NUC_TABLE_MODE != NUC_TABLE_MODE_TEMP  &&  NUC_TABLE_MODE != NUC_TABLE_MODE_ENGY )
 #        error : ERROR : unsupported nuclear EoS table type (NUC_TABLE_MODE_TEMP/NUC_TABLE_MODE_ENGY) !!
 #     endif
-#  endif // if ( EOS != EOS_NUCLEAR )
+#     if ( !defined NUC_EOS_SOLVER )
+#        error : ERROR : must enable NUC_EOS_SOLVER for EOS_NUCLEAR !!
+#     elif ( NUC_EOS_SOLVER != ORIG  &&  NUC_EOS_SOLVER != LUT  &&  NUC_EOS_SOLVER != DIRECT )
+#        error : ERROR : unsupported nuclear EoS solver (ORIG/LUT/DIRECT) !!
+#     endif
+#     if ( NUC_EOS_SOLVER == ORIG  ||  NUC_EOS_SOLVER == DIRECT )
+#        if ( NUC_TABLE_MODE == NUC_TABLE_MODE_ENGY )
+#           error : ERROR : ORIG/DIRECT nuclear EoS solver does not support energy-based table !!
+#        endif
+#     endif
+#  endif // if ( EOS == EOS_NUCLEAR )
 
 #  ifdef BAROTROPIC_EOS
 #     if ( EOS == EOS_GAMMA  ||  EOS == EOS_NUCLEAR )

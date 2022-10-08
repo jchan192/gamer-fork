@@ -184,8 +184,10 @@ void nuc_eos_C_short( real *Out, const real *In,
                      ltoreps   = leps;
 #        endif
 
+#        if ( NUC_EOS_SOLVER != ORIG )
          if ( leps >  table_chk[npt_chk-1]  )  {  *keyerr = 110;  return;  }
          if ( leps <  table_chk[        0]  )  {  *keyerr = 111;  return;  }
+#        endif
          if ( leps != leps                  )  {  *keyerr = 112;  return;  }
       }
       break;
@@ -219,8 +221,10 @@ void nuc_eos_C_short( real *Out, const real *In,
                     var_mode = entr;
                     var_idx  = NUC_VAR_IDX_ENTR;
 
+#        if ( NUC_EOS_SOLVER != ORIG )
          if ( entr >  mode_Aux[nmode_Aux-1] )  {  *keyerr = 130;  return;  }
          if ( entr <  mode_Aux[          0] )  {  *keyerr = 131;  return;  }
+#        endif
          if ( entr != entr                  )  {  *keyerr = 132;  return;  }
       }
       break;
@@ -232,8 +236,10 @@ void nuc_eos_C_short( real *Out, const real *In,
                     var_mode = lprs;
                     var_idx  = NUC_VAR_IDX_PRES;
 
+#        if ( NUC_EOS_SOLVER != ORIG )
          if ( lprs >  mode_Aux[nmode_Aux-1] )  {  *keyerr = 140;  return;  }
          if ( lprs <  mode_Aux[          0] )  {  *keyerr = 141;  return;  }
+#        endif
          if ( lprs != lprs                  )  {  *keyerr = 142;  return;  }
       }
       break;
@@ -243,22 +249,30 @@ void nuc_eos_C_short( real *Out, const real *In,
 // find corresponding temperature or internal energy
    if ( ltoreps == NULL_REAL )
    {
-//    (a) Auxiliary table
+//    (a) Table lookup or direct method
+#     if ( NUC_EOS_SOLVER != ORIG )
       const real *table_Aux = alltables_Aux + var_idx*nrho_Aux*nmode_Aux*nye_Aux;
 
-//      findtoreps( lr, var_mode, xye, &ltoreps, table_Aux, nrho_Aux, nmode_Aux, nye_Aux, ntoreps,
-//                  logrho_Aux, mode_Aux, yes_Aux, logtoreps, IntScheme_Aux, keyerr );
+#     if   ( NUC_EOS_SOLVER == LUT    )
+      findtoreps( lr, var_mode, xye, &ltoreps, table_Aux, nrho_Aux, nmode_Aux, nye_Aux, ntoreps,
+                  logrho_Aux, mode_Aux, yes_Aux, logtoreps, IntScheme_Aux, keyerr );
+
+#     elif ( NUC_EOS_SOLVER == DIRECT )
 
       findtoreps_direct( lr, var_mode, xye, &ltoreps, alltables, table_Aux, nrho, ntoreps, nye, nmode_Aux,
                          logrho, logtoreps, yes, mode_Aux, keymode, keyerr );
+#     endif
+#     endif // if ( NUC_EOS_SOLVER != ORIG )
 
 
 //    (b) Newton-Raphson and bisection methods (for temperature-based table only)
-//#     if ( NUC_TABLE_MODE == NUC_TABLE_MODE_TEMP )
+#     if ( NUC_TABLE_MODE == NUC_TABLE_MODE_TEMP )
+#     if ( NUC_EOS_SOLVER != ORIG )
       if ( *keyerr != 0 )
+#     endif
          findtemp_NR_bisection( lr, lt_IG, xye, var_mode, &ltoreps, nrho, ntoreps, nye, alltables,
                                 logrho, logtoreps, yes, keymode, keyerr, rfeps );
-//#     endif
+#     endif // if ( NUC_TABLE_MODE == NUC_TABLE_MODE_TEMP )
    }
 
    if ( *keyerr != 0 ) return;
