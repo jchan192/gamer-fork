@@ -9,6 +9,7 @@
 #include "cubinterp_some.cu"
 #include "linterp_some.cu"
 #include "findtoreps.cu"
+#include "findtoreps_direct.cu"
 #include "findtemp_NR_bisection.cu"
 
 #else
@@ -28,6 +29,12 @@ void findtoreps( const real x, const real y, const real z,
                  const int nx, const int ny, const int nz, const int ntemp,
                  const real *xt, const real *yt, const real *zt, const real *logtoreps,
                  const int IntScheme_Aux, int *keyerr );
+
+void findtoreps_direct( const real x, const real y, const real z,
+                        real *found_ltoreps, const real *table_main, const real *table_aux,
+                        const int nx, const int ny, const int nz, const int nvar,
+                        const real *xt, const real *yt, const real *zt, const real *vart,
+                        const int keymode, int *keyerr );
 
 void findtemp_NR_bisection( const real lr, const real lt_IG, const real ye, const real varin, real *ltout,
                             const int nrho, const int ntemp, const int nye, const real *alltables,
@@ -111,6 +118,7 @@ void findtemp_NR_bisection( const real lr, const real lt_IG, const real ye, cons
 //                                     150 : Ye   too high
 //                                     151 : Ye   too low
 //                                     152 : Ye   NaN
+//                                     660 : fail in finding temperature         in the direct method
 //                                     665 : fail in finding internal energy or temperature
 //                                     668 : fail in bracketing the target value in the bisection method
 //                                     669 : fail in finding temperature         in the bisection method
@@ -238,16 +246,19 @@ void nuc_eos_C_short( real *Out, const real *In,
 //    (a) Auxiliary table
       const real *table_Aux = alltables_Aux + var_idx*nrho_Aux*nmode_Aux*nye_Aux;
 
-      findtoreps( lr, var_mode, xye, &ltoreps, table_Aux, nrho_Aux, nmode_Aux, nye_Aux, ntoreps,
-                  logrho_Aux, mode_Aux, yes_Aux, logtoreps, IntScheme_Aux, keyerr );
+//      findtoreps( lr, var_mode, xye, &ltoreps, table_Aux, nrho_Aux, nmode_Aux, nye_Aux, ntoreps,
+//                  logrho_Aux, mode_Aux, yes_Aux, logtoreps, IntScheme_Aux, keyerr );
+
+      findtoreps_direct( lr, var_mode, xye, &ltoreps, alltables, table_Aux, nrho, ntoreps, nye, nmode_Aux,
+                         logrho, logtoreps, yes, mode_Aux, keymode, keyerr );
 
 
 //    (b) Newton-Raphson and bisection methods (for temperature-based table only)
-#     if ( NUC_TABLE_MODE == NUC_TABLE_MODE_TEMP )
+//#     if ( NUC_TABLE_MODE == NUC_TABLE_MODE_TEMP )
       if ( *keyerr != 0 )
          findtemp_NR_bisection( lr, lt_IG, xye, var_mode, &ltoreps, nrho, ntoreps, nye, alltables,
                                 logrho, logtoreps, yes, keymode, keyerr, rfeps );
-#     endif
+//#     endif
    }
 
    if ( *keyerr != 0 ) return;
