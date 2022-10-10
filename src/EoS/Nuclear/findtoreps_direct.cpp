@@ -136,7 +136,7 @@ void findtoreps_direct( const real x, const real var, const real z,
    if ( iy_bdry_1 < 0 )   {  *keyerr = 660;  return;  }
 
 // (1-b) find the value at the given density and Ye, and the input quantity at `iy_bdry_1`
-   ifs      = ip + nx * iy_bdry_1;
+   ifs        = ip + nx * iy_bdry_1;
    var_bdry_1 = Bilinear( table_main, fracx, fracz, ifs, nxy );
 
 
@@ -180,6 +180,7 @@ void findtoreps_direct( const real x, const real var, const real z,
    const real fracy = ( var - var_bdry_1 ) / ( var_bdry_2 - var_bdry_1 );
 
    *found_ltoreps = yt[iy_bdry_1] + ( yt[iy_bdry_2] - yt[iy_bdry_1] ) * fracy;
+
 
    return;
 
