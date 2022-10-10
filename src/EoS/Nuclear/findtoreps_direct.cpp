@@ -92,26 +92,25 @@ void findtoreps_direct( const real x, const real var, const real z,
                         const int keymode, int *keyerr )
 {
 
-   int  ix, iy_brd1, iy_brd2, iz, iv, ip, ifs;
-   real dx, dz, dv, dxi, dzi, dvi, fracx, fracy, fracz;
-   real var_brd1, var_brd2;
+   int  iy_bdry_1, iy_bdry_2, ip, ifs;
+   real var_bdry_1, var_bdry_2;
 
    const int nxy  = nx  * ny;
    const int nxyz = nxy * nz;
 
 
 // determine spacing parameters and location in an equidistant table
-   dx = (   xt[nx  -1] -   xt[0] ) / (real)(nx  -1);  // dens
-   dz = (   zt[nz  -1] -   zt[0] ) / (real)(nz  -1);  // ye
-   dv = ( vart[nvar-1] - vart[0] ) / (real)(nvar-1);  // var
+   const real dx = (   xt[nx  -1] -   xt[0] ) / (real)(nx  -1);  // dens
+   const real dz = (   zt[nz  -1] -   zt[0] ) / (real)(nz  -1);  // ye
+   const real dv = ( vart[nvar-1] - vart[0] ) / (real)(nvar-1);  // var
 
-   dxi = (real)1.0 / dx;
-   dzi = (real)1.0 / dz;
-   dvi = (real)1.0 / dv;
+   const real dxi = (real)1.0 / dx;
+   const real dzi = (real)1.0 / dz;
+   const real dvi = (real)1.0 / dv;
 
-   ix = (int)(  (   x -   xt[0] ) * dxi  );
-   iz = (int)(  (   z -   zt[0] ) * dzi  );
-   iv = (int)(  ( var - vart[0] ) * dvi  );  // index in the auxiliary table
+   const int  ix = (int)(  (   x -   xt[0] ) * dxi  );
+   const int  iz = (int)(  (   z -   zt[0] ) * dzi  );
+   const int  iv = (int)(  ( var - vart[0] ) * dvi  );  // index in the auxiliary table
 
 
 // (0) check if the target variable is in the degeneracy region
@@ -127,60 +126,60 @@ void findtoreps_direct( const real x, const real var, const real z,
 
    ip = ip * nxyz + ix + nxy * iz;
 
-   fracx = ( x - xt[ix] ) * dxi;
-   fracz = ( z - zt[iz] ) * dzi;
+   const real fracx = ( x - xt[ix] ) * dxi;
+   const real fracz = ( z - zt[iz] ) * dzi;
 
 
-// (1-a) find the index `iy_brd1` s.t. var(ix, iy_brd1, iz) <= var < var(ix, iy_brd1+1, iz)
-   iy_brd1 = BinarySearch( table_main, var, iv_left, iv_right, nx, ip );
+// (1-a) find the index `iy_bdry_1` s.t. var(ix, iy_bdry_1, iz) <= var < var(ix, iy_bdry_1+1, iz)
+   iy_bdry_1 = BinarySearch( table_main, var, iv_left, iv_right, nx, ip );
 
-   if ( iy_brd1 < 0 )   {  *keyerr = 660;  return;  }
+   if ( iy_bdry_1 < 0 )   {  *keyerr = 660;  return;  }
 
-// (1-b) find the value at the given density and Ye, and the input quantity at `iy_brd1`
-   ifs      = ip + nx * iy_brd1;
-   var_brd1 = Bilinear( table_main, fracx, fracz, ifs, nxy );
+// (1-b) find the value at the given density and Ye, and the input quantity at `iy_bdry_1`
+   ifs      = ip + nx * iy_bdry_1;
+   var_bdry_1 = Bilinear( table_main, fracx, fracz, ifs, nxy );
 
 
 // (2) find the lower and upper boundaries iteratively
-   bool brd_found = false;
+   bool bdry_found = false;
 
-   if ( var_brd1 > var )
+   if ( var_bdry_1 > var )
    {
-//    (2-a) guess the solution located at index < iy_brd1, and find the lower boundary
-//      while ( iy_brd1 > iv_left ) // TO CHECK: unstable, check again after the PR for IG of temperature
-      while ( iy_brd1 > 0 )
+//    (2-a) guess the solution located at index < iy_bdry_1, and find the lower boundary
+//      while ( iy_bdry_1 > iv_left ) // TO CHECK: unstable, check again after the PR for IG of temperature
+      while ( iy_bdry_1 > 0 )
       {
-         iy_brd2  = iy_brd1 - 1;
-         ifs      = ip + nx * iy_brd2;
-         var_brd2 = Bilinear( table_main, fracx, fracz, ifs, nxy );
+         iy_bdry_2  = iy_bdry_1 - 1;
+         ifs        = ip + nx * iy_bdry_2;
+         var_bdry_2 = Bilinear( table_main, fracx, fracz, ifs, nxy );
 
-         if   ( var_brd2 < var )   {  brd_found = true;  break;  }
-         else                      {  iy_brd1 = iy_brd2;  var_brd1 = var_brd2;  }
+         if   ( var_bdry_2 < var )   {  bdry_found = true;  break;  }
+         else                        {  iy_bdry_1 = iy_bdry_2;  var_bdry_1 = var_bdry_2;  }
       }
    }
 
    else
    {
-//    (2-b) guess the solution located at index > iy_brd1, and find the upper boundary
-//      while ( iy_brd1 < iv_right ) // TO CHECK: unstable, check again after the PR for IG of temperature
-      while ( iy_brd1 < ny - 1 )
+//    (2-b) guess the solution located at index > iy_bdry_1, and find the upper boundary
+//      while ( iy_bdry_1 < iv_right ) // TO CHECK: unstable, check again after the PR for IG of temperature
+      while ( iy_bdry_1 < ny - 1 )
       {
-         iy_brd2  = iy_brd1 + 1;
-         ifs      = ip + nx * iy_brd2;
-         var_brd2 = Bilinear( table_main, fracx, fracz, ifs, nxy );
+         iy_bdry_2  = iy_bdry_1 + 1;
+         ifs        = ip + nx * iy_bdry_2;
+         var_bdry_2 = Bilinear( table_main, fracx, fracz, ifs, nxy );
 
-         if   ( var_brd2 > var )   {  brd_found = true;  break;  }
-         else                      {  iy_brd1 = iy_brd2;  var_brd1 = var_brd2;  }
+         if   ( var_bdry_2 > var )   {  bdry_found = true;  break;  }
+         else                        {  iy_bdry_1 = iy_bdry_2;  var_bdry_1 = var_bdry_2;  }
       }
-   } // if ( var_brd1 > var ) ... else ...
+   } // if ( var_bdry_1 > var ) ... else ...
 
 
 // (3) apply linear interpolation to compute the temperature / energy, if found
-   if ( brd_found == false )   {  *keyerr = 660;  return;  }
+   if ( bdry_found == false )   {  *keyerr = 660;  return;  }
 
-   fracy = ( var - var_brd1 ) / ( var_brd2 - var_brd1 );
+   const real fracy = ( var - var_bdry_1 ) / ( var_bdry_2 - var_bdry_1 );
 
-   *found_ltoreps = yt[iy_brd1] + ( yt[iy_brd2] - yt[iy_brd1] ) * fracy;
+   *found_ltoreps = yt[iy_bdry_1] + ( yt[iy_bdry_2] - yt[iy_bdry_1] ) * fracy;
 
    return;
 
