@@ -394,6 +394,9 @@ void SetGridIC( real fluid[], const double x, const double y, const double z, co
 
    Passive[ YE      - NCOMP_FLUID ] = Ye*Dens;
    Passive[ DEDT_LB - NCOMP_FLUID ] = DEDT_UNINITIALIZED;
+#  ifdef TEMP_IG
+   Passive[ TEMP_IG - NCOMP_FLUID ] = Temp;
+#  endif
 #  else
    real *Passive = NULL;
 #  endif
@@ -406,11 +409,12 @@ void SetGridIC( real fluid[], const double x, const double y, const double z, co
       const int  NTarget = 0;
 #     endif
             int  TmpIn_Int[NTarget+1];
-            real TmpIn_Flt[3], TmpOut[NTarget+1];
+            real TmpIn_Flt[4], TmpOut[NTarget+1];
 
       TmpIn_Flt[0] = (real)Dens;
       TmpIn_Flt[1] = (real)Temp;
       TmpIn_Flt[2] = (real)Ye;
+      TmpIn_Flt[3] = (real)Temp;
 
       TmpIn_Int[0] = NTarget;
 #     if ( NUC_TABLE_MODE == NUC_TABLE_MODE_TEMP )
