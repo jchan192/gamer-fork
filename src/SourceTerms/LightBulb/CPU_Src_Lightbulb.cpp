@@ -166,17 +166,16 @@ static void Src_Lightbulb( real fluid[], const real B[],
    const int  NTarget = 3;
 #  endif
          int  In_Int[NTarget+1];
-#  ifdef TEMP_IG
-         real In_Flt[4];
-              In_Flt[3] = Temp_IG_Kelv;
-#  else
-         real In_Flt[3];
-#  endif
-         real Out[NTarget+1];
+         real In_Flt[4], Out[NTarget+1];
 
    In_Flt[0] = Dens_Code;
    In_Flt[1] = Eint_Code;
    In_Flt[2] = Ye;
+#  ifdef TEMP_IG
+   In_Flt[3] = Temp_IG_Kelv;
+#  else
+   In_Flt[3] = NULL_REAL;
+#  endif
 
    In_Int[0] = NTarget;
    In_Int[1] = NUC_VAR_IDX_XN;
@@ -209,7 +208,7 @@ static void Src_Lightbulb( real fluid[], const real B[],
    const real rate_Code = ( rate_heating - rate_cooling ) * ( Xn + Xp ) * EXP( -tau );
 
 
-// 3. calculate the change in internal energy and update the input energy density and temperature for initial guess
+// 3. calculate the change in internal energy and update the input energy density
    const real dEint_Code  = rate_Code * dt * Dens_Code;
    const real Eint_Update = Eint_Code + dEint_Code;
 
@@ -217,16 +216,16 @@ static void Src_Lightbulb( real fluid[], const real B[],
 #  ifdef DEDT_LB
    fluid[DEDT_LB] = FABS( rate_Code * Dens_Code );
 #  endif
-// calculate temperature for initial guess and store to fluid[TEMP_IG]
+
+
+// 4. calculate temperature for initial guess and store to fluid[TEMP_IG]
 #  ifdef TEMP_IG
 #  ifdef __CUDACC__
-   fluid[TEMP_IG] = Hydro_Con2Temp( fluid[DENS], fluid[MOMX], fluid[MOMY], fluid[MOMZ], fluid[ENGY], fluid+NCOMP_FLUID,
-                                    false, 0.0, Emag, EoS->DensEint2Temp_FuncPtr,
-                                    EoS->AuxArrayDevPtr_Flt, EoS->AuxArrayDevPtr_Int, EoS->Table );
+   fluid[TEMP_IG] = EoS->DensEint2Temp_FuncPtr( fluid[DENS], fluid[ENGY], fluid+NCOMP_FLUID,
+                                                EoS->AuxArrayDevPtr_Flt, EoS->AuxArrayDevPtr_Int, EoS->Table );
 #  else
-   fluid[TEMP_IG] = Hydro_Con2Temp( fluid[DENS], fluid[MOMX], fluid[MOMY], fluid[MOMZ], fluid[ENGY], fluid+NCOMP_FLUID,
-                                    false, 0.0, Emag, EoS_DensEint2Temp_CPUPtr,
-                                    EoS_AuxArray_Flt, EoS_AuxArray_Int, h_EoS_Table );
+   fluid[TEMP_IG] = EoS_DensEint2Temp_CPUPtr  ( fluid[DENS], fluid[ENGY], fluid+NCOMP_FLUID,
+                                                EoS_AuxArray_Flt, EoS_AuxArray_Int, h_EoS_Table );
 #  endif
 #  endif
 
