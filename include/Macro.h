@@ -159,7 +159,7 @@
 #  define NCOMP_PASSIVE_BUILTIN1    0
 # endif
 
-// electron fraction (Ye), temperature initial guess (TEMP_IG), and neutrino heating/cooling rate
+// electron fraction (Ye), neutrino heating/cooling rate, and temperature initial guess (TEMP_IG)
 # if ( EOS == EOS_NUCLEAR )
 # if ( NUC_TABLE_MODE == NUC_TABLE_MODE_TEMP )
 #  define NCOMP_PASSIVE_BUILTIN2    3
