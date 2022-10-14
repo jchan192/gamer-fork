@@ -285,7 +285,7 @@ void Flu_FixUp_Flux( const int lv )
 #                 error : DE_EINT is NOT supported yet !!
 #                 endif // DUAL_ENERGY
 
-#                 if ( EOS == EOS_NUCLEAR  &&  NUC_TABLE_MODE==NUC_TABLE_MODE_TEMP )
+#                 if ( EOS == EOS_NUCLEAR  &&  NUC_TABLE_MODE == NUC_TABLE_MODE_TEMP )
                   const bool CheckMinTemp_No = false;
                   CorrVal[TEMP_IG] = Hydro_Con2Temp( CorrVal[DENS],
                                                      CorrVal[MOMX], CorrVal[MOMY], CorrVal[MOMZ],
