@@ -159,8 +159,6 @@ static void Src_Deleptonization( real fluid[], const real B[],
    const real Delep_minDens_CGS = (real)1.0e6; // [g/cm^3]
 
 
-   const real MeV2Kelvin        = 1.0/Kelvin2MeV;
-
 #  ifdef MHD
    const real Emag       = (real)0.5*(  SQR( B[MAGX] ) + SQR( B[MAGY] ) + SQR( B[MAGZ] )  );
 #  else
@@ -214,17 +212,16 @@ static void Src_Deleptonization( real fluid[], const real B[],
       const int  NTarget1 = 3;
 #     endif
             int  In_Int1[NTarget1+1];
-#     ifdef TEMP_IG
-            real In_Flt1[4];
-                 In_Flt1[3] = Temp_IG_Kelv;
-#     else
-            real In_Flt1[3];
-#     endif
-            real Out1[NTarget1+1];
+            real In_Flt1[4], Out1[NTarget1+1];
 
       In_Flt1[0] = Dens_Code;
       In_Flt1[1] = Eint_Code;
       In_Flt1[2] = Ye;
+#     ifdef TEMP_IG
+      In_Flt1[3] = Temp_IG_Kelv;
+#     else
+      In_Flt1[3] = NULL_REAL;
+#     endif
 
       In_Int1[0] = NTarget1;
       In_Int1[1] = NUC_VAR_IDX_ENTR;
@@ -267,14 +264,12 @@ static void Src_Deleptonization( real fluid[], const real B[],
       const int  NTarget2 = 0;
 #     endif
             int  In_Int2[NTarget2+1];
+            real In_Flt2[4], Out2[NTarget2+1];
 #     ifdef TEMP_IG
-            real In_Flt2[4];
-                 In_Flt2[3] = Temp_MeV * MeV2Kelvin;
+                 In_Flt2[3] = Temp_MeV / Kelvin2MeV;
 #     else
-            real In_Flt2[3];
+                 In_Flt2[3] = NULL_REAL;
 #     endif
-
-            real Out2[NTarget2+1];
 
       In_Flt2[0]  = Dens_Code;
       In_Flt2[1]  = Entr;
@@ -291,6 +286,12 @@ static void Src_Deleptonization( real fluid[], const real B[],
       fluid[ENGY] = Hydro_ConEint2Etot( fluid[DENS], fluid[MOMX], fluid[MOMY], fluid[MOMZ], Eint_Update, Emag );
 
 
+//    update temperature initial guess
+#     ifdef TEMP_IG
+      fluid[TEMP_IG] = Out2[1];
+#     endif
+
+
       // final check
 #     if GAMER_DEBUG
       if (  Hydro_CheckUnphysical( UNPHY_MODE_SING, &Eint_Update, "output internal energy density", ERROR_INFO, UNPHY_VERBOSE )  )
@@ -303,12 +304,7 @@ static void Src_Deleptonization( real fluid[], const real B[],
    } // if ( Del_Ye < (real)0.0 )
 
 
-// update temperature initial guess
-#  ifdef TEMP_IG
-   fluid[TEMP_IG] = Hydro_Con2Temp( fluid[DENS], fluid[MOMX], fluid[MOMY], fluid[MOMZ], fluid[ENGY], fluid+NCOMP_FLUID,
-                                    false, 0.0, Emag, EoS->DensEint2Temp_FuncPtr,
-                                    EoS->AuxArrayDevPtr_Flt, EoS->AuxArrayDevPtr_Int, EoS->Table );
-#  endif
+
 
 } // FUNCTION : Src_Deleptonization
 
