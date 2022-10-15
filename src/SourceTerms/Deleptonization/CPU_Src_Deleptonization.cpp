@@ -217,11 +217,7 @@ static void Src_Deleptonization( real fluid[], const real B[],
       In_Flt1[0] = Dens_Code;
       In_Flt1[1] = Eint_Code;
       In_Flt1[2] = Ye;
-#     ifdef TEMP_IG
       In_Flt1[3] = Temp_IG_Kelv;
-#     else
-      In_Flt1[3] = NULL_REAL;
-#     endif
 
       In_Int1[0] = NTarget1;
       In_Int1[1] = NUC_VAR_IDX_ENTR;
@@ -265,19 +261,19 @@ static void Src_Deleptonization( real fluid[], const real B[],
 #     endif
             int  In_Int2[NTarget2+1];
             real In_Flt2[4], Out2[NTarget2+1];
+
+      In_Flt2[0] = Dens_Code;
+      In_Flt2[1] = Entr;
+      In_Flt2[2] = Ye;
 #     ifdef TEMP_IG
-                 In_Flt2[3] = Temp_MeV / Kelvin2MeV;
+      In_Flt2[3] = Temp_MeV / Kelvin2MeV;
 #     else
-                 In_Flt2[3] = NULL_REAL;
+      In_Flt2[3] = NULL_REAL;
 #     endif
 
-      In_Flt2[0]  = Dens_Code;
-      In_Flt2[1]  = Entr;
-      In_Flt2[2]  = Ye;
-
-      In_Int2[0]  = NTarget2;
+      In_Int2[0] = NTarget2;
 #     if ( NUC_TABLE_MODE == NUC_TABLE_MODE_TEMP )
-      In_Int2[1]  = NUC_VAR_IDX_EORT;
+      In_Int2[1] = NUC_VAR_IDX_EORT;
 #     endif
 
 //    call Nuclear EoS with entropy mode
@@ -302,9 +298,6 @@ static void Src_Deleptonization( real fluid[], const real B[],
 #     endif // GAMER_DEBUG
 
    } // if ( Del_Ye < (real)0.0 )
-
-
-
 
 } // FUNCTION : Src_Deleptonization
 
