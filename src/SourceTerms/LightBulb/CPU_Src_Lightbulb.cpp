@@ -171,11 +171,7 @@ static void Src_Lightbulb( real fluid[], const real B[],
    In_Flt[0] = Dens_Code;
    In_Flt[1] = Eint_Code;
    In_Flt[2] = Ye;
-#  ifdef TEMP_IG
    In_Flt[3] = Temp_IG_Kelv;
-#  else
-   In_Flt[3] = NULL_REAL;
-#  endif
 
    In_Int[0] = NTarget;
    In_Int[1] = NUC_VAR_IDX_XN;
@@ -218,7 +214,7 @@ static void Src_Lightbulb( real fluid[], const real B[],
 #  endif
 
 
-// 4. calculate temperature for initial guess and store to fluid[TEMP_IG]
+// 4. update temperature initial guess
 #  ifdef TEMP_IG
 #  ifdef __CUDACC__
    fluid[TEMP_IG] = EoS->DensEint2Temp_FuncPtr( fluid[DENS], fluid[ENGY], fluid+NCOMP_FLUID,
