@@ -427,6 +427,7 @@ void SetGridIC( real fluid[], const double x, const double y, const double z, co
 // do NOT include magnetic energy here
    fluid[ENGY   ] = Hydro_ConEint2Etot( fluid[DENS], fluid[MOMX], fluid[MOMY], fluid[MOMZ], Eint, 0.0 );
 #  ifdef TEMP_IG
+   fluid[TEMP_IG] = NULL_REAL;
    fluid[TEMP_IG] = EoS_DensEint2Temp_CPUPtr( fluid[DENS], fluid[ENGY], fluid+NCOMP_FLUID,
                                               EoS_AuxArray_Flt, EoS_AuxArray_Int, h_EoS_Table );
 #  endif
