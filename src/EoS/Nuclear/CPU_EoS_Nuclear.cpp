@@ -242,9 +242,9 @@ static real EoS_DensEint2Pres_Nuclear( const real Dens_Code, const real Eint_Cod
 
 // set up the initial guess of temperature for temperature-based table
 #  ifdef TEMP_IG
-   real Temp_IG_MeV  = Passive_Code[ TEMP_IG - NCOMP_FLUID ] * Kelvin2MeV;
+   real Temp_IG_MeV = Passive_Code[ TEMP_IG - NCOMP_FLUID ] * Kelvin2MeV;
 #  else
-   real Temp_IG_MeV  = NULL_REAL;
+   real Temp_IG_MeV = NULL_REAL;
 #  endif
 
 // check floating-point overflow and Ye
@@ -359,9 +359,9 @@ static real EoS_DensPres2Eint_Nuclear( const real Dens_Code, const real Pres_Cod
 
 // set up the initial guess of temperature for temperature-based table
 #  ifdef TEMP_IG
-   real Temp_IG_MeV  = Passive_Code[ TEMP_IG - NCOMP_FLUID ] * Kelvin2MeV;
+   real Temp_IG_MeV = Passive_Code[ TEMP_IG - NCOMP_FLUID ] * Kelvin2MeV;
 #  else
-   real Temp_IG_MeV  = NULL_REAL;
+   real Temp_IG_MeV = NULL_REAL;
 #  endif
 
 // check floating-point overflow and Ye
@@ -483,9 +483,9 @@ static real EoS_DensPres2CSqr_Nuclear( const real Dens_Code, const real Pres_Cod
 
 // set up the initial guess of temperature for temperature-based table
 #  ifdef TEMP_IG
-   real Temp_IG_MeV  = Passive_Code[ TEMP_IG - NCOMP_FLUID ] * Kelvin2MeV;
+   real Temp_IG_MeV = Passive_Code[ TEMP_IG - NCOMP_FLUID ] * Kelvin2MeV;
 #  else
-   real Temp_IG_MeV  = NULL_REAL;
+   real Temp_IG_MeV = NULL_REAL;
 #  endif
 
 // check floating-point overflow and Ye
@@ -803,7 +803,6 @@ static void EoS_General_Nuclear( const int Mode, real Out[], const real In_Flt[]
 #  else
    const real Temp_IG_MeV = NULL_REAL;
 #  endif
-
 
 
    switch ( Mode )
