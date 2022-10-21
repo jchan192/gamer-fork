@@ -146,8 +146,7 @@ void findtoreps_direct( const real x, const real var, const real z,
    if ( var_bdry_1 > var )
    {
 //    (2-a) guess the solution located at index < iy_bdry_1, and find the lower boundary
-//      while ( iy_bdry_1 > iv_left ) // TO CHECK: unstable, check again after the PR for IG of temperature
-      while ( iy_bdry_1 > 0 )
+      while ( iy_bdry_1 > iv_left )
       {
          iy_bdry_2  = iy_bdry_1 - 1;
          ifs        = ip + nx * iy_bdry_2;
@@ -161,8 +160,7 @@ void findtoreps_direct( const real x, const real var, const real z,
    else
    {
 //    (2-b) guess the solution located at index > iy_bdry_1, and find the upper boundary
-//      while ( iy_bdry_1 < iv_right ) // TO CHECK: unstable, check again after the PR for IG of temperature
-      while ( iy_bdry_1 < ny - 1 )
+      while ( iy_bdry_1 < iv_right )
       {
          iy_bdry_2  = iy_bdry_1 + 1;
          ifs        = ip + nx * iy_bdry_2;

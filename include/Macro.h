@@ -84,7 +84,7 @@
 #define NUC_TABLE_MODE_ENGY 2
 
 
-// nuclear eos solver
+// nuclear eos solvers
 #define ORIG   1
 #define LUT    2
 #define DIRECT 3
