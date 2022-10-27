@@ -217,10 +217,10 @@ static void Src_Lightbulb( real fluid[], const real B[],
 // 4. update temperature initial guess
 #  ifdef TEMP_IG
 #  ifdef __CUDACC__
-   fluid[TEMP_IG] = EoS->DensEint2Temp_FuncPtr( fluid[DENS], fluid[ENGY], fluid+NCOMP_FLUID,
+   fluid[TEMP_IG] = EoS->DensEint2Temp_FuncPtr( fluid[DENS], Eint_Update, fluid+NCOMP_FLUID,
                                                 EoS->AuxArrayDevPtr_Flt, EoS->AuxArrayDevPtr_Int, EoS->Table );
 #  else
-   fluid[TEMP_IG] = EoS_DensEint2Temp_CPUPtr  ( fluid[DENS], fluid[ENGY], fluid+NCOMP_FLUID,
+   fluid[TEMP_IG] = EoS_DensEint2Temp_CPUPtr  ( fluid[DENS], Eint_Update, fluid+NCOMP_FLUID,
                                                 EoS_AuxArray_Flt, EoS_AuxArray_Int, h_EoS_Table );
 #  endif
 #  endif
