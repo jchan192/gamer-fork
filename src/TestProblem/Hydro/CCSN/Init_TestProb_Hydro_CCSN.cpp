@@ -74,7 +74,7 @@ bool   Flu_ResetByUser_Func_CCSN( real fluid[], const double x, const double y, 
                                  const double dt, const int lv, double AuxArray[] );
 void   Flu_ResetByUser_API_CCSN( const int lv, const int FluSg, const double TimeNew, const double dt );
 
-// this test problem needs to reset both Flu_ResetByUser_API_Ptr and Flu_ResetByUser_Func_Ptr, while
+// Post_Bounce, Core_Collapse test problems need to reset both Flu_ResetByUser_API_Ptr and Flu_ResetByUser_Func_Ptr, while
 // the former is not defined in TestProb.h (because it's rarely required)
 extern void (*Flu_ResetByUser_API_Ptr)( const int lv, const int FluSg, const double TimeNew, const double dt );
 
@@ -831,9 +831,11 @@ void Init_TestProb_Hydro_CCSN()
    Aux_Record_User_Ptr      = Record_CCSN;
    End_User_Ptr             = End_CCSN;
    Mis_GetTimeStep_User_Ptr = Mis_GetTimeStep_CCSN;
-#  ifdef TEMP_IG
-   Flu_ResetByUser_Func_Ptr = Flu_ResetByUser_Func_CCSN;
-   Flu_ResetByUser_API_Ptr  = Flu_ResetByUser_API_CCSN;
+#  if ( EOS == EOS_NUCLEAR  &&  NUC_TABLE_MODE == NUC_TABLE_MODE_TEMP )
+   if ( CCSN_Prob != Migration_Test ) {
+      Flu_ResetByUser_Func_Ptr = Flu_ResetByUser_Func_CCSN;
+      Flu_ResetByUser_API_Ptr  = Flu_ResetByUser_API_CCSN;
+   }
 #  endif
 
 #  ifdef MHD
