@@ -58,7 +58,7 @@ static double    Riemann_YeR;          // right-state electron fraction
 
 
 // problem-specific function prototypes
-#if ( EOS == EOS_NUCLEAR  &&  NUC_TABLE_MODE=NUC_TABLE_MODE_TEMP )
+#if ( EOS == EOS_NUCLEAR  &&  NUC_TABLE_MODE == NUC_TABLE_MODE_TEMP )
 bool   Flu_ResetByUser_Func_Riemann( real fluid[], const double x, const double y, const double z, const double Time,
                                  const double dt, const int lv, double AuxArray[] );
 void   Flu_ResetByUser_API_Riemann( const int lv, const int FluSg, const double TimeNew, const double dt );
