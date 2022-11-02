@@ -345,12 +345,13 @@ void Flu_FixUp_Restrict( const int FaLv, const int SonFluSg, const int FaFluSg, 
 #        endif // #ifdef DUAL_ENERGY ... else ...
 
 //       fix temperature initial guess
-#        ifdef TEMP_IG
+#        if ( EOS == EOS_NUCLEAR  &&  NUC_TABLE_MODE == NUC_TABLE_MODE_TEMP )
          real Passive[NCOMP_PASSIVE];
 
-         for (int N_PASSIVE=0; N_PASSIVE<NCOMP_PASSIVE; N_PASSIVE++)
-            Passive[N_PASSIVE] = amr->patch[FaFluSg][FaLv][FaPID]->fluid[NCOMP_FLUID+N_PASSIVE][k][j][i];
+         for (int v=0; v<NCOMP_PASSIVE; v++)
+            Passive[v] = amr->patch[FaFluSg][FaLv][FaPID]->fluid[NCOMP_FLUID+v][k][j][i];
 
+         const bool CheckMinTemp_No = false;
          amr->patch[FaFluSg][FaLv][FaPID]->fluid[TEMP_IG][k][j][i]
             = Hydro_Con2Temp( amr->patch[FaFluSg][FaLv][FaPID]->fluid[DENS][k][j][i],
                               amr->patch[FaFluSg][FaLv][FaPID]->fluid[MOMX][k][j][i],
@@ -358,9 +359,9 @@ void Flu_FixUp_Restrict( const int FaLv, const int SonFluSg, const int FaFluSg, 
                               amr->patch[FaFluSg][FaLv][FaPID]->fluid[MOMZ][k][j][i],
                               amr->patch[FaFluSg][FaLv][FaPID]->fluid[ENGY][k][j][i],
                               Passive,
-                              false, NULL_REAL, Emag, EoS_DensEint2Temp_CPUPtr,
+                              CheckMinTemp_No, NULL_REAL, Emag, EoS_DensEint2Temp_CPUPtr,
                               EoS_AuxArray_Flt, EoS_AuxArray_Int, h_EoS_Table );
-#        endif // ifdef TEMP_IG
+#        endif // #if ( EOS == EOS_NUCLEAR  &&  NUC_TABLE_MODE == NUC_TABLE_MODE_TEMP )
       } // i,j,k
 #     endif // #if ( MODEL == HYDRO )
 
