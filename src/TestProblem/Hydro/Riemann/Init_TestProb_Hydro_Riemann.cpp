@@ -538,7 +538,7 @@ void Init_TestProb_Hydro_Riemann()
 #  ifdef MHD
    Init_Function_BField_User_Ptr = SetBFieldIC;
 #  endif
-#  if ( EOS == EOS_NUCLEAR  &&  NUC_TABLE_MODE=NUC_TABLE_MODE_TEMP )
+#  if ( EOS == EOS_NUCLEAR  &&  NUC_TABLE_MODE == NUC_TABLE_MODE_TEMP )
    Flu_ResetByUser_Func_Ptr = Flu_ResetByUser_Func_Riemann;
    Flu_ResetByUser_API_Ptr  = Flu_ResetByUser_API_Riemann;
 #  endif
