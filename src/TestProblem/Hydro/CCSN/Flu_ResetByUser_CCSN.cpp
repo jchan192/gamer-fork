@@ -6,7 +6,7 @@
 
 
 //-------------------------------------------------------------------------------------------------------
-// Function    :  Flu_ResetByUser_CCSN
+// Function    :  Flu_ResetByUser_Func_CCSN
 // Description :  Function to reset the temperature initial guess TEMP_IG in the CCSN problem
 //
 // Note        :  1. Invoked by Flu_ResetByUser_API_CCSN() and Model_Init_ByFunction_AssignData() using the
@@ -35,22 +35,20 @@ bool Flu_ResetByUser_Func_CCSN( real fluid[], const double x, const double y, co
 {
 
    if ( AuxArray != NULL ) {
-#     ifdef MHD
       const double Emag = AuxArray[0];
-#     else
-      const double Emag = NULL_REAL;
-#     endif
+      const bool   CheckMinTemp_No = false;
 
       fluid[TEMP_IG] = Hydro_Con2Temp( fluid[DENS], fluid[MOMX], fluid[MOMY], fluid[MOMZ], fluid[ENGY],
-                                       fluid+NCOMP_FLUID, false, NULL_REAL, Emag,
+                                       fluid+NCOMP_FLUID, CheckMinTemp_No, NULL_REAL, Emag,
                                        EoS_DensEint2Temp_CPUPtr, EoS_AuxArray_Flt, EoS_AuxArray_Int, h_EoS_Table );
 
       return true;
    }
+
    else
       return false;
 
-} // FUNCTION : Flu_ResetByUser_CCSN
+} // FUNCTION : Flu_ResetByUser_Func_CCSN
 
 
 
@@ -73,10 +71,11 @@ bool Flu_ResetByUser_Func_CCSN( real fluid[], const double x, const double y, co
 void Flu_ResetByUser_API_CCSN( const int lv, const int FluSg, const double TimeNew, const double dt )
 {
 
-   real fluid[NCOMP_TOTAL];
-   bool Reset;
+   real   fluid[NCOMP_TOTAL];
+   double AuxArray[1];
+   bool   Reset;
 
-#  pragma omp parallel for private( fluid ) schedule( runtime )
+#  pragma omp parallel for private( fluid, Reset ) schedule( runtime )
    for (int PID=0; PID<amr->NPatchComma[lv][1]; PID++)
    {
       for (int k=0; k<PS1; k++)  {
@@ -85,16 +84,15 @@ void Flu_ResetByUser_API_CCSN( const int lv, const int FluSg, const double TimeN
 
          for (int v=0; v<NCOMP_TOTAL; v++)   fluid[v] = amr->patch[FluSg][lv][PID]->fluid[v][k][j][i];
 
-#           if ( MODEL == HYDRO )
 #           ifdef MHD
             const real Emag = MHD_GetCellCenteredBEnergyInPatch( lv, PID, i, j, k, amr->MagSg[lv] );
 #           else
             const real Emag = NULL_REAL;
 #           endif
-#           endif
+            AuxArray[1] = Emag;
 
-//          reset temperature initial guess for all cells
-            Reset = Flu_ResetByUser_Func_CCSN( fluid, NULL_REAL, NULL_REAL, NULL_REAL, TimeNew, dt, lv, (double*)&Emag );
+//          reset temperature initial guess for this cell
+            Reset = Flu_ResetByUser_Func_CCSN( fluid, NULL_REAL, NULL_REAL, NULL_REAL, TimeNew, dt, lv, AuxArray );
 
 //          store the reset values
             if ( Reset )
@@ -107,4 +105,4 @@ void Flu_ResetByUser_API_CCSN( const int lv, const int FluSg, const double TimeN
 
 
 
-#endif // if ( MODEL == HYDRO  &&  EOS == EOS_NUCLEAR  &&  NUC_TABLE_MODE == NUC_TABLE_MODE_TEMP )
+#endif // #if ( MODEL == HYDRO  &&  EOS == EOS_NUCLEAR  &&  NUC_TABLE_MODE == NUC_TABLE_MODE_TEMP )
