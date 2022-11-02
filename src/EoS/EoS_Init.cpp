@@ -2,8 +2,7 @@
 
 #if ( MODEL == HYDRO )
 
-extern bool (*Flu_ResetByUser_Func_Ptr)( real fluid[], const double x, const double y, const double z, const double Time,
-                                         const double dt, const int lv, double AuxArray[] );
+
 
 // prototypes of built-in EoS
 #if   ( EOS == EOS_GAMMA )
