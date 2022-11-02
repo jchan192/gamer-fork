@@ -70,6 +70,13 @@ double Mis_GetTimeStep_Lightbulb( const int lv, const double dTime_dt );
 double Mis_GetTimeStep_CoreCollapse( const int lv, const double dTime_dt );
 bool   Flag_CoreCollapse( const int i, const int j, const int k, const int lv, const int PID, const double *Threshold );
 bool   Flag_Lightbulb( const int i, const int j, const int k, const int lv, const int PID, const double *Threshold );
+bool   Flu_ResetByUser_Func_CCSN( real fluid[], const double x, const double y, const double z, const double Time,
+                                 const double dt, const int lv, double AuxArray[] );
+void   Flu_ResetByUser_API_CCSN( const int lv, const int FluSg, const double TimeNew, const double dt );
+
+// this test problem needs to reset both Flu_ResetByUser_API_Ptr and Flu_ResetByUser_Func_Ptr, while
+// the former is not defined in TestProb.h (because it's rarely required)
+extern void (*Flu_ResetByUser_API_Ptr)( const int lv, const int FluSg, const double TimeNew, const double dt );
 
 
 
@@ -824,6 +831,10 @@ void Init_TestProb_Hydro_CCSN()
    Aux_Record_User_Ptr      = Record_CCSN;
    End_User_Ptr             = End_CCSN;
    Mis_GetTimeStep_User_Ptr = Mis_GetTimeStep_CCSN;
+#  ifdef TEMP_IG
+   Flu_ResetByUser_Func_Ptr = Flu_ResetByUser_Func_CCSN;
+   Flu_ResetByUser_API_Ptr  = Flu_ResetByUser_API_CCSN;
+#  endif
 
 #  ifdef MHD
    switch ( CCSN_Mag )

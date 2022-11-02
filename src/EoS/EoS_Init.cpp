@@ -2,7 +2,8 @@
 
 #if ( MODEL == HYDRO )
 
-
+extern bool (*Flu_ResetByUser_Func_Ptr)( real fluid[], const double x, const double y, const double z, const double Time,
+                                         const double dt, const int lv, double AuxArray[] );
 
 // prototypes of built-in EoS
 #if   ( EOS == EOS_GAMMA )
@@ -66,6 +67,10 @@ void EoS_Init()
    EoS_Init_Ptr = EoS_Init_Isothermal;
 #  elif ( EOS == EOS_NUCLEAR )
    EoS_Init_Ptr = EoS_Init_Nuclear;
+#  if   ( NUC_TABLE_MODE == NUC_TABLE_MODE_TEMP )   
+   if ( Flu_ResetByUser_Func_Ptr == NULL ) 
+      Aux_Error( ERROR_INFO, "Flu_ResetByUser_Func_Ptr == NULL for NUC_TABLE_MODE = %d !!\n", NUC_TABLE_MODE_TEMP );
+#  endif
 #  endif // # EOS
 
 

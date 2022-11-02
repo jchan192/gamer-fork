@@ -57,6 +57,18 @@ static double    Riemann_YeR;          // right-state electron fraction
 // =======================================================================================
 
 
+// problem-specific function prototypes
+#if ( EOS == EOS_NUCLEAR  &&  NUC_TABLE_MODE=NUC_TABLE_MODE_TEMP )
+bool   Flu_ResetByUser_Func_Riemann( real fluid[], const double x, const double y, const double z, const double Time,
+                                 const double dt, const int lv, double AuxArray[] );
+void   Flu_ResetByUser_API_Riemann( const int lv, const int FluSg, const double TimeNew, const double dt );
+
+// this test problem needs to reset both Flu_ResetByUser_API_Ptr and Flu_ResetByUser_Func_Ptr, while
+// the former is not defined in TestProb.h (because it's rarely required)
+extern void (*Flu_ResetByUser_API_Ptr)( const int lv, const int FluSg, const double TimeNew, const double dt );
+#endif
+
+
 
 
 //-------------------------------------------------------------------------------------------------------
@@ -427,6 +439,7 @@ void SetGridIC( real fluid[], const double x, const double y, const double z, co
 // do NOT include magnetic energy here
    fluid[ENGY   ] = Hydro_ConEint2Etot( fluid[DENS], fluid[MOMX], fluid[MOMY], fluid[MOMZ], Eint, 0.0 );
 #  ifdef TEMP_IG
+   fluid[TEMP_IG] = NULL_REAL;
    fluid[TEMP_IG] = EoS_DensEint2Temp_CPUPtr( fluid[DENS], Eint, fluid+NCOMP_FLUID,
                                               EoS_AuxArray_Flt, EoS_AuxArray_Int, h_EoS_Table );
 #  endif
@@ -524,6 +537,10 @@ void Init_TestProb_Hydro_Riemann()
    Init_Function_User_Ptr        = SetGridIC;
 #  ifdef MHD
    Init_Function_BField_User_Ptr = SetBFieldIC;
+#  endif
+#  if ( EOS == EOS_NUCLEAR  &&  NUC_TABLE_MODE=NUC_TABLE_MODE_TEMP )
+   Flu_ResetByUser_Func_Ptr = Flu_ResetByUser_Func_Riemann;
+   Flu_ResetByUser_API_Ptr  = Flu_ResetByUser_API_Riemann;
 #  endif
 #  endif // #if ( MODEL == HYDRO )
 
