@@ -58,12 +58,12 @@ static double    Riemann_YeR;          // right-state electron fraction
 
 
 // problem-specific function prototypes
-#if ( EOS == EOS_NUCLEAR  &&  NUC_TABLE_MODE=NUC_TABLE_MODE_TEMP )
+#if ( EOS == EOS_NUCLEAR  &&  NUC_TABLE_MODE == NUC_TABLE_MODE_TEMP )
 bool   Flu_ResetByUser_Func_Riemann( real fluid[], const double x, const double y, const double z, const double Time,
                                  const double dt, const int lv, double AuxArray[] );
 void   Flu_ResetByUser_API_Riemann( const int lv, const int FluSg, const double TimeNew, const double dt );
 
-// this test problem needs to reset both Flu_ResetByUser_API_Ptr and Flu_ResetByUser_Func_Ptr, while
+// NUCLEAR1 and NUCLEAR2 problems need to reset both Flu_ResetByUser_API_Ptr and Flu_ResetByUser_Func_Ptr, while
 // the former is not defined in TestProb.h (because it's rarely required)
 extern void (*Flu_ResetByUser_API_Ptr)( const int lv, const int FluSg, const double TimeNew, const double dt );
 #endif
