@@ -67,10 +67,6 @@ void EoS_Init()
    EoS_Init_Ptr = EoS_Init_Isothermal;
 #  elif ( EOS == EOS_NUCLEAR )
    EoS_Init_Ptr = EoS_Init_Nuclear;
-#  if   ( NUC_TABLE_MODE == NUC_TABLE_MODE_TEMP )   
-   if ( Flu_ResetByUser_Func_Ptr == NULL ) 
-      Aux_Error( ERROR_INFO, "Flu_ResetByUser_Func_Ptr == NULL for NUC_TABLE_MODE = %d !!\n", NUC_TABLE_MODE_TEMP );
-#  endif
 #  endif // # EOS
 
 
