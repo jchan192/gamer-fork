@@ -199,6 +199,8 @@ void Aux_TakeNote()
       fprintf( Note, "NUC_EOS_SOLVER                  NUC_EOS_SOLVER_LUT\n" );
 #     elif ( NUC_EOS_SOLVER == NUC_EOS_SOLVER_DIRECT )
       fprintf( Note, "NUC_EOS_SOLVER                  NUC_EOS_SOLVER_DIRECT\n" );
+#     else
+      fprintf( Note, "NUC_EOS_SOLVER                  UNKNOWN\n" );
 #     endif
 #     elif ( EOS == EOS_TABULAR )
       fprintf( Note, "EOS                             EOS_TABULAR\n" );
