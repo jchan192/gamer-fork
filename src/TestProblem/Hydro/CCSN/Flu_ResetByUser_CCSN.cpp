@@ -84,19 +84,19 @@ void Flu_ResetByUser_API_CCSN( const int lv, const int FluSg, const double TimeN
 
          for (int v=0; v<NCOMP_TOTAL; v++)   fluid[v] = amr->patch[FluSg][lv][PID]->fluid[v][k][j][i];
 
-#           ifdef MHD
-            const real Emag = MHD_GetCellCenteredBEnergyInPatch( lv, PID, i, j, k, amr->MagSg[lv] );
-#           else
-            const real Emag = NULL_REAL;
-#           endif
-            AuxArray[1] = Emag;
+#        ifdef MHD
+         const real Emag = MHD_GetCellCenteredBEnergyInPatch( lv, PID, i, j, k, amr->MagSg[lv] );
+#        else
+         const real Emag = NULL_REAL;
+#        endif
+         AuxArray[1] = Emag;
 
-//          reset temperature initial guess for this cell
-            Reset = Flu_ResetByUser_Func_CCSN( fluid, NULL_REAL, NULL_REAL, NULL_REAL, TimeNew, dt, lv, AuxArray );
+//       reset temperature initial guess for this cell
+         Reset = Flu_ResetByUser_Func_CCSN( fluid, NULL_REAL, NULL_REAL, NULL_REAL, TimeNew, dt, lv, AuxArray );
 
-//          store the reset values
-            if ( Reset )
-               amr->patch[FluSg][lv][PID]->fluid[TEMP_IG][k][j][i] = fluid[TEMP_IG];
+//       store the reset values
+         if ( Reset )
+             amr->patch[FluSg][lv][PID]->fluid[TEMP_IG][k][j][i] = fluid[TEMP_IG];
 
       }}} // i,j,k
    } // for (int PID=0; PID<amr->NPatchComma[lv][1]; PID++)
