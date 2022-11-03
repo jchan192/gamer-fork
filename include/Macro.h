@@ -159,9 +159,13 @@
 #  define NCOMP_PASSIVE_BUILTIN1    0
 # endif
 
-// electron fraction (Ye) and neutrino heating/cooling rate
+// electron fraction (Ye), neutrino heating/cooling rate, and temperature initial guess (TEMP_IG)
 # if ( EOS == EOS_NUCLEAR )
+# if ( NUC_TABLE_MODE == NUC_TABLE_MODE_TEMP )
+#  define NCOMP_PASSIVE_BUILTIN2    3
+# else
 #  define NCOMP_PASSIVE_BUILTIN2    2
+# endif
 # else
 #  define NCOMP_PASSIVE_BUILTIN2    0
 # endif
@@ -266,7 +270,12 @@
 # if ( EOS == EOS_NUCLEAR )
 #  define YE                  ( PASSIVE_NEXT_IDX2 )
 #  define DEDT_LB             ( YE - 1            )
+# if ( NUC_TABLE_MODE == NUC_TABLE_MODE_TEMP )
+#  define TEMP_IG             ( YE - 2            )
+#  define PASSIVE_NEXT_IDX3   ( YE - 3            )
+# else
 #  define PASSIVE_NEXT_IDX3   ( YE - 2            )
+# endif
 # else
 #  define PASSIVE_NEXT_IDX3   ( PASSIVE_NEXT_IDX2 )
 # endif
@@ -310,7 +319,12 @@
 # if ( EOS == EOS_NUCLEAR )
 #  define FLUX_YE          ( FLUX_NEXT_IDX2  )
 #  define FLUX_DEDT_LB     ( FLUX_YE - 1     )
+# if ( NUC_TABLE_MODE == NUC_TABLE_MODE_TEMP )
+#  define FLUX_TEMP_IG     ( FLUX_YE - 2     )
+#  define FLUX_NEXT_IDX3   ( FLUX_YE - 3     )
+# else
 #  define FLUX_NEXT_IDX3   ( FLUX_YE - 2     )
+# endif
 # else
 #  define FLUX_NEXT_IDX3   ( FLUX_NEXT_IDX2  )
 # endif
@@ -340,6 +354,9 @@
 # if ( EOS == EOS_NUCLEAR )
 #  define _YE                 ( 1L << YE      )
 #  define _DEDT_LB            ( 1L << DEDT_LB )
+# if ( NUC_TABLE_MODE == NUC_TABLE_MODE_TEMP )
+#  define _TEMP_IG            ( 1L << TEMP_IG )
+# endif
 # endif
 
 #endif // #if ( NCOMP_PASSIVE > 0 )
@@ -374,6 +391,9 @@
 # if ( EOS == EOS_NUCLEAR )
 #  define _FLUX_YE            ( 1L << FLUX_YE      )
 #  define _FLUX_DEDT_LB       ( 1L << FLUX_DEDT_LB )
+# if ( NUC_TABLE_MODE == NUC_TABLE_MODE_TEMP )
+#  define _FLUX_TEMP_IG       ( 1L << FLUX_TEMP_IG )
+# endif
 # endif
 
 #endif // #if ( NFLUX_PASSIVE > 0 )

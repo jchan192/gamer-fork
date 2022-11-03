@@ -394,6 +394,9 @@ void SetGridIC( real fluid[], const double x, const double y, const double z, co
 
    Passive[ YE      - NCOMP_FLUID ] = Ye*Dens;
    Passive[ DEDT_LB - NCOMP_FLUID ] = DEDT_UNINITIALIZED;
+#  ifdef TEMP_IG
+   Passive[ TEMP_IG - NCOMP_FLUID ] = Temp;
+#  endif
 #  else
    real *Passive = NULL;
 #  endif
@@ -406,11 +409,12 @@ void SetGridIC( real fluid[], const double x, const double y, const double z, co
       const int  NTarget = 0;
 #     endif
             int  TmpIn_Int[NTarget+1];
-            real TmpIn_Flt[3], TmpOut[NTarget+1];
+            real TmpIn_Flt[4], TmpOut[NTarget+1];
 
       TmpIn_Flt[0] = (real)Dens;
       TmpIn_Flt[1] = (real)Temp;
       TmpIn_Flt[2] = (real)Ye;
+      TmpIn_Flt[3] = (real)Temp;
 
       TmpIn_Int[0] = NTarget;
 #     if ( NUC_TABLE_MODE == NUC_TABLE_MODE_TEMP )
@@ -595,6 +599,50 @@ void SetBFieldIC_Suwa2007( real magnetic[], const double x, const double y, cons
 
 } // FUNCTION : SetBFieldIC_Suwa2007
 #endif // #ifdef MHD
+
+
+
+#if ( EOS == EOS_NUCLEAR  &&  NUC_TABLE_MODE == NUC_TABLE_MODE_TEMP )
+//-------------------------------------------------------------------------------------------------------
+// Function    :  Flu_ResetByUser_CCSN
+// Description :  Function to reset the temperature initial guess
+//
+// Note        :  1. Invoked by "Flu_ResetByUser_API()" and "Model_Init_ByFunction_AssignData()" using the
+//                   function pointer "Flu_ResetByUser_Func_Ptr"
+//                2. This function will be invoked when constructing the initial condition
+//                    (by calling "Model_Init_ByFunction_AssignData()") and after each update
+//                    (by calling "Flu_ResetByUser_API()")
+//                3. Input "fluid" array stores the original values
+//                4. Even when DUAL_ENERGY is adopted, one does NOT need to set the dual-energy variable here
+//                   --> It will be set automatically in "Flu_ResetByUser_API()" and "Model_Init_ByFunction_AssignData()"
+//                5. Enabled by the runtime option "OPT__RESET_FLUID"
+//
+// Parameter   :  fluid    : Fluid array storing both the input (origial) and reset values
+//                           --> Including both active and passive variables
+//                Emag     : Magnetic energy (MHD only)
+//                x/y/z    : Target physical coordinates
+//                Time     : Target physical time
+//                dt       : Time interval to advance solution
+//                lv       : Target refinement level
+//                AuxArray : Auxiliary array
+//
+// Return      :  true  : This cell has been reset
+//                false : This cell has not been reset
+//-------------------------------------------------------------------------------------------------------
+bool Flu_ResetByUser_CCSN( real fluid[], const double Emag, const double x, const double y, const double z, const double Time,
+                           const double dt, const int lv, double AuxArray[] )
+{
+
+      const bool CheckMinTemp_No = false;
+      fluid[TEMP_IG] = Hydro_Con2Temp( fluid[DENS], fluid[MOMX], fluid[MOMY], fluid[MOMZ], fluid[ENGY],
+                                       fluid+NCOMP_FLUID, CheckMinTemp_No, NULL_REAL, Emag,
+                                       EoS_DensEint2Temp_CPUPtr, EoS_AuxArray_Flt, EoS_AuxArray_Int, h_EoS_Table );
+
+      return true;
+
+
+} // FUNCTION : Flu_ResetByUser_CCSN
+#endif // #if ( EOS == EOS_NUCLEAR  &&  NUC_TABLE_MODE == NUC_TABLE_MODE_TEMP )
 #endif // #if ( MODEL == HYDRO )
 
 
@@ -820,6 +868,9 @@ void Init_TestProb_Hydro_CCSN()
    Aux_Record_User_Ptr      = Record_CCSN;
    End_User_Ptr             = End_CCSN;
    Mis_GetTimeStep_User_Ptr = Mis_GetTimeStep_CCSN;
+#  if ( EOS == EOS_NUCLEAR  &&  NUC_TABLE_MODE == NUC_TABLE_MODE_TEMP )
+   Flu_ResetByUser_Func_Ptr = Flu_ResetByUser_CCSN;
+#  endif
 
 #  ifdef MHD
    switch ( CCSN_Mag )
