@@ -832,10 +832,8 @@ void Init_TestProb_Hydro_CCSN()
    End_User_Ptr             = End_CCSN;
    Mis_GetTimeStep_User_Ptr = Mis_GetTimeStep_CCSN;
 #  if ( EOS == EOS_NUCLEAR  &&  NUC_TABLE_MODE == NUC_TABLE_MODE_TEMP )
-   if ( CCSN_Prob != Migration_Test ) {
-      Flu_ResetByUser_Func_Ptr = Flu_ResetByUser_Func_CCSN;
-      Flu_ResetByUser_API_Ptr  = Flu_ResetByUser_API_CCSN;
-   }
+   Flu_ResetByUser_Func_Ptr = Flu_ResetByUser_Func_CCSN;
+   Flu_ResetByUser_API_Ptr  = Flu_ResetByUser_API_CCSN;
 #  endif
 
 #  ifdef MHD
