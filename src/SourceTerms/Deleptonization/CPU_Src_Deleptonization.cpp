@@ -181,9 +181,14 @@ static void Src_Deleptonization( real fluid[], const real B[],
          real Eint_Update;
          real Entr = NULL_REAL;
 #  ifdef YE
-         real Ye        = fluid[YE] / fluid[DENS];
+         real Ye           = fluid[YE] / fluid[DENS];
 #  else
-         real Ye        = NULL_REAL;
+         real Ye           = NULL_REAL;
+#  endif
+#  ifdef TEMP_IG
+         real Temp_IG_Kelv = fluid[TEMP_IG];
+#  else
+         real Temp_IG_Kelv = NULL_REAL;
 #  endif
 
    if ( Dens_CGS <= Delep_minDens_CGS )
@@ -207,11 +212,12 @@ static void Src_Deleptonization( real fluid[], const real B[],
       const int  NTarget1 = 3;
 #     endif
             int  In_Int1[NTarget1+1];
-            real In_Flt1[3], Out1[NTarget1+1];
+            real In_Flt1[4], Out1[NTarget1+1];
 
       In_Flt1[0] = Dens_Code;
       In_Flt1[1] = Eint_Code;
       In_Flt1[2] = Ye;
+      In_Flt1[3] = Temp_IG_Kelv;
 
       In_Int1[0] = NTarget1;
       In_Int1[1] = NUC_VAR_IDX_ENTR;
@@ -254,15 +260,20 @@ static void Src_Deleptonization( real fluid[], const real B[],
       const int  NTarget2 = 0;
 #     endif
             int  In_Int2[NTarget2+1];
-            real In_Flt2[3], Out2[NTarget2+1];
+            real In_Flt2[4], Out2[NTarget2+1];
 
-      In_Flt2[0]  = Dens_Code;
-      In_Flt2[1]  = Entr;
-      In_Flt2[2]  = Ye;
+      In_Flt2[0] = Dens_Code;
+      In_Flt2[1] = Entr;
+      In_Flt2[2] = Ye;
+#     ifdef TEMP_IG
+      In_Flt2[3] = Temp_MeV / Kelvin2MeV;
+#     else
+      In_Flt2[3] = NULL_REAL;
+#     endif
 
-      In_Int2[0]  = NTarget2;
+      In_Int2[0] = NTarget2;
 #     if ( NUC_TABLE_MODE == NUC_TABLE_MODE_TEMP )
-      In_Int2[1]  = NUC_VAR_IDX_EORT;
+      In_Int2[1] = NUC_VAR_IDX_EORT;
 #     endif
 
 //    call Nuclear EoS with entropy mode
@@ -271,7 +282,7 @@ static void Src_Deleptonization( real fluid[], const real B[],
       fluid[ENGY] = Hydro_ConEint2Etot( fluid[DENS], fluid[MOMX], fluid[MOMY], fluid[MOMZ], Eint_Update, Emag );
 
 
-      // final check
+//    final check
 #     if GAMER_DEBUG
       if (  Hydro_CheckUnphysical( UNPHY_MODE_SING, &Eint_Update, "output internal energy density", ERROR_INFO, UNPHY_VERBOSE )  )
       {
