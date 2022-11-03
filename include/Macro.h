@@ -275,6 +275,8 @@
 #  define PASSIVE_NEXT_IDX3   ( YE - 3            )
 # else
 #  define PASSIVE_NEXT_IDX3   ( YE - 2            )
+# else
+#  define PASSIVE_NEXT_IDX3   ( PASSIVE_NEXT_IDX2 )
 # endif
 # endif
 
@@ -322,6 +324,8 @@
 #  define FLUX_NEXT_IDX3   ( FLUX_YE - 3     )
 # else
 #  define FLUX_NEXT_IDX3   ( FLUX_YE - 2     )
+# else
+#  define FLUX_NEXT_IDX3   ( FLUX_NEXT_IDX2  )
 # endif
 # endif
 
