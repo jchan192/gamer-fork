@@ -193,12 +193,12 @@ void Aux_TakeNote()
 #     else
       fprintf( Note, "NUC_TABLE_MODE                  UNKNOWN\n" );
 #     endif
-#     if   ( NUC_EOS_SOLVER == ORIG )
-      fprintf( Note, "NUC_EOS_SOLVER                  ORIG\n" );
-#     elif ( NUC_EOS_SOLVER == LUT )
-      fprintf( Note, "NUC_EOS_SOLVER                  LUT\n" );
-#     elif ( NUC_EOS_SOLVER == DIRECT )
-      fprintf( Note, "NUC_EOS_SOLVER                  DIRECT\n" );
+#     if   ( NUC_EOS_SOLVER == NUC_EOS_SOLVER_ORIG )
+      fprintf( Note, "NUC_EOS_SOLVER                  NUC_EOS_SOLVER_ORIG\n" );
+#     elif ( NUC_EOS_SOLVER == NUC_EOS_SOLVER_LUT )
+      fprintf( Note, "NUC_EOS_SOLVER                  NUC_EOS_SOLVER_LUT\n" );
+#     elif ( NUC_EOS_SOLVER == NUC_EOS_SOLVER_DIRECT )
+      fprintf( Note, "NUC_EOS_SOLVER                  NUC_EOS_SOLVER_DIRECT\n" );
 #     endif
 #     elif ( EOS == EOS_TABULAR )
       fprintf( Note, "EOS                             EOS_TABULAR\n" );

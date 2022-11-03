@@ -85,9 +85,9 @@
 
 
 // nuclear eos solvers
-#define ORIG   1
-#define LUT    2
-#define DIRECT 3
+#define NUC_EOS_SOLVER_ORIG   1
+#define NUC_EOS_SOLVER_LUT    2
+#define NUC_EOS_SOLVER_DIRECT 3
 
 
 // neutrino updating schemes

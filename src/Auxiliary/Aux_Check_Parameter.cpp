@@ -745,12 +745,12 @@ void Aux_Check_Parameter()
 #     endif
 #     if ( !defined NUC_EOS_SOLVER )
 #        error : ERROR : must enable NUC_EOS_SOLVER for EOS_NUCLEAR !!
-#     elif ( NUC_EOS_SOLVER != ORIG  &&  NUC_EOS_SOLVER != LUT  &&  NUC_EOS_SOLVER != DIRECT )
-#        error : ERROR : unsupported nuclear EoS solver (ORIG/LUT/DIRECT) !!
+#     elif ( NUC_EOS_SOLVER != NUC_EOS_SOLVER_ORIG  &&  NUC_EOS_SOLVER != NUC_EOS_SOLVER_LUT  &&  NUC_EOS_SOLVER != NUC_EOS_SOLVER_DIRECT )
+#        error : ERROR : unsupported nuclear EoS solver (NUC_EOS_SOLVER_ORIG/NUC_EOS_SOLVER_LUT/NUC_EOS_SOLVER_DIRECT) !!
 #     endif
-#     if ( NUC_EOS_SOLVER == ORIG  ||  NUC_EOS_SOLVER == DIRECT )
+#     if ( NUC_EOS_SOLVER == NUC_EOS_SOLVER_ORIG  ||  NUC_EOS_SOLVER == NUC_EOS_SOLVER_DIRECT )
 #        if ( NUC_TABLE_MODE == NUC_TABLE_MODE_ENGY )
-#           error : ERROR : ORIG/DIRECT nuclear EoS solver does not support energy-based tables !!
+#           error : ERROR : NUC_EOS_SOLVER_ORIG/NUC_EOS_SOLVER_DIRECT nuclear EoS solver does not support NUC_TABLE_MODE_ENGY !!
 #        endif
 #     endif
 #  endif // if ( EOS == EOS_NUCLEAR )
