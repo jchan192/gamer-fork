@@ -193,6 +193,15 @@ void Aux_TakeNote()
 #     else
       fprintf( Note, "NUC_TABLE_MODE                  UNKNOWN\n" );
 #     endif
+#     if   ( NUC_EOS_SOLVER == NUC_EOS_SOLVER_ORIG )
+      fprintf( Note, "NUC_EOS_SOLVER                  NUC_EOS_SOLVER_ORIG\n" );
+#     elif ( NUC_EOS_SOLVER == NUC_EOS_SOLVER_LUT )
+      fprintf( Note, "NUC_EOS_SOLVER                  NUC_EOS_SOLVER_LUT\n" );
+#     elif ( NUC_EOS_SOLVER == NUC_EOS_SOLVER_DIRECT )
+      fprintf( Note, "NUC_EOS_SOLVER                  NUC_EOS_SOLVER_DIRECT\n" );
+#     else
+      fprintf( Note, "NUC_EOS_SOLVER                  UNKNOWN\n" );
+#     endif
 #     elif ( EOS == EOS_TABULAR )
       fprintf( Note, "EOS                             EOS_TABULAR\n" );
 #     elif ( EOS == EOS_USER )
@@ -921,10 +930,10 @@ void Aux_TakeNote()
       fprintf( Note, "SRC_LIGHTBULB                   %d\n",      SrcTerms.Lightbulb        );
       if ( SrcTerms.Deleptonization ) {
       fprintf( Note, "SRC_DELEP_ENU                   %13.7e\n",  SrcTerms.Dlep_Enu         );
-      fprintf( Note, "SRC_DELEP_RHO1                  %13.7e\n",  SrcTerms.Dlep_Rho1        ); 
+      fprintf( Note, "SRC_DELEP_RHO1                  %13.7e\n",  SrcTerms.Dlep_Rho1        );
       fprintf( Note, "SRC_DELEP_RHO2                  %13.7e\n",  SrcTerms.Dlep_Rho2        );
-      fprintf( Note, "SRC_DELEP_YE1                   %13.7e\n",  SrcTerms.Dlep_Ye1         ); 
-      fprintf( Note, "SRC_DELEP_YE2                   %13.7e\n",  SrcTerms.Dlep_Ye2         ); 
+      fprintf( Note, "SRC_DELEP_YE1                   %13.7e\n",  SrcTerms.Dlep_Ye1         );
+      fprintf( Note, "SRC_DELEP_YE2                   %13.7e\n",  SrcTerms.Dlep_Ye2         );
       fprintf( Note, "SRC_DELEP_YEC                   %13.7e\n",  SrcTerms.Dlep_Yec         ); }
       if ( SrcTerms.Lightbulb ) {
       fprintf( Note, "SRC_LIGHTBULB_LNUE              %13.7e\n",  SrcTerms.Lightbulb_Lnue   );

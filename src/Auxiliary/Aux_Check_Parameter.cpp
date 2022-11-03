@@ -743,7 +743,17 @@ void Aux_Check_Parameter()
       if ( !OPT__RESET_FLUID )
          Aux_Error( ERROR_INFO, "ERROR : must enable OPT__RESET_FLUID for nucelar EoS table type NUC_TABLE_MODE_TEMP !!\n" );
 #     endif
-#  endif // if ( EOS != EOS_NUCLEAR )
+#     if ( !defined NUC_EOS_SOLVER )
+#        error : ERROR : must enable NUC_EOS_SOLVER for EOS_NUCLEAR !!
+#     elif ( NUC_EOS_SOLVER != NUC_EOS_SOLVER_ORIG  &&  NUC_EOS_SOLVER != NUC_EOS_SOLVER_LUT  &&  NUC_EOS_SOLVER != NUC_EOS_SOLVER_DIRECT )
+#        error : ERROR : unsupported nuclear EoS solver (NUC_EOS_SOLVER_ORIG/NUC_EOS_SOLVER_LUT/NUC_EOS_SOLVER_DIRECT) !!
+#     endif
+#     if ( NUC_EOS_SOLVER == NUC_EOS_SOLVER_ORIG  ||  NUC_EOS_SOLVER == NUC_EOS_SOLVER_DIRECT )
+#        if ( NUC_TABLE_MODE == NUC_TABLE_MODE_ENGY )
+#           error : ERROR : NUC_EOS_SOLVER_ORIG/NUC_EOS_SOLVER_DIRECT nuclear EoS solver does not support NUC_TABLE_MODE_ENGY !!
+#        endif
+#     endif
+#  endif // if ( EOS == EOS_NUCLEAR )
 
 #  ifdef BAROTROPIC_EOS
 #     if ( EOS == EOS_GAMMA  ||  EOS == EOS_NUCLEAR )
