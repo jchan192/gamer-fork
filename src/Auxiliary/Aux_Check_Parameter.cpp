@@ -739,7 +739,7 @@ void Aux_Check_Parameter()
 #        error : ERROR : must enable NUC_TABLE_MODE for EOS_NUCLEAR !!
 #     elif ( NUC_TABLE_MODE != NUC_TABLE_MODE_TEMP  &&  NUC_TABLE_MODE != NUC_TABLE_MODE_ENGY )
 #        error : ERROR : unsupported nuclear EoS table type (NUC_TABLE_MODE_TEMP/NUC_TABLE_MODE_ENGY) !!
-#     elif ( NUC_TABLE_MODE == NUC_TABLE_MODE_TEMP  &&  OPT__RESET_FLUID )
+#     elif ( NUC_TABLE_MODE == NUC_TABLE_MODE_TEMP  &&  !OPT__RESET_FLUID )
 #        error : ERROR : must enable OPT__RESET_FLUID for nuclear EoS table type NUC_TABLE_MODE_TEMP !!
 #     endif
 #  endif // if ( EOS != EOS_NUCLEAR )
