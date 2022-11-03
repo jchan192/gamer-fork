@@ -70,13 +70,6 @@ double Mis_GetTimeStep_Lightbulb( const int lv, const double dTime_dt );
 double Mis_GetTimeStep_CoreCollapse( const int lv, const double dTime_dt );
 bool   Flag_CoreCollapse( const int i, const int j, const int k, const int lv, const int PID, const double *Threshold );
 bool   Flag_Lightbulb( const int i, const int j, const int k, const int lv, const int PID, const double *Threshold );
-bool   Flu_ResetByUser_Func_CCSN( real fluid[], const double x, const double y, const double z, const double Time,
-                                 const double dt, const int lv, double AuxArray[] );
-void   Flu_ResetByUser_API_CCSN( const int lv, const int FluSg, const double TimeNew, const double dt );
-
-// Post_Bounce, Core_Collapse test problems need to reset both Flu_ResetByUser_API_Ptr and Flu_ResetByUser_Func_Ptr, while
-// the former is not defined in TestProb.h (because it's rarely required)
-extern void (*Flu_ResetByUser_API_Ptr)( const int lv, const int FluSg, const double TimeNew, const double dt );
 
 
 
@@ -606,6 +599,50 @@ void SetBFieldIC_Suwa2007( real magnetic[], const double x, const double y, cons
 
 } // FUNCTION : SetBFieldIC_Suwa2007
 #endif // #ifdef MHD
+
+
+
+#if ( EOS == EOS_NUCLEAR  &&  NUC_TABLE_MODE == NUC_TABLE_MODE_TEMP )
+//-------------------------------------------------------------------------------------------------------
+// Function    :  Flu_ResetByUser_CCSN
+// Description :  Function to reset the temperature initial guess
+//
+// Note        :  1. Invoked by "Flu_ResetByUser_API()" and "Model_Init_ByFunction_AssignData()" using the
+//                   function pointer "Flu_ResetByUser_Func_Ptr"
+//                2. This function will be invoked when constructing the initial condition
+//                    (by calling "Model_Init_ByFunction_AssignData()") and after each update
+//                    (by calling "Flu_ResetByUser_API()")
+//                3. Input "fluid" array stores the original values
+//                4. Even when DUAL_ENERGY is adopted, one does NOT need to set the dual-energy variable here
+//                   --> It will be set automatically in "Flu_ResetByUser_API()" and "Model_Init_ByFunction_AssignData()"
+//                5. Enabled by the runtime option "OPT__RESET_FLUID"
+//
+// Parameter   :  fluid    : Fluid array storing both the input (origial) and reset values
+//                           --> Including both active and passive variables
+//                Emag     : Magnetic energy (MHD only)
+//                x/y/z    : Target physical coordinates
+//                Time     : Target physical time
+//                dt       : Time interval to advance solution
+//                lv       : Target refinement level
+//                AuxArray : Auxiliary array
+//
+// Return      :  true  : This cell has been reset
+//                false : This cell has not been reset
+//-------------------------------------------------------------------------------------------------------
+bool Flu_ResetByUser_CCSN( real fluid[], const double Emag, const double x, const double y, const double z, const double Time,
+                           const double dt, const int lv, double AuxArray[] )
+{
+
+      const bool   CheckMinTemp_No = false;
+      fluid[TEMP_IG] = Hydro_Con2Temp( fluid[DENS], fluid[MOMX], fluid[MOMY], fluid[MOMZ], fluid[ENGY],
+                                       fluid+NCOMP_FLUID, CheckMinTemp_No, NULL_REAL, Emag,
+                                       EoS_DensEint2Temp_CPUPtr, EoS_AuxArray_Flt, EoS_AuxArray_Int, h_EoS_Table );
+
+      return true;
+
+
+} // FUNCTION : Flu_ResetByUser_CCSN
+#endif // #if ( EOS == EOS_NUCLEAR  &&  NUC_TABLE_MODE == NUC_TABLE_MODE_TEMP )
 #endif // #if ( MODEL == HYDRO )
 
 
@@ -832,8 +869,7 @@ void Init_TestProb_Hydro_CCSN()
    End_User_Ptr             = End_CCSN;
    Mis_GetTimeStep_User_Ptr = Mis_GetTimeStep_CCSN;
 #  if ( EOS == EOS_NUCLEAR  &&  NUC_TABLE_MODE == NUC_TABLE_MODE_TEMP )
-   Flu_ResetByUser_Func_Ptr = Flu_ResetByUser_Func_CCSN;
-   Flu_ResetByUser_API_Ptr  = Flu_ResetByUser_API_CCSN;
+   Flu_ResetByUser_Func_Ptr = Flu_ResetByUser_CCSN;
 #  endif
 
 #  ifdef MHD
