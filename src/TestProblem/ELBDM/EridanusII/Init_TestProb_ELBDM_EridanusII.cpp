@@ -542,7 +542,7 @@ void GetCenterOfMass( const double CM_Old[], double CM_New[], const double CM_Ma
 #     ifdef PARTICLE
       Prepare_PatchData_InitParticleDensityArray( lv );
 
-      Par_CollectParticle2OneLevel( lv, _PAR_MASS|_PAR_POSX|_PAR_POSY|_PAR_POSZ, PredictParPos_No, NULL_REAL,
+      Par_CollectParticle2OneLevel( lv, _PAR_MASS|_PAR_POSX|_PAR_POSY|_PAR_POSZ|_PAR_TYPE, PredictParPos_No, NULL_REAL,
                                     SibBufPatch, FaSibBufPatch, JustCountNPar_No, TimingSendPar_No );
 #     endif
 
