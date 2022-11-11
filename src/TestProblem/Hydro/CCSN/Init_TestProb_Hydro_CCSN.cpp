@@ -66,6 +66,7 @@ static int        CCSN_Eint_Mode;                  // Mode of obtaining internal
 void   Record_CCSN_CentralQuant();
 void   Record_CCSN_GWSignal();
 void   Detect_CoreBounce();
+void   Detect_Shock();
 double Mis_GetTimeStep_Lightbulb( const int lv, const double dTime_dt );
 double Mis_GetTimeStep_CoreCollapse( const int lv, const double dTime_dt );
 bool   Flag_CoreCollapse( const int i, const int j, const int k, const int lv, const int PID, const double *Threshold );
@@ -684,11 +685,15 @@ void Load_IC_Prof_CCSN()
 void Record_CCSN()
 {
 
-// (1) record quantities at the center
+// (1) shock detection
+   if ( CCSN_Prob != Migration_Test  &&  CCSN_Is_PostBounce )
+      Detect_Shock();
+
+// (2) record quantities at the center
    Record_CCSN_CentralQuant();
 
 
-// (2) GW signal
+// (3) GW signal
 #  ifdef GRAVITY
    if ( CCSN_GW_OUTPUT )
    {
@@ -722,7 +727,7 @@ void Record_CCSN()
 #  endif
 
 
-// (3) Check whether the core bounce occurs
+// (4) Check whether the core bounce occurs
    if ( !CCSN_Is_PostBounce )
    {
       Detect_CoreBounce();
