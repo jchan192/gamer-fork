@@ -61,7 +61,7 @@ bool Flag_CoreCollapse( const int i, const int j, const int k, const int lv, con
       MaxRefine = lv >= CCSN_CC_MaxRefine_LV2;
    }
 
-// (2) always refine innermost cell to the highest level, if allowed
+// (2) always refine innermost cells to the highest level, if allowed
    if (  !MaxRefine  &&  ( dmax * UNIT_L < 3.2e6 )  )
       Flag = true;
 
