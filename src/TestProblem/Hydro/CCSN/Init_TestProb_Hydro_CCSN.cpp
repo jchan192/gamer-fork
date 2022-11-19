@@ -689,6 +689,7 @@ void Record_CCSN()
    if ( CCSN_Prob != Migration_Test  &&  CCSN_Is_PostBounce )
       Detect_Shock();
 
+
 // (2) record quantities at the center
    Record_CCSN_CentralQuant();
 
@@ -727,7 +728,7 @@ void Record_CCSN()
 #  endif
 
 
-// (4) Check whether the core bounce occurs
+// (4) check whether the core bounce occurs
    if ( !CCSN_Is_PostBounce )
    {
       Detect_CoreBounce();

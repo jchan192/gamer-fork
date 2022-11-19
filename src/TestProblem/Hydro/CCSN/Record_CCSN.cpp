@@ -564,14 +564,14 @@ void Detect_Shock()
                for (int v=0; v<NCOMP_PASSIVE; v++)   Passive[v] = Fluid[v+1][k][j][i];
 
                const real CSqr = EoS_DensPres2CSqr_CPUPtr( Dens, Pres, Passive,
-                                                           EoS_AuxArray_Flt, EoS_AuxArray_Int, h_EoS_Table);
+                                                           EoS_AuxArray_Flt, EoS_AuxArray_Int, h_EoS_Table );
 
                Fluid[DENS][k][j][i] = SQRT( CSqr );
 
             }}} // i, j, k
 
 
-//          (2) use a naive method fo find the minimum of pressure and sound speed in the local 3x3 subarray
+//          (2) use a naive method to find the minimum of pressure and sound speed in the local 3x3 subarray
             for (int k=1; k<PS1+1; k++)  {
             for (int j=1; j<PS1+1; j++)  {
             for (int i=1; i<PS1+1; i++)  {
