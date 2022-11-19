@@ -43,10 +43,10 @@ bool Flag_CoreCollapse( const int i, const int j, const int k, const int lv, con
                               amr->patch[0][lv][PID]->EdgeL[1] + (j+0.5)*dh,
                               amr->patch[0][lv][PID]->EdgeL[2] + (k+0.5)*dh  };
 
-   const double dx = Center[0] - Pos[0];
-   const double dy = Center[1] - Pos[1];
-   const double dz = Center[2] - Pos[2];
-   const double r  = sqrt(  SQR( dx ) + SQR( dy ) + SQR( dz )  );
+   const double dx   = Center[0] - Pos[0];
+   const double dy   = Center[1] - Pos[1];
+   const double dz   = Center[2] - Pos[2];
+   const double dmax = MAX(   MAX(  fabs( dx ), fabs( dy )  ), fabs( dz )   );
 
    const double CentralDens = CCSN_CentralDens / UNIT_D;
 
@@ -61,9 +61,8 @@ bool Flag_CoreCollapse( const int i, const int j, const int k, const int lv, con
       MaxRefine = lv >= CCSN_CC_MaxRefine_LV2;
    }
 
-
-// (2) always refined to highest level in the region with r < 30 km, if allowed
-   if (  !MaxRefine  &&  ( r * UNIT_L < 3e6 )  )
+// (2) always refine innermost cell to the highest level, if allowed
+   if (  !MaxRefine  &&  ( dmax * UNIT_L < 3.2e6 )  )
       Flag = true;
 
 
