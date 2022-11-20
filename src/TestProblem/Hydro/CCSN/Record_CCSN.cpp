@@ -474,8 +474,10 @@ void Detect_Shock()
    const int NT = 1;
 #  endif
 
-   const int PS1P2   = PS1 + 2;
+   const int NGhost  = 1;
+   const int PS1P2   = PS1 + 2*NGhost;
    const int NPG_Max = FLU_GPU_NPGROUP;
+   const int TVarCC  = _DENS | _PASSIVE | _VELX | _VELY | _VELZ | _PRES;
    const int Stride1 = CUBE( PS1P2 );
    const int Stride2 = NCOMP_TOTAL * Stride1;
    const int VELX    = NCOMP_PASSIVE + 1;
@@ -492,13 +494,13 @@ void Detect_Shock()
    double Shock_Max    = -HUGE_NUMBER;
    double Shock_Ave    =  0.0;
    double Shock_Weight =  0.0;
-   bool   Shock_Found  =  false;
+   int    Shock_Found  =  false;
 
    double OMP_Shock_Min   [NT];
    double OMP_Shock_Max   [NT];
    double OMP_Shock_Ave   [NT];
    double OMP_Shock_Weight[NT];
-   bool   OMP_Shock_Found [NT];
+   int    OMP_Shock_Found [NT];
 
    real *OMP_Fluid    = new real [ 8*NPG_Max*Stride2 ];
    real *OMP_Pres_Min = new real [ 8*NPG_Max*Stride1 ];
@@ -525,12 +527,12 @@ void Detect_Shock()
 
       for (int Disp=0; Disp<NTotal; Disp+=NPG_Max)
       {
-         int NPG = ( NPG_Max < NTotal-Disp ) ? NPG_Max : NTotal-Disp;
+         const int NPG = MIN( NPG_Max, NTotal-Disp );
 
 //       (1-a) prepare the primitive and passive variables
 //             note that the data are prepared in order of density, Passive, velx, vely, velz, and pressure
          Prepare_PatchData( lv, Time[lv], OMP_Fluid, NULL,
-                            1, NPG, PID0_List+Disp, _DENS|_PASSIVE|_VELX|_VELY|_VELZ|_PRES, _NONE,
+                            NGhost, NPG, PID0_List+Disp, TVarCC, _NONE,
                             OPT__FLU_INT_SCHEME, INT_NONE, UNIT_PATCH, NSIDE_26, false,
                             OPT__BC_FLU, BC_POT_NONE, -1.0, -1.0, -1.0, -1.0, false );
 
@@ -572,16 +574,16 @@ void Detect_Shock()
 
 
 //          (2) use a naive method to find the minimum of pressure and sound speed in the local 3x3 subarray
-            for (int k=1; k<PS1+1; k++)  {
-            for (int j=1; j<PS1+1; j++)  {
-            for (int i=1; i<PS1+1; i++)  {
+            for (int k=NGhost; k<PS1+NGhost; k++)  {
+            for (int j=NGhost; j<PS1+NGhost; j++)  {
+            for (int i=NGhost; i<PS1+NGhost; i++)  {
 
                real Pres_Min_Loc = HUGE_NUMBER;
                real Cs_Min_Loc   = HUGE_NUMBER;
 
-               for (int kk=k-1; kk<k+2; kk++)  {
-               for (int jj=j-1; jj<j+2; jj++)  {
-               for (int ii=i-1; ii<i+2; ii++)  {
+               for (int kk=k-NGhost; kk<=k+NGhost; kk++)  {
+               for (int jj=j-NGhost; jj<=j+NGhost; jj++)  {
+               for (int ii=i-NGhost; ii<=i+NGhost; ii++)  {
                   Pres_Min_Loc = FMIN( Pres_Min_Loc, Fluid[PRES][kk][jj][ii] );
                   Cs_Min_Loc   = FMIN( Cs_Min_Loc,   Fluid[DENS][kk][jj][ii] );
                }}}
@@ -592,9 +594,9 @@ void Detect_Shock()
             }}} // i, j, k
 
 
-            for (int k=0; k<PS1; k++)  {  const double z = amr->patch[0][lv][PID]->EdgeL[2] + (k+0.5)*dh; const int kk = k + 1;
-            for (int j=0; j<PS1; j++)  {  const double y = amr->patch[0][lv][PID]->EdgeL[1] + (j+0.5)*dh; const int jj = j + 1;
-            for (int i=0; i<PS1; i++)  {  const double x = amr->patch[0][lv][PID]->EdgeL[0] + (i+0.5)*dh; const int ii = i + 1;
+            for (int k=0; k<PS1; k++)  {  const double z = amr->patch[0][lv][PID]->EdgeL[2] + (k+0.5)*dh; const int kk = k+NGhost;
+            for (int j=0; j<PS1; j++)  {  const double y = amr->patch[0][lv][PID]->EdgeL[1] + (j+0.5)*dh; const int jj = j+NGhost;
+            for (int i=0; i<PS1; i++)  {  const double x = amr->patch[0][lv][PID]->EdgeL[0] + (i+0.5)*dh; const int ii = i+NGhost;
 
                const double dx = x - BoxCenter[0];
                const double dy = y - BoxCenter[1];
@@ -602,13 +604,13 @@ void Detect_Shock()
                const double r  = sqrt(  SQR( dx ) + SQR( dy ) + SQR( dz )  );
 
 //             (3) evaluate the undivided gradient of pressure and the undivided divergence of velocity
-               real GradP = 0.5 * (   FABS( Fluid[PRES][kk+1][jj  ][ii  ] - Fluid[PRES][kk-1][jj  ][ii  ] )
-                                    + FABS( Fluid[PRES][kk  ][jj+1][ii  ] - Fluid[PRES][kk  ][jj-1][ii  ] )
-                                    + FABS( Fluid[PRES][kk  ][jj  ][ii+1] - Fluid[PRES][kk  ][jj  ][ii-1] )  );
+               real GradP = (real)0.5 * (   FABS( Fluid[PRES][kk+1][jj  ][ii  ] - Fluid[PRES][kk-1][jj  ][ii  ] )
+                                          + FABS( Fluid[PRES][kk  ][jj+1][ii  ] - Fluid[PRES][kk  ][jj-1][ii  ] )
+                                          + FABS( Fluid[PRES][kk  ][jj  ][ii+1] - Fluid[PRES][kk  ][jj  ][ii-1] )  );
 
-               real DivV  = 0.5 * (       ( Fluid[VELZ][kk+1][jj  ][ii  ] - Fluid[VELZ][kk-1][jj  ][ii  ] )
-                                    +     ( Fluid[VELY][kk  ][jj+1][ii  ] - Fluid[VELY][kk  ][jj-1][ii  ] )
-                                    +     ( Fluid[VELX][kk  ][jj  ][ii+1] - Fluid[VELX][kk  ][jj  ][ii-1] )  );
+               real DivV  = (real)0.5 * (       ( Fluid[VELZ][kk+1][jj  ][ii  ] - Fluid[VELZ][kk-1][jj  ][ii  ] )
+                                          +     ( Fluid[VELY][kk  ][jj+1][ii  ] - Fluid[VELY][kk  ][jj-1][ii  ] )
+                                          +     ( Fluid[VELX][kk  ][jj  ][ii+1] - Fluid[VELX][kk  ][jj  ][ii-1] )  );
 
 //             (4) examine the criteria for detecting strong shock
                if (  ( GradP >=  ThresholdFac_Pres * Pres_Min[kk][jj][ii] )  &&
@@ -622,7 +624,7 @@ void Detect_Shock()
                }
 
             }}} // i,j,k
-         } // for (int PID=0; PID<amr->NPatchComma[lv][1]; PID++)
+         } // for (int PID_IDX=0; PID_IDX<8*NPG; PID_IDX++)
       } // for (int Disp=0; Disp<NTotal; Disp+=NPG_Max)
 
       delete [] PID0_List;
