@@ -20,4 +20,6 @@ CCSN_Eint_Mode   1                                 # Mode of obtaining internal 
                                                    # ( 1=Temp Mode: Eint(dens, temp, [Ye])
                                                    #   2=Pres Mode: Eint(dens, pres, [Ye]) )
 
-CCSN_Is_PostBounce     1                           # boolean that indicates whether core bounce has occurred  [0]
+CCSN_Cent_MinRefine_LV   3                         # minimum refinement level for innermost cells  [-1]
+
+CCSN_Is_PostBounce       1                         # boolean that indicates whether core bounce has occurred  [0]

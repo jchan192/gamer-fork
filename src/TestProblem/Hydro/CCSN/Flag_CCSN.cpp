@@ -7,6 +7,7 @@ extern int    CCSN_CC_MaxRefine_LV1;
 extern int    CCSN_CC_MaxRefine_LV2;
 extern double CCSN_CC_MaxRefine_Dens1;
 extern double CCSN_CC_MaxRefine_Dens2;
+extern int    CCSN_Cent_MinRefine_LV;
 extern double CCSN_MaxRefine_RadFac;
 extern double CCSN_CentralDens;
 
@@ -43,10 +44,10 @@ bool Flag_CoreCollapse( const int i, const int j, const int k, const int lv, con
                               amr->patch[0][lv][PID]->EdgeL[1] + (j+0.5)*dh,
                               amr->patch[0][lv][PID]->EdgeL[2] + (k+0.5)*dh  };
 
-   const double dx   = Center[0] - Pos[0];
-   const double dy   = Center[1] - Pos[1];
-   const double dz   = Center[2] - Pos[2];
-   const double dmax = MAX(   MAX(  fabs( dx ), fabs( dy )  ), fabs( dz )   );
+   const double dx = Center[0] - Pos[0];
+   const double dy = Center[1] - Pos[1];
+   const double dz = Center[2] - Pos[2];
+   const double r  = sqrt(  SQR( dx ) + SQR( dy ) + SQR( dz )  );
 
    const double CentralDens = CCSN_CentralDens / UNIT_D;
 
@@ -61,8 +62,12 @@ bool Flag_CoreCollapse( const int i, const int j, const int k, const int lv, con
       MaxRefine = lv >= CCSN_CC_MaxRefine_LV2;
    }
 
-// (2) always refine innermost cells to the highest level, if allowed
-   if (  !MaxRefine  &&  ( dmax * UNIT_L < 3.2e6 )  )
+// (2) refine innermost cells to the user-defined minimum level
+   if (  !MaxRefine  &&  ( lv < CCSN_Cent_MinRefine_LV )  &&  ( r < amr->dh[lv] )  )
+      Flag = true;
+
+// (3) always refined to highest level in the region with r < 30 km
+   if (  !MaxRefine  &&  ( r * UNIT_L < 3e6 )  )
       Flag = true;
 
 
@@ -111,19 +116,20 @@ bool Flag_Lightbulb( const int i, const int j, const int k, const int lv, const 
    const real (*Rho )[PS1][PS1] = amr->patch[ amr->FluSg[lv] ][lv][PID]->fluid[DENS];
 
 
-// TODO: fine-tune the criteria
-// (1) always refined to highest level in the region with r < 30 km
-   if ( r * UNIT_L < 3e6 )
-   {
+// (1) refine innermost cells to the user-defined minimum level
+   if ( lv < CCSN_Cent_MinRefine_LV  &&  ( r < amr->dh[lv] )  )
       Flag = true;
-   }
+
+// (2) always refined to highest level in the region with r < 30 km
+   if ( r * UNIT_L < 3e6 )
+      Flag = true;
 
    else
    {
-//    (2-a) density is larger than the threshold in Input__Flag_User
+//    (3-a) density is larger than the threshold in Input__Flag_User
       if ( Rho[k][j][i] < Threshold[0] )   return false;
 
-//    (2-b) the cell width at son level (lv+1) is larger than the threshold
+//    (3-b) the cell width at son level (lv+1) is larger than the threshold
       const double Min_CellWidth = r * CCSN_MaxRefine_RadFac;
 
       Flag = ( 0.5 * dh ) > Min_CellWidth;
