@@ -2,8 +2,11 @@
 
 
        double CCSN_CentralDens;
-
+       double CCSN_Rsh_Min = 0.0;
+       double CCSN_Rsh_Max = 0.0;
+       double CCSN_Rsh_Ave = 0.0;
 extern bool   CCSN_Is_PostBounce;
+
 
 
 
@@ -137,9 +140,9 @@ void Record_CCSN_CentralQuant()
          else
          {
              FILE *file_cent_quant = fopen( filename_central_quant, "w" );
-             fprintf( file_cent_quant, "#%14s %12s %16s %16s %16s %16s %16s\n",
+             fprintf( file_cent_quant, "#%14s %12s %16s %16s %16s %16s %16s %16s %16s %16s\n",
                                        "1_Time [sec]", "2_Step", "3_PosX [cm]", "4_PosY [cm]", "5_PosZ [cm]",
-                                       "6_Dens [g/cm^3]", "7_Ye" );
+                                       "6_Dens [g/cm^3]", "7_Ye", "8_Rsh_Min [cm]", "9_Rsh_Ave [cm]", "10_Rsh_Max [cm]" );
              fclose( file_cent_quant );
          }
 
@@ -156,16 +159,16 @@ void Record_CCSN_CentralQuant()
 
       for (int v=0; v<NCOMP_TOTAL; v++)   u[v] = amr->patch[ amr->FluSg[lv] ][lv][PID]->fluid[v][k][j][i];
 
-
-      FILE *file_cent_quant = fopen( filename_central_quant, "a" );
 #     ifdef YE
       const real Ye = u[YE] / u[DENS];
 #     else
       const real Ye = (real)0.0;
 #     endif
-      fprintf( file_cent_quant, "%15.7e %12ld %16.7e %16.7e %16.7e %16.7e %16.7e\n",
+
+      FILE *file_cent_quant = fopen( filename_central_quant, "a" );
+      fprintf( file_cent_quant, "%15.7e %12ld %16.7e %16.7e %16.7e %16.7e %16.7e %16.7e %16.7e %16.7e\n",
                Time[0]*UNIT_T, Step, Data_Flt[1]*UNIT_L, Data_Flt[2]*UNIT_L, Data_Flt[3]*UNIT_L,
-               u[DENS]*UNIT_D, Ye );
+               u[DENS]*UNIT_D, Ye, CCSN_Rsh_Min*UNIT_L, CCSN_Rsh_Ave*UNIT_L, CCSN_Rsh_Max*UNIT_L );
       fclose( file_cent_quant );
 
    } // if ( MPI_Rank == 0 )
@@ -451,3 +454,213 @@ void Detect_CoreBounce()
    if ( MaxEntr > 3.0 )   CCSN_Is_PostBounce = true;
 
 } // FUNCTION : Detect_CoreBounce()
+
+
+
+//-------------------------------------------------------------------------------------------------------
+// Function    :  Detect_Shock
+// Description :  Measure the minimum, maximum, and average shock radius if a shock is present
+//
+// Note        :  1. Invoked by Record_CCSN()
+//                2. The average shock radius is weighted by the inverse cell volume
+//                3. Ref: Balsara and Spicer, 1999, JCP, 149, 270, sec 2.2
+//-------------------------------------------------------------------------------------------------------
+void Detect_Shock()
+{
+
+#  ifdef OPENMP
+   const int NT = OMP_NTHREAD;
+#  else
+   const int NT = 1;
+#  endif
+
+   const int NGhost  = 1;
+   const int PS1P2   = PS1 + 2*NGhost;
+   const int NPG_Max = FLU_GPU_NPGROUP;
+   const int TVarCC  = _DENS | _PASSIVE | _VELX | _VELY | _VELZ | _PRES;
+   const int Stride1 = CUBE( PS1P2 );
+   const int Stride2 = NCOMP_TOTAL * Stride1;
+   const int VELX    = NCOMP_PASSIVE + 1;
+   const int VELY    = NCOMP_PASSIVE + 2;
+   const int VELZ    = NCOMP_PASSIVE + 3;
+   const int PRES    = NCOMP_PASSIVE + 4;
+
+   const real   ThresholdFac_Pres = 0.5;
+   const real   ThresholdFac_Vel  = 0.1;
+   const double BoxCenter[3]      = { amr->BoxCenter[0], amr->BoxCenter[1], amr->BoxCenter[2] };
+
+
+   double Shock_Min    =  HUGE_NUMBER;
+   double Shock_Max    = -HUGE_NUMBER;
+   double Shock_Ave    =  0.0;
+   double Shock_Weight =  0.0;
+   int    Shock_Found  =  false;
+
+   double OMP_Shock_Min   [NT];
+   double OMP_Shock_Max   [NT];
+   double OMP_Shock_Ave   [NT];
+   double OMP_Shock_Weight[NT];
+   int    OMP_Shock_Found [NT];
+
+   real *OMP_Fluid    = new real [ 8*NPG_Max*Stride2 ];
+   real *OMP_Pres_Min = new real [ 8*NPG_Max*Stride1 ];
+   real *OMP_Cs_Min   = new real [ 8*NPG_Max*Stride1 ];
+
+   for (int t=0; t<NT; t++)
+   {
+      OMP_Shock_Min   [t] =  HUGE_NUMBER;
+      OMP_Shock_Max   [t] = -HUGE_NUMBER;
+      OMP_Shock_Ave   [t] = 0.0;
+      OMP_Shock_Weight[t] = 0.0;
+      OMP_Shock_Found [t] = false;
+   }
+
+
+   for (int lv=0; lv<NLEVEL; lv++)
+   {
+      const double dh        = amr->dh[lv];
+      const double _dv       = 1.0 / CUBE( dh );
+      const int    NTotal    = amr->NPatchComma[lv][1] / 8;
+            int   *PID0_List = new int [NTotal];
+
+      for (int t=0; t<NTotal; t++)  PID0_List[t] = 8*t;
+
+      for (int Disp=0; Disp<NTotal; Disp+=NPG_Max)
+      {
+         const int NPG = MIN( NPG_Max, NTotal-Disp );
+
+//       (1-a) prepare the primitive and passive variables
+//             note that the data are prepared in order of density, Passive, velx, vely, velz, and pressure
+         Prepare_PatchData( lv, Time[lv], OMP_Fluid, NULL,
+                            NGhost, NPG, PID0_List+Disp, TVarCC, _NONE,
+                            OPT__FLU_INT_SCHEME, INT_NONE, UNIT_PATCH, NSIDE_26, false,
+                            OPT__BC_FLU, BC_POT_NONE, -1.0, -1.0, -1.0, -1.0, false );
+
+
+#        pragma omp parallel for schedule( runtime )
+         for (int PID_IDX=0; PID_IDX<8*NPG; PID_IDX++)
+         {
+#           ifdef OPENMP
+            const int TID = omp_get_thread_num();
+#           else
+            const int TID = 0;
+#           endif
+
+            const int PID = 8*Disp + PID_IDX;
+
+            if ( amr->patch[0][lv][PID]->son != -1 )  continue;
+
+            real (*Fluid   )[PS1P2][PS1P2][PS1P2] = ( real(*)[PS1P2][PS1P2][PS1P2] ) ( OMP_Fluid    + PID_IDX*Stride2 );
+            real (*Pres_Min)       [PS1P2][PS1P2] = ( real(*)       [PS1P2][PS1P2] ) ( OMP_Pres_Min + PID_IDX*Stride1 );
+            real (*Cs_Min  )       [PS1P2][PS1P2] = ( real(*)       [PS1P2][PS1P2] ) ( OMP_Cs_Min   + PID_IDX*Stride1 );
+
+//          (1-b) compute the sound speed and store in the density field
+            for (int k=0; k<PS1P2; k++)  {
+            for (int j=0; j<PS1P2; j++)  {
+            for (int i=0; i<PS1P2; i++)  {
+
+               real Passive[NCOMP_PASSIVE];
+               real Dens = Fluid[DENS][k][j][i];
+               real Pres = Fluid[PRES][k][j][i];
+
+               for (int v=0; v<NCOMP_PASSIVE; v++)   Passive[v] = Fluid[v+1][k][j][i];
+
+               const real CSqr = EoS_DensPres2CSqr_CPUPtr( Dens, Pres, Passive,
+                                                           EoS_AuxArray_Flt, EoS_AuxArray_Int, h_EoS_Table );
+
+               Fluid[DENS][k][j][i] = SQRT( CSqr );
+
+            }}} // i, j, k
+
+
+//          (2) use a naive method to find the minimum of pressure and sound speed in the local 3x3 subarray
+            for (int k=NGhost; k<PS1+NGhost; k++)  {
+            for (int j=NGhost; j<PS1+NGhost; j++)  {
+            for (int i=NGhost; i<PS1+NGhost; i++)  {
+
+               real Pres_Min_Loc = HUGE_NUMBER;
+               real Cs_Min_Loc   = HUGE_NUMBER;
+
+               for (int kk=k-NGhost; kk<=k+NGhost; kk++)  {
+               for (int jj=j-NGhost; jj<=j+NGhost; jj++)  {
+               for (int ii=i-NGhost; ii<=i+NGhost; ii++)  {
+                  Pres_Min_Loc = FMIN( Pres_Min_Loc, Fluid[PRES][kk][jj][ii] );
+                  Cs_Min_Loc   = FMIN( Cs_Min_Loc,   Fluid[DENS][kk][jj][ii] );
+               }}}
+
+               Pres_Min[k][j][i] = Pres_Min_Loc;
+               Cs_Min  [k][j][i] = Cs_Min_Loc;
+
+            }}} // i, j, k
+
+
+            for (int k=0; k<PS1; k++)  {  const double z = amr->patch[0][lv][PID]->EdgeL[2] + (k+0.5)*dh; const int kk = k+NGhost;
+            for (int j=0; j<PS1; j++)  {  const double y = amr->patch[0][lv][PID]->EdgeL[1] + (j+0.5)*dh; const int jj = j+NGhost;
+            for (int i=0; i<PS1; i++)  {  const double x = amr->patch[0][lv][PID]->EdgeL[0] + (i+0.5)*dh; const int ii = i+NGhost;
+
+               const double dx = x - BoxCenter[0];
+               const double dy = y - BoxCenter[1];
+               const double dz = z - BoxCenter[2];
+               const double r  = sqrt(  SQR( dx ) + SQR( dy ) + SQR( dz )  );
+
+//             (3) evaluate the undivided gradient of pressure and the undivided divergence of velocity
+               real GradP = (real)0.5 * (   FABS( Fluid[PRES][kk+1][jj  ][ii  ] - Fluid[PRES][kk-1][jj  ][ii  ] )
+                                          + FABS( Fluid[PRES][kk  ][jj+1][ii  ] - Fluid[PRES][kk  ][jj-1][ii  ] )
+                                          + FABS( Fluid[PRES][kk  ][jj  ][ii+1] - Fluid[PRES][kk  ][jj  ][ii-1] )  );
+
+               real DivV  = (real)0.5 * (       ( Fluid[VELZ][kk+1][jj  ][ii  ] - Fluid[VELZ][kk-1][jj  ][ii  ] )
+                                          +     ( Fluid[VELY][kk  ][jj+1][ii  ] - Fluid[VELY][kk  ][jj-1][ii  ] )
+                                          +     ( Fluid[VELX][kk  ][jj  ][ii+1] - Fluid[VELX][kk  ][jj  ][ii-1] )  );
+
+//             (4) examine the criteria for detecting strong shock
+               if (  ( GradP >=  ThresholdFac_Pres * Pres_Min[kk][jj][ii] )  &&
+                     ( DivV  <= -ThresholdFac_Vel  * Cs_Min  [kk][jj][ii] )      )
+               {
+                  OMP_Shock_Min   [TID]  = fmin( r, OMP_Shock_Min[TID] );
+                  OMP_Shock_Max   [TID]  = fmax( r, OMP_Shock_Max[TID] );
+                  OMP_Shock_Ave   [TID] += r * _dv;
+                  OMP_Shock_Weight[TID] += _dv;
+                  OMP_Shock_Found [TID]  = true;
+               }
+
+            }}} // i,j,k
+         } // for (int PID_IDX=0; PID_IDX<8*NPG; PID_IDX++)
+      } // for (int Disp=0; Disp<NTotal; Disp+=NPG_Max)
+
+      delete [] PID0_List;
+   } // for (int lv=0; lv<NLEVEL; lv++)
+
+
+// free memory
+   delete [] OMP_Fluid;
+   delete [] OMP_Pres_Min;
+   delete [] OMP_Cs_Min;
+
+
+// collect data over all OpenMP threads
+   for (int t=0; t<NT; t++)
+   {
+      Shock_Min     = fmin( Shock_Min, OMP_Shock_Min[t] );
+      Shock_Max     = fmax( Shock_Max, OMP_Shock_Max[t] );
+      Shock_Ave    += OMP_Shock_Ave[t];
+      Shock_Weight += OMP_Shock_Weight[t];
+      Shock_Found  |= OMP_Shock_Found[t];
+   }
+
+
+// collect data from all ranks (in-place reduction)
+#  ifndef SERIAL
+   MPI_Allreduce( MPI_IN_PLACE, &Shock_Min,    1, MPI_DOUBLE, MPI_MIN, MPI_COMM_WORLD );
+   MPI_Allreduce( MPI_IN_PLACE, &Shock_Max,    1, MPI_DOUBLE, MPI_MAX, MPI_COMM_WORLD );
+   MPI_Allreduce( MPI_IN_PLACE, &Shock_Ave,    1, MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD );
+   MPI_Allreduce( MPI_IN_PLACE, &Shock_Weight, 1, MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD );
+   MPI_Allreduce( MPI_IN_PLACE, &Shock_Found,  1, MPI_INT,    MPI_BOR, MPI_COMM_WORLD );
+#  endif // ifndef SERIAL
+
+
+// update the shock radius
+   CCSN_Rsh_Min = ( Shock_Found ) ? Shock_Min                : 0.0;
+   CCSN_Rsh_Max = ( Shock_Found ) ? Shock_Max                : 0.0;
+   CCSN_Rsh_Ave = ( Shock_Found ) ? Shock_Ave / Shock_Weight : 0.0;
+
+} // FUNCTION : Detect_Shock()
