@@ -7,7 +7,6 @@ extern int    CCSN_CC_MaxRefine_LV1;
 extern int    CCSN_CC_MaxRefine_LV2;
 extern double CCSN_CC_MaxRefine_Dens1;
 extern double CCSN_CC_MaxRefine_Dens2;
-extern int    CCSN_Cent_MinRefine_LV;
 extern double CCSN_MaxRefine_RadFac;
 extern double CCSN_CentralDens;
 
@@ -62,11 +61,8 @@ bool Flag_CoreCollapse( const int i, const int j, const int k, const int lv, con
       MaxRefine = lv >= CCSN_CC_MaxRefine_LV2;
    }
 
-// (2) refine innermost cells to the user-defined minimum level
-   if (  !MaxRefine  &&  ( lv < CCSN_Cent_MinRefine_LV )  &&  ( r < amr->dh[lv] )  )
-      Flag = true;
 
-// (3) always refined to highest level in the region with r < 30 km
+// (2) always refined to highest level in the region with r < 30 km
    if (  !MaxRefine  &&  ( r < amr->dh[lv] )  &&  ( amr->dh[lv] * sqrt(0.75) * UNIT_L >= 3e6 )  )
       Flag = true;
 
@@ -119,11 +115,8 @@ bool Flag_Lightbulb( const int i, const int j, const int k, const int lv, const 
    const real (*Rho )[PS1][PS1] = amr->patch[ amr->FluSg[lv] ][lv][PID]->fluid[DENS];
 
 
-// (1) refine innermost cells to the user-defined minimum level
-   if ( lv < CCSN_Cent_MinRefine_LV  &&  ( r < amr->dh[lv] )  )
-      Flag = true;
-
-// (2) always refined to highest level in the region with r < 30 km
+// TODO: fine-tune the criteria
+// (1) always refined to highest level in the region with r < 30 km
    if (  ( r < amr->dh[lv] )  &&  ( amr->dh[lv] * sqrt(0.75) * UNIT_L >= 3e6 )  )
       Flag = true;
 
@@ -132,10 +125,10 @@ bool Flag_Lightbulb( const int i, const int j, const int k, const int lv, const 
 
    else
    {
-//    (3-a) density is larger than the threshold in Input__Flag_User
+//    (2-a) density is larger than the threshold in Input__Flag_User
       if ( Rho[k][j][i] < Threshold[0] )   return false;
 
-//    (3-b) the cell width at son level (lv+1) is larger than the threshold
+//    (2-b) the cell width at son level (lv+1) is larger than the threshold
       const double Min_CellWidth = r * CCSN_MaxRefine_RadFac;
 
       Flag = ( 0.5 * dh ) > Min_CellWidth;

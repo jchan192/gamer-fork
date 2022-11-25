@@ -20,7 +20,6 @@ CCSN_Eint_Mode   1                                 # Mode of obtaining internal 
                                                    # ( 1=Temp Mode: Eint(dens, temp, [Ye])
                                                    #   2=Pres Mode: Eint(dens, pres, [Ye]) )
 
-CCSN_Cent_MinRefine_LV    3                        # minimum refinement level for innermost cells  [-1]
 CCSN_CC_MaxRefine_Flag1   1                        # enable limiting maximum refinement level 1 [0]
 CCSN_CC_MaxRefine_Flag2   1                        # enable limiting maximum refinement level 2 [0]
 CCSN_CC_MaxRefine_LV1     6                        # reduced maximum refinement level 1 to this value [MAX_LEVEL-2]

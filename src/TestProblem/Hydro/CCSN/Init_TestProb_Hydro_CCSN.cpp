@@ -47,7 +47,6 @@ static int        CCSN_Eint_Mode;                  // Mode of obtaining internal
                                                    // ( 1=Temp Mode: Eint(dens, temp, [Ye])
                                                    //   2=Pres Mode: Eint(dens, pres, [Ye]) )
 
-       int        CCSN_Cent_MinRefine_LV;          // minimum refinement level for innermost cells
        bool       CCSN_CC_MaxRefine_Flag1;         // flag for limiting maximum refinement level 1
        bool       CCSN_CC_MaxRefine_Flag2;         // flag for limiting maximum refinement level 2
        int        CCSN_CC_MaxRefine_LV1;           // reduced maximum refinement level 1 to this value
@@ -154,7 +153,6 @@ void SetParameter()
    ReadPara->Add( "CCSN_GW_OUTPUT",          &CCSN_GW_OUTPUT,          false,         Useless_bool,     Useless_bool      );
    ReadPara->Add( "CCSN_GW_DT",              &CCSN_GW_DT,              1.0,           Eps_double,       NoMax_double      );
    ReadPara->Add( "CCSN_Eint_Mode",          &CCSN_Eint_Mode,          2,             1,                2                 );
-   ReadPara->Add( "CCSN_Cent_MinRefine_LV",  &CCSN_Cent_MinRefine_LV,  -1,            NoMin_int,        MAX_LEVEL         );
    ReadPara->Add( "CCSN_CC_MaxRefine_Flag1", &CCSN_CC_MaxRefine_Flag1, false,         Useless_bool,     Useless_bool      );
    ReadPara->Add( "CCSN_CC_MaxRefine_Flag2", &CCSN_CC_MaxRefine_Flag2, false,         Useless_bool,     Useless_bool      );
    ReadPara->Add( "CCSN_CC_MaxRefine_LV1",   &CCSN_CC_MaxRefine_LV1,   -1,            NoMin_int,        MAX_LEVEL-1       );
@@ -293,7 +291,6 @@ void SetParameter()
       Aux_Message( stdout, "  sampling interval of GW signals                     = %13.7e\n", CCSN_GW_DT               );
       Aux_Message( stdout, "  mode for obtaining internal energy                  = %d\n",     CCSN_Eint_Mode           );
       if ( CCSN_Prob != Migration_Test ) {
-      Aux_Message( stdout, "  minimum refinement lv for innermost cells           = %d\n",     CCSN_Cent_MinRefine_LV   );
       Aux_Message( stdout, "  radial factor for maximum refine level              = %13.7e\n", CCSN_MaxRefine_RadFac    );
       Aux_Message( stdout, "  scaling factor for lightbulb dt                     = %13.7e\n", CCSN_LB_TimeFac          );
       Aux_Message( stdout, "  has core bounce occurred                            = %d\n",     CCSN_Is_PostBounce       );   }
