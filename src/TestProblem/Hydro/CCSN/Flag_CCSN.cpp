@@ -63,10 +63,7 @@ bool Flag_CoreCollapse( const int i, const int j, const int k, const int lv, con
 
 
 // (2) always refined to highest level in the region with r < 30 km
-   if (  !MaxRefine  &&  ( r < amr->dh[lv] )  &&  ( amr->dh[lv] * sqrt(0.75) * UNIT_L >= 3e6 )  )
-      Flag = true;
-
-   if (  !MaxRefine  &&  ( r * UNIT_L < 3e6 )  )
+   if (   !MaxRefine  &&  (  ( r * UNIT_L < 3e6 ) || ( r < amr->dh[lv] )  )   )
       Flag = true;
 
 
@@ -117,9 +114,6 @@ bool Flag_Lightbulb( const int i, const int j, const int k, const int lv, const 
 
 // TODO: fine-tune the criteria
 // (1) always refined to highest level in the region with r < 30 km
-   if (  ( r < amr->dh[lv] )  &&  ( amr->dh[lv] * sqrt(0.75) * UNIT_L >= 3e6 )  )
-      Flag = true;
-
    if ( r * UNIT_L < 3e6 )
       Flag = true;
 
