@@ -62,9 +62,17 @@ bool Flag_CoreCollapse( const int i, const int j, const int k, const int lv, con
    }
 
 
-// (2) always refined to highest level in the region with r < 30 km, if allowed
-   if (  !MaxRefine  &&  ( r * UNIT_L < 3e6 )  )
-      Flag = true;
+// (2) always refined to highest level in the region with r < 30 km
+   if ( !MaxRefine )
+   {
+//    (2-a) always refine the innermost cells
+      if ( r < amr->dh[lv] )
+         Flag = true;
+
+//    (2-b) refine the region with r < 30 km
+      if ( r * UNIT_L < 3e6 )
+         Flag = true;
+   }
 
 
    return Flag;
@@ -115,9 +123,7 @@ bool Flag_Lightbulb( const int i, const int j, const int k, const int lv, const 
 // TODO: fine-tune the criteria
 // (1) always refined to highest level in the region with r < 30 km
    if ( r * UNIT_L < 3e6 )
-   {
       Flag = true;
-   }
 
    else
    {
