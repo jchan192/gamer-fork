@@ -58,9 +58,9 @@ static int        CCSN_Eint_Mode;                  // Mode of obtaining internal
        double     CCSN_CC_Red_DT;                  // reduced time step (in s) when the central density exceeds CCSN_CC_CentralDensFac before bounce
        double     CCSN_MaxRefine_RadFac;           // factor that determines the maximum refinement level based on distance from the box center
        double     CCSN_LB_TimeFac;                 // factor that scales the dt constrained by lightbulb scheme
-       bool       CCSN_CC_Form_Rot;                // add formulated initial angular momentum (0=off, 1=on)
-       double     CCSN_CC_Form_Rot_R_0;            // rotational parameter R_0     in the rotatinal profile ( Omega(r)=Omega_0*[R_0^2/(r^2+R_0^2)] )
-       double     CCSN_CC_Form_Rot_Omega_0;        // rotational parameter Omega_0 in the rotatinal profile ( Omega(r)=Omega_0*[R_0^2/(r^2+R_0^2)] )
+       bool       CCSN_CC_Form_Rot;                // add formulated shell-type initial angular velocity    ( Omega(r)=Omega_0*[R_0^2/(r^2+R_0^2)], r: spehrical radius )
+       double     CCSN_CC_Form_Rot_R_0;            // rotational parameter R_0     in the rotatinal profile ( Omega(r)=Omega_0*[R_0^2/(r^2+R_0^2)], r: spherical radius )
+       double     CCSN_CC_Form_Rot_Omega_0;        // rotational parameter Omega_0 in the rotatinal profile ( Omega(r)=Omega_0*[R_0^2/(r^2+R_0^2)], r: spherical radius )
        bool       CCSN_CC_Rot_Mag;                 // flag for magnifying rotational velocity by constant, CCSN_Rot_Mag_Fact (0=off, 1=on)
        double     CCSN_CC_Rot_Mag_Fact;            // magnification factor for rotational veolocity
 
@@ -413,7 +413,7 @@ void SetGridIC( real fluid[], const double x, const double y, const double z, co
             double Omega_r, Vel_phi;
 
       if ( CCSN_CC_Form_Rot ) {
-//       rotational profile from the formula ( Omega(r)=Omega_0*[R_0^2/(r^2+R_0^2)] )
+//       rotational profile from the formula ( Omega(r)=Omega_0*[R_0^2/(r^2+R_0^2)], r: spherical radius )
          const double R_0     = CCSN_CC_Form_Rot_R_0 / UNIT_L;
          const double Omega_0 = CCSN_CC_Form_Rot_Omega_0 * UNIT_T;
                       Omega_r = Omega_0 * SQR(R_0) / ( SQR(r) + SQR(R_0) );
