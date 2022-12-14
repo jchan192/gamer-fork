@@ -58,11 +58,11 @@ static int        CCSN_Eint_Mode;                  // Mode of obtaining internal
        double     CCSN_CC_Red_DT;                  // reduced time step (in s) when the central density exceeds CCSN_CC_CentralDensFac before bounce
        double     CCSN_MaxRefine_RadFac;           // factor that determines the maximum refinement level based on distance from the box center
        double     CCSN_LB_TimeFac;                 // factor that scales the dt constrained by lightbulb scheme
-       bool       CCSN_CC_Form_Rot;                // add formulated shell-type initial angular velocity    ( Omega(r)=Omega_0*[R_0^2/(r^2+R_0^2)], r: spehrical radius )
-       double     CCSN_CC_Form_Rot_R_0;            // rotational parameter R_0     in the rotatinal profile ( Omega(r)=Omega_0*[R_0^2/(r^2+R_0^2)], r: spherical radius )
-       double     CCSN_CC_Form_Rot_Omega_0;        // rotational parameter Omega_0 in the rotatinal profile ( Omega(r)=Omega_0*[R_0^2/(r^2+R_0^2)], r: spherical radius )
-       bool       CCSN_CC_Rot_Mag;                 // flag for magnifying rotational velocity by constant, CCSN_Rot_Mag_Fact (0=off, 1=on)
-       double     CCSN_CC_Rot_Mag_Fact;            // magnification factor for rotational veolocity
+       bool       CCSN_CC_Rot;                     // add formulated shell-type initial angular velocity
+                                                   // ( Omega(r)=Omega_0*[R_0^2/(r^2+R_0^2)], r: spherical radius )
+       double     CCSN_CC_Rot_R0;                  // characteristic radius, R_0, in the formulated rotational profile
+       double     CCSN_CC_Rot_Omega0;              // central rotational velocity, Omega_0, in the formulated rotational profile
+       double     CCSN_CC_Rot_Amp;                 // amplification factor for rotational velocity
 
        bool       CCSN_Is_PostBounce = false;      // boolean that indicates whether core bounce has occurred
 // =======================================================================================
@@ -170,11 +170,10 @@ void SetParameter()
    ReadPara->Add( "CCSN_MaxRefine_RadFac",    &CCSN_MaxRefine_RadFac,    0.15,          0.0,              NoMax_double      );
    ReadPara->Add( "CCSN_LB_TimeFac",          &CCSN_LB_TimeFac,          0.1,           Eps_double,       1.0               );
    ReadPara->Add( "CCSN_Is_PostBounce",       &CCSN_Is_PostBounce,       false,         Useless_bool,     Useless_bool      );
-   ReadPara->Add( "CCSN_CC_Form_Rot",         &CCSN_CC_Form_Rot,         false,         Useless_bool,     Useless_bool      );
-   ReadPara->Add( "CCSN_CC_Form_Rot_R_0",     &CCSN_CC_Form_Rot_R_0,     2.0e8,         0.0,              NoMax_double      );
-   ReadPara->Add( "CCSN_CC_Form_Rot_Omega_0", &CCSN_CC_Form_Rot_Omega_0, 0.5,           0.0,              NoMax_double      );
-   ReadPara->Add( "CCSN_CC_Rot_Mag",          &CCSN_CC_Rot_Mag,          false,         Useless_bool,     Useless_bool      );
-   ReadPara->Add( "CCSN_CC_Rot_Mag_Fact",     &CCSN_CC_Rot_Mag_Fact,     1.0,           NoMin_double,     NoMax_double      );
+   ReadPara->Add( "CCSN_CC_Rot",              &CCSN_CC_Rot,              false,         Useless_bool,     Useless_bool      );
+   ReadPara->Add( "CCSN_CC_Rot_R0",           &CCSN_CC_Rot_R0,           2.0e8,         0.0,              NoMax_double      );
+   ReadPara->Add( "CCSN_CC_Rot_Omega0",       &CCSN_CC_Rot_Omega0,       0.5,           0.0,              NoMax_double      );
+   ReadPara->Add( "CCSN_CC_Rot_Amp",          &CCSN_CC_Rot_Amp,          -1.0,          NoMin_double,     NoMax_double      );
 
    ReadPara->Read( FileName );
 
@@ -314,11 +313,11 @@ void SetParameter()
       Aux_Message( stdout, "  central density threshold for CCSN_CC_MaxRefine_LV2 = %13.7e\n", CCSN_CC_MaxRefine_Dens2  ); }
       Aux_Message( stdout, "  central density factor for reducing dt              = %13.7e\n", CCSN_CC_CentralDensFac   );
       Aux_Message( stdout, "  reduced dt near bounce                              = %13.7e\n", CCSN_CC_Red_DT           );   }
-      if ( CCSN_CC_Form_Rot ) {
-      Aux_Message( stdout, "  rotational parameter R_0                            = %13.7e\n", CCSN_CC_Form_Rot_R_0     );
-      Aux_Message( stdout, "  rotational parameter Omega_0                        = %13.7e\n", CCSN_CC_Form_Rot_Omega_0 ); }
-      if ( CCSN_CC_Rot_Mag )
-      Aux_Message( stdout, "  magnification factor for rotational profile         = %13.7e\n", CCSN_CC_Rot_Mag_Fact     );
+      if ( CCSN_CC_Rot ) {
+      Aux_Message( stdout, "  characteristic rotational radius R_0                = %13.7e\n", CCSN_CC_Rot_R0           );
+      Aux_Message( stdout, "  central rotational velocity Omega_0                 = %13.7e\n", CCSN_CC_Rot_Omega0       ); }
+      if ( CCSN_CC_Rot_Amp > 0.0 )
+      Aux_Message( stdout, "  amplification factor for rotational profile         = %13.7e\n", CCSN_CC_Rot_Amp          );
       Aux_Message( stdout, "=======================================================================================\n"  );
    }
 
@@ -412,12 +411,13 @@ void SetGridIC( real fluid[], const double x, const double y, const double z, co
       const double Sin_phi = y0/r_xy;
             double Omega_r, Vel_phi;
 
-      if ( CCSN_CC_Form_Rot ) {
+      if ( CCSN_CC_Rot ) {
 //       rotational profile from the formula ( Omega(r)=Omega_0*[R_0^2/(r^2+R_0^2)], r: spherical radius )
-         const double R_0     = CCSN_CC_Form_Rot_R_0 / UNIT_L;
-         const double Omega_0 = CCSN_CC_Form_Rot_Omega_0 * UNIT_T;
+         const double R_0     = CCSN_CC_Rot_R0 / UNIT_L;
+         const double Omega_0 = CCSN_CC_Rot_Omega0 * UNIT_T;
                       Omega_r = Omega_0 * SQR(R_0) / ( SQR(r) + SQR(R_0) );
       }
+
       else
       {
          Omega_r  = Mis_InterpolateFromTable( CCSN_Prof_NBin, Table_R, CCSN_Prof+CCSN_ColIdx_Omega*CCSN_Prof_NBin, r );
@@ -425,12 +425,12 @@ void SetGridIC( real fluid[], const double x, const double y, const double z, co
       }
 
 //    check whether we are going to artificially magnify the rotation
-      if ( CCSN_CC_Rot_Mag )
-         Omega_r = Omega_r * CCSN_CC_Rot_Mag_Fact;
+      if ( CCSN_CC_Rot_Amp > 0.0 )
+         Omega_r *= CCSN_CC_Rot_Amp;
 
       Vel_phi  = r_xy * Omega_r;
-      Momx    -= Dens * ( Vel_phi * Sin_phi );
-      Momy    += Dens * ( Vel_phi * Cos_phi );
+      Momx    -= Dens * Vel_phi * Sin_phi;
+      Momy    += Dens * Vel_phi * Cos_phi;
    }
 
 // calculate the internal energy
