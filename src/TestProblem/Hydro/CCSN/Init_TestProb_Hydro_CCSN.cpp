@@ -31,7 +31,6 @@ static int        CCSN_ColIdx_Pres;                // column index of pressure  
 static int        CCSN_ColIdx_Velr;                // column index of radial velocity in the input profile
 static int        CCSN_ColIdx_Ye;                  // column index of Ye              in the input profile
 static int        CCSN_ColIdx_Temp;                // column index of temperature     in the input profile
-static int        CCSN_ColIdx_Entr;                // column index of entropy         in the input profile
 
 #ifdef MHD
 static CCSN_Mag_t CCSN_Mag;                        // target magnetic field profile
@@ -176,15 +175,15 @@ void SetParameter()
                             CCSN_TargetCols[0] =  0;  CCSN_TargetCols[1] =  1;  CCSN_TargetCols[2] =  2;  CCSN_TargetCols[3] =  3;
                             CCSN_TargetCols[4] = -1;  CCSN_TargetCols[5] = -1;  CCSN_TargetCols[6] = -1;
                             CCSN_ColIdx_R      =  0;  CCSN_ColIdx_Dens   =  2;  CCSN_ColIdx_Pres   =  3;  CCSN_ColIdx_Velr   =  1;
-                            CCSN_ColIdx_Ye     = -1;  CCSN_ColIdx_Temp   = -1;  CCSN_ColIdx_Entr   = -1;
+                            CCSN_ColIdx_Ye     = -1;  CCSN_ColIdx_Temp   = -1;
                             sprintf( CCSN_Name, "GREP migration test" );
                             break;
 
-      case Post_Bounce    : CCSN_NCol = 7;
-                            CCSN_TargetCols[0] =  0;  CCSN_TargetCols[1] =  2;  CCSN_TargetCols[2] =  3;  CCSN_TargetCols[3] =  4;
-                            CCSN_TargetCols[4] =  5;  CCSN_TargetCols[5] =  6;  CCSN_TargetCols[6] =  7;
+      case Post_Bounce    : CCSN_NCol = 6;
+                            CCSN_TargetCols[0] =  0;  CCSN_TargetCols[1] =  1;  CCSN_TargetCols[2] =  2;  CCSN_TargetCols[3] =  3;
+                            CCSN_TargetCols[4] =  4;  CCSN_TargetCols[5] =  5;  CCSN_TargetCols[6] = -1;
                             CCSN_ColIdx_R      =  0;  CCSN_ColIdx_Dens   =  1;  CCSN_ColIdx_Pres   =  5;  CCSN_ColIdx_Velr   =  3;
-                            CCSN_ColIdx_Ye     =  2;  CCSN_ColIdx_Temp   =  4;  CCSN_ColIdx_Entr   =  6;
+                            CCSN_ColIdx_Ye     =  4;  CCSN_ColIdx_Temp   =  2;
                             sprintf( CCSN_Name, "Post bounce test" );
                             break;
 
@@ -192,7 +191,7 @@ void SetParameter()
                             CCSN_TargetCols[0] =  0;  CCSN_TargetCols[1] =  1;  CCSN_TargetCols[2] =  2;  CCSN_TargetCols[3] =  3;
                             CCSN_TargetCols[4] =  4;  CCSN_TargetCols[5] =  5;  CCSN_TargetCols[6] = -1;
                             CCSN_ColIdx_R      =  0;  CCSN_ColIdx_Dens   =  1;  CCSN_ColIdx_Pres   =  5;  CCSN_ColIdx_Velr   =  3;
-                            CCSN_ColIdx_Ye     =  4;  CCSN_ColIdx_Temp   =  2;  CCSN_ColIdx_Entr   = -1;
+                            CCSN_ColIdx_Ye     =  4;  CCSN_ColIdx_Temp   =  2;
                             sprintf( CCSN_Name, "Core collapse test" );
                             break;
 
@@ -347,7 +346,7 @@ void SetGridIC( real fluid[], const double x, const double y, const double z, co
    const double z0 = z - BoxCenter[2];
    const double r  = sqrt(  SQR( x0 ) + SQR( y0 ) + SQR( z0 )  );
 
-   double Dens, Velr, Pres, Momx, Momy, Momz, Eint, Etot, Ye, Temp, Entr;
+   double Dens, Velr, Pres, Momx, Momy, Momz, Eint, Etot, Ye, Temp;
 
    Dens = Mis_InterpolateFromTable( CCSN_Prof_NBin, Table_R, Table_Dens, r );
    Velr = Mis_InterpolateFromTable( CCSN_Prof_NBin, Table_R, Table_Velr, r );
@@ -364,14 +363,11 @@ void SetGridIC( real fluid[], const double x, const double y, const double z, co
    {
       Ye   = Mis_InterpolateFromTable( CCSN_Prof_NBin, Table_R, CCSN_Prof+CCSN_ColIdx_Ye  *CCSN_Prof_NBin, r );
       Temp = Mis_InterpolateFromTable( CCSN_Prof_NBin, Table_R, CCSN_Prof+CCSN_ColIdx_Temp*CCSN_Prof_NBin, r );  // in Kelvin
-      Entr = Mis_InterpolateFromTable( CCSN_Prof_NBin, Table_R, CCSN_Prof+CCSN_ColIdx_Entr*CCSN_Prof_NBin, r );
 
       if ( Ye   == NULL_REAL )
          Aux_Error( ERROR_INFO, "interpolation failed for Ye at radius %13.7e !!\n", r );
       if ( Temp == NULL_REAL )
          Aux_Error( ERROR_INFO, "interpolation failed for temperature at radius %13.7e !!\n", r );
-      if ( Entr == NULL_REAL )
-         Aux_Error( ERROR_INFO, "interpolation failed for entropy at radius %13.7e !!\n", r );
    }
    else if ( CCSN_Prob == Core_Collapse )
    {
