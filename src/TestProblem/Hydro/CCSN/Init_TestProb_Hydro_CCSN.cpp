@@ -174,6 +174,7 @@ void SetParameter()
    ReadPara->Add( "CCSN_CC_Rot_R0",           &CCSN_CC_Rot_R0,           2.0e8,         0.0,              NoMax_double      );
    ReadPara->Add( "CCSN_CC_Rot_Omega0",       &CCSN_CC_Rot_Omega0,       0.5,           0.0,              NoMax_double      );
    ReadPara->Add( "CCSN_CC_Rot_Fac",          &CCSN_CC_Rot_Fac,          -1.0,          NoMin_double,     NoMax_double      );
+   ReadPara->Add( "CCSN_Is_PostBounce",       &CCSN_Is_PostBounce,       false,         Useless_bool,     Useless_bool      );
 
    ReadPara->Read( FileName );
 
