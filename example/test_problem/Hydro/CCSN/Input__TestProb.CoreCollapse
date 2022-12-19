@@ -31,11 +31,11 @@ CCSN_CC_CentralDensFac    1.0e13                   # factor that reduces the dt 
 CCSN_CC_Red_DT            1.0e-5                   # reduced time step (in s) when the central density exceeds CCSN_CC_CentralDensFac before bounce  [1e-5]
 CCSN_LB_TimeFac           0.10                     # factor that scales the dt constrained by lightbulb scheme  [0.1]
 
-CCSN_Is_Rotation          1                        # boolean that indicates whether we add rotational profile                                      [1]
-CCSN_CC_Rot               0                        # add formulated shell-type initial rotational velocity
-                                                   # ( Omega(r)=Omega_0*[R_0^2/(r^2+R_0^2)], r: spherical radius )  (0=off, 1=on)                  [0]
-CCSN_CC_Rot_R0            1.03376e8                # characteristic radius, R_0, in the formulated rotational profile                              [2.0e8]
-CCSN_CC_Rot_Omega0        2.0                      # central rotational velocity, Omega_0, in the formulated rotational profile                    [0.5]
+CCSN_CC_Rot               2                        # mode for rotational profile  (0:off, 1:formulated-rotation, 2:IC)                             [2]
+CCSN_CC_Rot_R0            1.03376e8                # characteristic radius, R_0, in the formulated rotational profile
+                                                   # ( Omega(r)=Omega_0*[R_0^2/(r^2+R_0^2)], r: spherical radius )                                 [2.0e8]
+CCSN_CC_Rot_Omega0        2.0                      # central rotational velocity, Omega_0, in the formulated rotational profile
+                                                   # ( Omega(r)=Omega_0*[R_0^2/(r^2+R_0^2)], r: spherical radius )                                 [0.5]
 CCSN_CC_Rot_Fac          -1.0                      # multiplication factor for the rotational profile (only for a tabular rotation)  (<=0 -> off)  [-1.0]
 
 CCSN_Is_PostBounce        0                        # boolean that indicates whether core bounce has occurred  [0]

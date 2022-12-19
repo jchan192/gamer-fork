@@ -58,11 +58,11 @@ static int        CCSN_Eint_Mode;                  // Mode of obtaining internal
        double     CCSN_CC_Red_DT;                  // reduced time step (in s) when the central density exceeds CCSN_CC_CentralDensFac before bounce
        double     CCSN_MaxRefine_RadFac;           // factor that determines the maximum refinement level based on distance from the box center
        double     CCSN_LB_TimeFac;                 // factor that scales the dt constrained by lightbulb scheme
-       bool       CCSN_Is_Rotation = false;        // boolean that indicates whether we add rotational profile
-       bool       CCSN_CC_Rot;                     // add formulated shell-type initial rotational velocity
-                                                   // ( Omega(r)=Omega_0*[R_0^2/(r^2+R_0^2)], r: spherical radius )
+       int        CCSN_CC_Rot;                     // mode for rotational profile (0:off, 1:formulated-rotation, 2:IC)
        double     CCSN_CC_Rot_R0;                  // characteristic radius, R_0, in the formulated rotational profile
+                                                   // ( Omega(r)=Omega_0*[R_0^2/(r^2+R_0^2)], r: spherical radius )
        double     CCSN_CC_Rot_Omega0;              // central rotational velocity, Omega_0, in the formulated rotational profile
+                                                   // ( Omega(r)=Omega_0*[R_0^2/(r^2+R_0^2)], r: spherical radius )
        double     CCSN_CC_Rot_Fac;                 // multiplication factor for the rotational profile (only for a tabular rotation)
 
        bool       CCSN_Is_PostBounce = false;      // boolean that indicates whether core bounce has occurred
@@ -170,9 +170,7 @@ void SetParameter()
    ReadPara->Add( "CCSN_CC_Red_DT",           &CCSN_CC_Red_DT,           1.0e-5,        Eps_double,       NoMax_double      );
    ReadPara->Add( "CCSN_MaxRefine_RadFac",    &CCSN_MaxRefine_RadFac,    0.15,          0.0,              NoMax_double      );
    ReadPara->Add( "CCSN_LB_TimeFac",          &CCSN_LB_TimeFac,          0.1,           Eps_double,       1.0               );
-   ReadPara->Add( "CCSN_Is_PostBounce",       &CCSN_Is_PostBounce,       false,         Useless_bool,     Useless_bool      );
-   ReadPara->Add( "CCSN_Is_Rotation",         &CCSN_Is_Rotation,         true,          Useless_bool,     Useless_bool      );
-   ReadPara->Add( "CCSN_CC_Rot",              &CCSN_CC_Rot,              false,         Useless_bool,     Useless_bool      );
+   ReadPara->Add( "CCSN_CC_Rot",              &CCSN_CC_Rot,              2,             0,                2                 );
    ReadPara->Add( "CCSN_CC_Rot_R0",           &CCSN_CC_Rot_R0,           2.0e8,         0.0,              NoMax_double      );
    ReadPara->Add( "CCSN_CC_Rot_Omega0",       &CCSN_CC_Rot_Omega0,       0.5,           0.0,              NoMax_double      );
    ReadPara->Add( "CCSN_CC_Rot_Fac",          &CCSN_CC_Rot_Fac,          -1.0,          NoMin_double,     NoMax_double      );
@@ -261,11 +259,9 @@ void SetParameter()
                        CCSN_CC_MaxRefine_Dens2, "CCSN_CC_MaxRefine_Dens1", CCSN_CC_MaxRefine_Dens1 );
       }
 
-      if ( CCSN_Is_Rotation ) {
-//       do not mix CCSN_CC_Rot and CCSN_CC_Rot_Fac
-         if ( CCSN_CC_Rot  &&  CCSN_CC_Rot_Fac > 0.0 )
-            Aux_Error( ERROR_INFO, "%s and %s shouldn't be mixed\n", "CCSN_CC_Rot", "CCSN_CC_Rot_Fac" );
-      }
+//    do not mix formulated-rotation and CCSN_CC_Rot_Fac
+      if ( CCSN_CC_Rot == 1  &&  CCSN_CC_Rot_Fac > 0.0 )
+         Aux_Error( ERROR_INFO, "%s = %d and %s shouldn't be mixed\n", "CCSN_CC_Rot", CCSN_CC_Rot, "CCSN_CC_Rot_Fac" );
 
 //    core bounce must be disabled for core collapse
       if ( CCSN_Is_PostBounce == 1 )
@@ -321,14 +317,12 @@ void SetParameter()
       Aux_Message( stdout, "  central density threshold for CCSN_CC_MaxRefine_LV2 = %13.7e\n", CCSN_CC_MaxRefine_Dens2  ); }
       Aux_Message( stdout, "  central density factor for reducing dt              = %13.7e\n", CCSN_CC_CentralDensFac   );
       Aux_Message( stdout, "  reduced dt near bounce                              = %13.7e\n", CCSN_CC_Red_DT           );   }
-      Aux_Message( stdout, "  whether add rotation or not                         = %d\n",     CCSN_Is_Rotation         );
-      if ( CCSN_Is_Rotation ) {
-      Aux_Message( stdout, "  add formulated rotation                             = %d\n",     CCSN_CC_Rot              );
-      if ( CCSN_CC_Rot ) {
+      Aux_Message( stdout, "  mode for rotational profile                         = %d\n",     CCSN_CC_Rot              );
+      if ( CCSN_CC_Rot == 1 ) {
       Aux_Message( stdout, "  characteristic rotational radius R_0                = %13.7e\n", CCSN_CC_Rot_R0           );
       Aux_Message( stdout, "  central rotational velocity Omega_0                 = %13.7e\n", CCSN_CC_Rot_Omega0       ); }
-      if ( CCSN_CC_Rot_Fac > 0.0 )
-      Aux_Message( stdout, "  multiplication factor for rotational profile        = %13.7e\n", CCSN_CC_Rot_Fac          );   }
+      if ( CCSN_CC_Rot == 2  &&  CCSN_CC_Rot_Fac > 0.0 )
+      Aux_Message( stdout, "  multiplication factor for rotational profile        = %13.7e\n", CCSN_CC_Rot_Fac          );
       Aux_Message( stdout, "=======================================================================================\n"  );
    }
 
@@ -416,25 +410,27 @@ void SetGridIC( real fluid[], const double x, const double y, const double z, co
    Momz = Dens*Velr*z0/r;
 
 // add angular momentum in a core collapse test, if any
-   if ( CCSN_Is_Rotation  &&  CCSN_Prob == Core_Collapse ) {
+   if ( CCSN_CC_Rot  &&  CCSN_Prob == Core_Collapse ) {
       const double r_xy    = sqrt( SQR(x0) + SQR(y0) );
       const double Cos_phi = x0/r_xy;
       const double Sin_phi = y0/r_xy;
             double Omega_r, Vel_phi;
 
-      if ( CCSN_CC_Rot ) {
-//       rotational profile from the formula ( Omega(r)=Omega_0*[R_0^2/(r^2+R_0^2)], r: spherical radius )
+//    rotational profile from the formula ( Omega(r)=Omega_0*[R_0^2/(r^2+R_0^2)], r: spherical radius )
+      if ( CCSN_CC_Rot == 1 )
+      {
          const double R_0     = CCSN_CC_Rot_R0 / UNIT_L;
          const double Omega_0 = CCSN_CC_Rot_Omega0 * UNIT_T;
                       Omega_r = Omega_0 * SQR(R_0) / ( SQR(r) + SQR(R_0) );
       }
 
-      else
+//    rotational profile from the IC
+      else if ( CCSN_CC_Rot == 2 )
       {
          Omega_r  = Mis_InterpolateFromTable( CCSN_Prof_NBin, Table_R, CCSN_Prof+CCSN_ColIdx_Omega*CCSN_Prof_NBin, r );
          Omega_r *= UNIT_T;
 
-//       check whether we are going to artificially magnify the rotation
+//       check whether we are going to artificially increase or decrease the rotation
          if ( CCSN_CC_Rot_Fac > 0.0 )
             Omega_r *= CCSN_CC_Rot_Fac;
       }
