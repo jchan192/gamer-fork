@@ -3,7 +3,7 @@
 # -*- coding: utf-8 -*-
 #
 #  Purpose:
-#    Converting the progenitor file format (WH07, Heager2005, Sukhbold2015, and MESA)
+#    Converting the progenitor file format (Heager2005, WH07, Sukhbold2015, and MESA)
 #    to the format that GAMER can use for CCSN test problems
 #
 
@@ -13,26 +13,18 @@ import numpy as np
 
 
 def convert_WHS(file):
-
     # read file info
     f_info = file.readline()
 
     # read the header
-    headers = []
     line_header = file.readline()
     headers = [word.strip() for word in line_header.strip().split("  ") if word]
-
-    for i in range(len(headers)):
-        keys = ["cell outer radius", "cell density", "cell temperature", "cell outer velocity",
-                "cell Y_e", "cell pressure", "cell angular velocity"]
 
     # find and read targeting variables (radius, density, temperature, radial velocity,
     #                                    electron fraction, pressure, and angular velocity)
     nvars = 7
-    TargetCols = np.empty(nvars, dtype=np.int)
-    for i in range(len(headers)):
-        keys = ["cell outer radius", "cell density", "cell temperature", "cell outer velocity",
-                "cell Y_e", "cell pressure", "cell angular velocity"]
+    keys = ["cell outer radius", "cell density", "cell temperature", "cell outer velocity",
+            "cell Y_e", "cell pressure", "cell angular velocity"]
     TargetCols = [headers.index(key) for key in keys]
 
     # GAMER-formatted array
@@ -42,7 +34,7 @@ def convert_WHS(file):
     outer_radius = 0.0
     outer_vel    = 0.0
     for line in f:
-        if ('wind:' in line):
+        if 'wind:' in line:
             break
 
         line_split = line.split()
@@ -64,13 +56,11 @@ def convert_WHS(file):
 
 
 def convert_MESA(file):
-
     # physical constants
-    R_sol = 6.977e10 # solar radius
+    R_sol = 6.957e10 # solar radius
     M2CM  = 1e2      # meter to centimeter
 
     # read the header
-    headers = []
     f_info = ''
     for i in range(5):
         f.readline()
@@ -80,9 +70,8 @@ def convert_MESA(file):
     #                                    electron fraction, pressure, and angular velocity)
     nvars = 7
     TargetCols = np.empty(nvars, dtype=np.int)
-    for i in range(len(headers)):
-        keys = ["logR", "density", "temperature", "velocity",
-                "ye", "pressure", "omega"]
+    keys = ["logR", "density", "temperature", "velocity",
+            "ye", "pressure", "omega"]
     TargetCols = [headers.index(key) for key in keys]
 
     # GAMER-formatted array
@@ -90,15 +79,14 @@ def convert_MESA(file):
     variables       = np.empty(nvars,      dtype=np.float)
 
     for line in f:
-
         line_split = line.split()
         for idx, icol in enumerate(TargetCols):
             variables[idx] = float(line_split[icol])
-            # unit conversion
+            # unit conversion (radius, velocity)
             if idx == 0:
-                variables[idx] = R_sol * np.power(10, variables[idx]) # unit conversion: radius
+                variables[idx] = R_sol * np.power(10, variables[idx])
             if idx == 3:
-                variables[idx] = M2CM * variables[idx]                # unit conversion: velocity
+                variables[idx] = M2CM * variables[idx]
 
         GAMER_DATA_FORM = np.vstack([GAMER_DATA_FORM, variables])
 
@@ -112,7 +100,6 @@ def convert_MESA(file):
 
 
 if __name__ == "__main__":
-
     # progenitor model format
     WHS  = '1'
     MESA = '2'
@@ -121,7 +108,7 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser(description='Convert the progenitor model to GAMER-supported format\n')
 
     parser.add_argument('-f', action='store', required=True, type=str, dest='format',
-                        help='original progenitor file format [1: WH07, Sukhbold2015, Heager2005 2: MESA] [%(default)s]')
+                        help='original progenitor file format [1: Heager2005, WH07, Sukhbold2015 2: MESA] [%(default)s]')
     parser.add_argument('-i', action='store', required=True, type=str, dest='input_file',
                         help='input progenitor file path [%(default)s]')
 
@@ -142,16 +129,13 @@ if __name__ == "__main__":
     assert form in [WHS, MESA], 'unsupported format "{0}"'.format(form)
 
     # open file
-    f = open(fin, 'r')
+    with open(fin, 'r') as f:
 
-    # read and store the f_info, data
-    if   form == WHS:
-        f_info, GAMER_DATA_FORM = convert_WHS (f)
-    elif form == MESA:
-        f_info, GAMER_DATA_FORM = convert_MESA(f)
-
-    # close file
-    f.close()
+        # read and store the f_info, data
+        if   form == WHS:
+            f_info, GAMER_DATA_FORM = convert_WHS (f)
+        elif form == MESA:
+            f_info, GAMER_DATA_FORM = convert_MESA(f)
 
     # write GAMER-formatted header
     fmt = "{:>21s}" + "{:>25s}" * 6
