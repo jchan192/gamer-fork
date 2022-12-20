@@ -45,8 +45,9 @@ def convert_WHS(file):
         if ('wind:' in line):
             break
 
+        line_split = line.split()
         for idx, icol in enumerate(TargetCols):
-            variables[idx] = float(line.split()[icol])
+            variables[idx] = float(line_split[icol])
             # convert cell outer variables to cell centered values (radius, velocity)
             if idx == 0:
                 variables[idx], outer_radius = 0.5 * (outer_radius + variables[idx]), variables[idx]
@@ -90,8 +91,9 @@ def convert_MESA(file):
 
     for line in f:
 
+        line_split = line.split()
         for idx, icol in enumerate(TargetCols):
-            variables[idx] = float(line.split()[icol])
+            variables[idx] = float(line_split[icol])
             # unit conversion
             if idx == 0:
                 variables[idx] = R_sol * np.power(10, variables[idx]) # unit conversion: radius
@@ -129,7 +131,7 @@ if __name__ == "__main__":
     print('\nCommand-line arguments:')
     print('-------------------------------------------------------------------')
     for t in range(len(sys.argv)):
-        print(str(sys.argv[t])),
+        print(sys.argv[t])
     print('')
     print('-------------------------------------------------------------------\n')
 
@@ -153,12 +155,12 @@ if __name__ == "__main__":
 
     # write GAMER-formatted header
     fmt = "{:>21s}" + "{:>25s}" * 6
-    header_GAMER  = fmt.format("radius", "density",  "temperature", "radial velocity", "ye",  "pressure", "omega\n")
+    header_GAMER  = fmt.format("radius", "density",  "temperature", "radial velocity", "ye",  "pressure", "omega"  ) + "\n"
     header_GAMER += fmt.format("[cm]",   "[g/cm^3]", "[K]",         "[cm/s]",          "[1]", "[bar]",    "[rad/s]")
     header_GAMER = f_info + header_GAMER
 
     # write data to the text file
     fout = fin + '_GAMER'
-    np.savetxt(fout, GAMER_DATA_FORM, fmt='% .16e', header=header_GAMER, delimiter='  ')
+    np.savetxt(fout, GAMER_DATA_FORM, fmt='%23.16e', header=header_GAMER, delimiter='  ')
 
     print('Progenitor model is converted to the GAMER-formatted output file\n"{file}"'.format(file=fout))
