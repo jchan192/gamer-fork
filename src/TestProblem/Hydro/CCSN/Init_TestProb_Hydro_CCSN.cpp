@@ -24,7 +24,7 @@ static char       CCSN_Prof_File[MAX_STRING];      // filename of input profile
 static double    *CCSN_Prof = NULL;                // radial profile of initial condition
 static int        CCSN_Prof_NBin;                  // number of radial bins in the input profile
 static int        CCSN_NCol;                       // number of columns read from the input profile
-static int       *CCSN_TargetCols = new int [7];   // index of columns read from the input profile
+static int       *CCSN_TargetCols = new int [6];   // index of columns read from the input profile
 static int        CCSN_ColIdx_R;                   // column index of radius          in the input profile
 static int        CCSN_ColIdx_Dens;                // column index of density         in the input profile
 static int        CCSN_ColIdx_Pres;                // column index of pressure        in the input profile
@@ -173,7 +173,7 @@ void SetParameter()
    {
       case Migration_Test : CCSN_NCol = 4;
                             CCSN_TargetCols[0] =  0;  CCSN_TargetCols[1] =  1;  CCSN_TargetCols[2] =  2;  CCSN_TargetCols[3] =  3;
-                            CCSN_TargetCols[4] = -1;  CCSN_TargetCols[5] = -1;  CCSN_TargetCols[6] = -1;
+                            CCSN_TargetCols[4] = -1;  CCSN_TargetCols[5] = -1;
                             CCSN_ColIdx_R      =  0;  CCSN_ColIdx_Dens   =  2;  CCSN_ColIdx_Pres   =  3;  CCSN_ColIdx_Velr   =  1;
                             CCSN_ColIdx_Ye     = -1;  CCSN_ColIdx_Temp   = -1;
                             sprintf( CCSN_Name, "GREP migration test" );
@@ -181,7 +181,7 @@ void SetParameter()
 
       case Post_Bounce    : CCSN_NCol = 6;
                             CCSN_TargetCols[0] =  0;  CCSN_TargetCols[1] =  1;  CCSN_TargetCols[2] =  2;  CCSN_TargetCols[3] =  3;
-                            CCSN_TargetCols[4] =  4;  CCSN_TargetCols[5] =  5;  CCSN_TargetCols[6] = -1;
+                            CCSN_TargetCols[4] =  4;  CCSN_TargetCols[5] =  5;
                             CCSN_ColIdx_R      =  0;  CCSN_ColIdx_Dens   =  1;  CCSN_ColIdx_Pres   =  5;  CCSN_ColIdx_Velr   =  3;
                             CCSN_ColIdx_Ye     =  4;  CCSN_ColIdx_Temp   =  2;
                             sprintf( CCSN_Name, "Post bounce test" );
@@ -189,7 +189,7 @@ void SetParameter()
 
       case Core_Collapse  : CCSN_NCol = 6;
                             CCSN_TargetCols[0] =  0;  CCSN_TargetCols[1] =  1;  CCSN_TargetCols[2] =  2;  CCSN_TargetCols[3] =  3;
-                            CCSN_TargetCols[4] =  4;  CCSN_TargetCols[5] =  5;  CCSN_TargetCols[6] = -1;
+                            CCSN_TargetCols[4] =  4;  CCSN_TargetCols[5] =  5;
                             CCSN_ColIdx_R      =  0;  CCSN_ColIdx_Dens   =  1;  CCSN_ColIdx_Pres   =  5;  CCSN_ColIdx_Velr   =  3;
                             CCSN_ColIdx_Ye     =  4;  CCSN_ColIdx_Temp   =  2;
                             sprintf( CCSN_Name, "Core collapse test" );
