@@ -24,15 +24,15 @@ static char       CCSN_Prof_File[MAX_STRING];      // filename of input profile
 static double    *CCSN_Prof = NULL;                // radial profile of initial condition
 static int        CCSN_Prof_NBin;                  // number of radial bins in the input profile
 static int        CCSN_NCol;                       // number of columns read from the input profile
-static int       *CCSN_TargetCols = new int [8];   // index of columns read from the input profile
-static int        CCSN_ColIdx_R;                   // column index of radius           in the input profile
-static int        CCSN_ColIdx_Dens;                // column index of density          in the input profile
-static int        CCSN_ColIdx_Pres;                // column index of pressure         in the input profile
-static int        CCSN_ColIdx_Velr;                // column index of radial velocity  in the input profile
-static int        CCSN_ColIdx_Ye;                  // column index of Ye               in the input profile
-static int        CCSN_ColIdx_Temp;                // column index of temperature      in the input profile
-static int        CCSN_ColIdx_Entr;                // column index of entropy          in the input profile
-static int        CCSN_ColIdx_Omega;               // column index of rotational velocity in the input profile
+static int        CCSN_TargetCols[8];              // index of columns read from the input profile
+static int        CCSN_ColIdx_R;                   // column index of radius            in the input profile
+static int        CCSN_ColIdx_Dens;                // column index of density           in the input profile
+static int        CCSN_ColIdx_Pres;                // column index of pressure          in the input profile
+static int        CCSN_ColIdx_Velr;                // column index of radial velocity   in the input profile
+static int        CCSN_ColIdx_Ye;                  // column index of Ye                in the input profile
+static int        CCSN_ColIdx_Temp;                // column index of temperature       in the input profile
+static int        CCSN_ColIdx_Entr;                // column index of entropy           in the input profile
+static int        CCSN_ColIdx_Omega;               // column index of angular frequency in the input profile
 
 #ifdef MHD
 static CCSN_Mag_t CCSN_Mag;                        // target magnetic field profile
@@ -58,12 +58,11 @@ static int        CCSN_Eint_Mode;                  // Mode of obtaining internal
        double     CCSN_CC_Red_DT;                  // reduced time step (in s) when the central density exceeds CCSN_CC_CentralDensFac before bounce
        double     CCSN_MaxRefine_RadFac;           // factor that determines the maximum refinement level based on distance from the box center
        double     CCSN_LB_TimeFac;                 // factor that scales the dt constrained by lightbulb scheme
-       int        CCSN_CC_Rot;                     // mode for rotational profile (0:off, 1:formulated-rotation, 2:IC)
-       double     CCSN_CC_Rot_R0;                  // characteristic radius, R_0, in the formulated rotational profile
-                                                   // ( Omega(r)=Omega_0*[R_0^2/(r^2+R_0^2)], r: spherical radius )
-       double     CCSN_CC_Rot_Omega0;              // central rotational velocity, Omega_0, in the formulated rotational profile
-                                                   // ( Omega(r)=Omega_0*[R_0^2/(r^2+R_0^2)], r: spherical radius )
-       double     CCSN_CC_Rot_Fac;                 // multiplication factor for the rotational profile (only for a tabular rotation)
+       int        CCSN_CC_Rot;                     // mode for rotational profile (0:off, 1:analytical, 2:table)
+                                                   // --> analytical formula: Omega(r)=Omega_0*[R_0^2/(r^2+R_0^2)], where r is the spherical radius
+       double     CCSN_CC_Rot_R0;                  // characteristic radius R_0 (in cm) in the analytical rotational profile
+       double     CCSN_CC_Rot_Omega0;              // central angular frequency Omega_0 (in rad/s) in the analytical rotational profile
+       double     CCSN_CC_Rot_Fac;                 // multiplication factor for the tabular rotational profile
 
        bool       CCSN_Is_PostBounce = false;      // boolean that indicates whether core bounce has occurred
 // =======================================================================================
@@ -171,7 +170,7 @@ void SetParameter()
    ReadPara->Add( "CCSN_MaxRefine_RadFac",    &CCSN_MaxRefine_RadFac,    0.15,          0.0,              NoMax_double      );
    ReadPara->Add( "CCSN_LB_TimeFac",          &CCSN_LB_TimeFac,          0.1,           Eps_double,       1.0               );
    ReadPara->Add( "CCSN_CC_Rot",              &CCSN_CC_Rot,              2,             0,                2                 );
-   ReadPara->Add( "CCSN_CC_Rot_R0",           &CCSN_CC_Rot_R0,           2.0e8,         0.0,              NoMax_double      );
+   ReadPara->Add( "CCSN_CC_Rot_R0",           &CCSN_CC_Rot_R0,           2.0e8,         Eps_double,       NoMax_double      );
    ReadPara->Add( "CCSN_CC_Rot_Omega0",       &CCSN_CC_Rot_Omega0,       0.5,           0.0,              NoMax_double      );
    ReadPara->Add( "CCSN_CC_Rot_Fac",          &CCSN_CC_Rot_Fac,          -1.0,          NoMin_double,     NoMax_double      );
    ReadPara->Add( "CCSN_Is_PostBounce",       &CCSN_Is_PostBounce,       false,         Useless_bool,     Useless_bool      );
@@ -320,9 +319,9 @@ void SetParameter()
       Aux_Message( stdout, "  reduced dt near bounce                              = %13.7e\n", CCSN_CC_Red_DT           );   }
       Aux_Message( stdout, "  mode for rotational profile                         = %d\n",     CCSN_CC_Rot              );
       if ( CCSN_CC_Rot == 1 ) {
-      Aux_Message( stdout, "  characteristic rotational radius R_0                = %13.7e\n", CCSN_CC_Rot_R0           );
-      Aux_Message( stdout, "  central rotational velocity Omega_0                 = %13.7e\n", CCSN_CC_Rot_Omega0       ); }
-      if ( CCSN_CC_Rot == 2  &&  CCSN_CC_Rot_Fac > 0.0 )
+      Aux_Message( stdout, "  characteristic rotational radius R_0 (in cm)        = %13.7e\n", CCSN_CC_Rot_R0           );
+      Aux_Message( stdout, "  central angular frequency Omega_0 (in rad/s)        = %13.7e\n", CCSN_CC_Rot_Omega0       ); }
+      if ( CCSN_CC_Rot == 2 )
       Aux_Message( stdout, "  multiplication factor for rotational profile        = %13.7e\n", CCSN_CC_Rot_Fac          );
       Aux_Message( stdout, "=======================================================================================\n"  );
    }
@@ -425,7 +424,7 @@ void SetGridIC( real fluid[], const double x, const double y, const double z, co
                       Omega_r = Omega_0 * SQR(R_0) / ( SQR(r) + SQR(R_0) );
       }
 
-//    rotational profile from the IC
+//    rotational profile from the table
       else if ( CCSN_CC_Rot == 2 )
       {
          Omega_r  = Mis_InterpolateFromTable( CCSN_Prof_NBin, Table_R, CCSN_Prof+CCSN_ColIdx_Omega*CCSN_Prof_NBin, r );
@@ -887,7 +886,6 @@ void End_CCSN()
 {
 
    delete [] CCSN_Prof;         CCSN_Prof       = NULL;
-   delete [] CCSN_TargetCols;   CCSN_TargetCols = NULL;
 
 } // FUNCTION : End_CCSN
 
