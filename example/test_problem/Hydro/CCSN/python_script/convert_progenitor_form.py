@@ -3,7 +3,7 @@
 # -*- coding: utf-8 -*-
 #
 #  Purpose:
-#    Converting the progenitor file format (Heager2005, WH07, Sukhbold2015, and MESA)
+#    Converting the progenitor file format (KEPLER and MESA)
 #    to the format that GAMER can use for CCSN test problems
 #
 
@@ -12,7 +12,7 @@ import sys
 import numpy as np
 
 
-def convert_WHS(file):
+def convert_KEPLER(file):
     # read file info
     f_info = file.readline()
 
@@ -69,7 +69,6 @@ def convert_MESA(file):
     # find and read targeting variables (radius, density, temperature, radial velocity,
     #                                    electron fraction, pressure, and angular velocity)
     nvars = 7
-    TargetCols = np.empty(nvars, dtype=np.int)
     keys = ["logR", "density", "temperature", "velocity",
             "ye", "pressure", "omega"]
     TargetCols = [headers.index(key) for key in keys]
@@ -101,16 +100,18 @@ def convert_MESA(file):
 
 if __name__ == "__main__":
     # progenitor model format
-    WHS  = '1'
-    MESA = '2'
+    KEPLER = '1'
+    MESA   = '2'
 
     # load the command-line parameters
     parser = argparse.ArgumentParser(description='Convert the progenitor model to GAMER-supported format\n')
 
-    parser.add_argument('-f', action='store', required=True, type=str, dest='format',
+    parser.add_argument('-f',    action='store', required=True,  type=str,   dest='format',
                         help='original progenitor file format [1: Heager2005, WH07, Sukhbold2015 2: MESA] [%(default)s]')
-    parser.add_argument('-i', action='store', required=True, type=str, dest='input_file',
+    parser.add_argument('-i',    action='store', required=True,  type=str,   dest='input_file',
                         help='input progenitor file path [%(default)s]')
+    parser.add_argument('-rmax', action='store', required=False, type=float, dest='maximum_radius',
+                        help='maixmum radius to be included [%(default)e]', default=1e10)
 
     args=parser.parse_args()
 
@@ -124,18 +125,26 @@ if __name__ == "__main__":
 
     form = args.format
     fin  = args.input_file
+    rmax = args.maximum_radius
 
     # check the validity of the format
-    assert form in [WHS, MESA], 'unsupported format "{0}"'.format(form)
+    assert form in [KEPLER, MESA], 'unsupported format "{0}"'.format(form)
 
     # open file
     with open(fin, 'r') as f:
 
         # read and store the f_info, data
-        if   form == WHS:
-            f_info, GAMER_DATA_FORM = convert_WHS (f)
+        if   form == KEPLER:
+            f_info, GAMER_DATA_FORM = convert_KEPLER(f)
         elif form == MESA:
             f_info, GAMER_DATA_FORM = convert_MESA(f)
+
+    # limit the maximum radius
+    num_line = 0
+    while rmax>GAMER_DATA_FORM[num_line, 0]:
+        num_line = num_line + 1
+
+    GAMER_DATA_FORM = GAMER_DATA_FORM[0:num_line, :]
 
     # write GAMER-formatted header
     fmt = "{:>21s}" + "{:>25s}" * 6
