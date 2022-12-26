@@ -132,7 +132,6 @@ if __name__ == "__main__":
 
     # open file
     with open(fin, 'r') as f:
-
         # read and store the f_info, data
         if   form == KEPLER:
             f_info, GAMER_DATA_FORM = convert_KEPLER(f)
