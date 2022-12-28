@@ -106,11 +106,11 @@ if __name__ == "__main__":
     # load the command-line parameters
     parser = argparse.ArgumentParser(description='Convert the progenitor model to GAMER-supported format\n')
 
-    parser.add_argument('-f',    action='store', required=True,  type=str,   dest='format',
+    parser.add_argument('-f', '--format',    action='store', required=True,  type=str,   dest='format',
                         help='original progenitor file format [1: Heager2005, WH07, Sukhbold2015 2: MESA] [%(default)s]')
-    parser.add_argument('-i',    action='store', required=True,  type=str,   dest='input_file',
+    parser.add_argument('-i', '--inputfile', action='store', required=True,  type=str,   dest='input_file',
                         help='input progenitor file path [%(default)s]')
-    parser.add_argument('-rmax', action='store', required=False, type=float, dest='maximum_radius',
+    parser.add_argument('-r', '--rmax',      action='store', required=False, type=float, dest='maximum_radius',
                         help='maixmum radius to be included [%(default)e]', default=1e10)
 
     args=parser.parse_args()
