@@ -24,14 +24,15 @@ static char       CCSN_Prof_File[MAX_STRING];      // filename of input profile
 static double    *CCSN_Prof = NULL;                // radial profile of initial condition
 static int        CCSN_Prof_NBin;                  // number of radial bins in the input profile
 static int        CCSN_NCol;                       // number of columns read from the input profile
-static int       *CCSN_TargetCols = new int [7];   // index of columns read from the input profile
-static int        CCSN_ColIdx_R;                   // column index of radius          in the input profile
-static int        CCSN_ColIdx_Dens;                // column index of density         in the input profile
-static int        CCSN_ColIdx_Pres;                // column index of pressure        in the input profile
-static int        CCSN_ColIdx_Velr;                // column index of radial velocity in the input profile
-static int        CCSN_ColIdx_Ye;                  // column index of Ye              in the input profile
-static int        CCSN_ColIdx_Temp;                // column index of temperature     in the input profile
-static int        CCSN_ColIdx_Entr;                // column index of entropy         in the input profile
+static int        CCSN_TargetCols[8];              // index of columns read from the input profile
+static int        CCSN_ColIdx_R;                   // column index of radius            in the input profile
+static int        CCSN_ColIdx_Dens;                // column index of density           in the input profile
+static int        CCSN_ColIdx_Pres;                // column index of pressure          in the input profile
+static int        CCSN_ColIdx_Velr;                // column index of radial velocity   in the input profile
+static int        CCSN_ColIdx_Ye;                  // column index of Ye                in the input profile
+static int        CCSN_ColIdx_Temp;                // column index of temperature       in the input profile
+static int        CCSN_ColIdx_Entr;                // column index of entropy           in the input profile
+static int        CCSN_ColIdx_Omega;               // column index of angular frequency in the input profile
 
 #ifdef MHD
 static CCSN_Mag_t CCSN_Mag;                        // target magnetic field profile
@@ -57,6 +58,11 @@ static int        CCSN_Eint_Mode;                  // Mode of obtaining internal
        double     CCSN_CC_Red_DT;                  // reduced time step (in s) when the central density exceeds CCSN_CC_CentralDensFac before bounce
        double     CCSN_MaxRefine_RadFac;           // factor that determines the maximum refinement level based on distance from the box center
        double     CCSN_LB_TimeFac;                 // factor that scales the dt constrained by lightbulb scheme
+       int        CCSN_CC_Rot;                     // mode for rotational profile (0:off, 1:analytical, 2:table)
+                                                   // --> analytical formula: Omega(r)=Omega_0*[R_0^2/(r^2+R_0^2)], where r is the spherical radius
+       double     CCSN_CC_Rot_R0;                  // characteristic radius R_0 (in cm) in the analytical rotational profile
+       double     CCSN_CC_Rot_Omega0;              // central angular frequency Omega_0 (in rad/s) in the analytical rotational profile
+       double     CCSN_CC_Rot_Fac;                 // multiplication factor for the tabular rotational profile
 
        bool       CCSN_Is_PostBounce = false;      // boolean that indicates whether core bounce has occurred
 // =======================================================================================
@@ -140,30 +146,34 @@ void SetParameter()
 // --> note that VARIABLE, DEFAULT, MIN, and MAX must have the same data type
 // --> some handy constants (e.g., Useless_bool, Eps_double, NoMin_int, ...) are defined in "include/ReadPara.h"
 // ********************************************************************************************************************************
-// ReadPara->Add( "KEY_IN_THE_FILE",         &VARIABLE,                DEFAULT,       MIN,              MAX               );
+// ReadPara->Add( "KEY_IN_THE_FILE",          &VARIABLE,                 DEFAULT,       MIN,              MAX               );
 // ********************************************************************************************************************************
-   ReadPara->Add( "CCSN_Prob",               &CCSN_Prob,               -1,            0,                2                 );
-   ReadPara->Add( "CCSN_Prof_File",           CCSN_Prof_File,          Useless_str,   Useless_str,      Useless_str       );
+   ReadPara->Add( "CCSN_Prob",                &CCSN_Prob,                -1,            0,                2                 );
+   ReadPara->Add( "CCSN_Prof_File",            CCSN_Prof_File,           Useless_str,   Useless_str,      Useless_str       );
 #  ifdef MHD
-   ReadPara->Add( "CCSN_Mag",                &CCSN_Mag,                1,             0,                1                 );
-   ReadPara->Add( "CCSN_Mag_B0",             &CCSN_Mag_B0,             1.0e14,        0.0,              NoMax_double      );
-   ReadPara->Add( "CCSN_Mag_np",             &CCSN_Mag_np,             0.0,           NoMin_double,     NoMax_double      );
-   ReadPara->Add( "CCSN_Mag_R0",             &CCSN_Mag_R0,             1.0e8,         Eps_double,       NoMax_double      );
+   ReadPara->Add( "CCSN_Mag",                 &CCSN_Mag,                 1,             0,                1                 );
+   ReadPara->Add( "CCSN_Mag_B0",              &CCSN_Mag_B0,              1.0e14,        0.0,              NoMax_double      );
+   ReadPara->Add( "CCSN_Mag_np",              &CCSN_Mag_np,              0.0,           NoMin_double,     NoMax_double      );
+   ReadPara->Add( "CCSN_Mag_R0",              &CCSN_Mag_R0,              1.0e8,         Eps_double,       NoMax_double      );
 #  endif
-   ReadPara->Add( "CCSN_GW_OUTPUT",          &CCSN_GW_OUTPUT,          false,         Useless_bool,     Useless_bool      );
-   ReadPara->Add( "CCSN_GW_DT",              &CCSN_GW_DT,              1.0,           Eps_double,       NoMax_double      );
-   ReadPara->Add( "CCSN_Eint_Mode",          &CCSN_Eint_Mode,          2,             1,                2                 );
-   ReadPara->Add( "CCSN_CC_MaxRefine_Flag1", &CCSN_CC_MaxRefine_Flag1, false,         Useless_bool,     Useless_bool      );
-   ReadPara->Add( "CCSN_CC_MaxRefine_Flag2", &CCSN_CC_MaxRefine_Flag2, false,         Useless_bool,     Useless_bool      );
-   ReadPara->Add( "CCSN_CC_MaxRefine_LV1",   &CCSN_CC_MaxRefine_LV1,   -1,            NoMin_int,        MAX_LEVEL-1       );
-   ReadPara->Add( "CCSN_CC_MaxRefine_LV2",   &CCSN_CC_MaxRefine_LV2,   -1,            NoMin_int,        MAX_LEVEL-1       );
-   ReadPara->Add( "CCSN_CC_MaxRefine_Dens1", &CCSN_CC_MaxRefine_Dens1, 1.0e11,        0.0,              NoMax_double      );
-   ReadPara->Add( "CCSN_CC_MaxRefine_Dens2", &CCSN_CC_MaxRefine_Dens2, 1.0e12,        0.0,              NoMax_double      );
-   ReadPara->Add( "CCSN_CC_CentralDensFac",  &CCSN_CC_CentralDensFac,  1.0e13,        Eps_double,       NoMax_double      );
-   ReadPara->Add( "CCSN_CC_Red_DT",          &CCSN_CC_Red_DT,          1.0e-5,        Eps_double,       NoMax_double      );
-   ReadPara->Add( "CCSN_MaxRefine_RadFac",   &CCSN_MaxRefine_RadFac,   0.15,          0.0,              NoMax_double      );
-   ReadPara->Add( "CCSN_LB_TimeFac",         &CCSN_LB_TimeFac,         0.1,           Eps_double,       1.0               );
-   ReadPara->Add( "CCSN_Is_PostBounce",      &CCSN_Is_PostBounce,      false,         Useless_bool,     Useless_bool      );
+   ReadPara->Add( "CCSN_GW_OUTPUT",           &CCSN_GW_OUTPUT,           false,         Useless_bool,     Useless_bool      );
+   ReadPara->Add( "CCSN_GW_DT",               &CCSN_GW_DT,               1.0,           Eps_double,       NoMax_double      );
+   ReadPara->Add( "CCSN_Eint_Mode",           &CCSN_Eint_Mode,           2,             1,                2                 );
+   ReadPara->Add( "CCSN_CC_MaxRefine_Flag1",  &CCSN_CC_MaxRefine_Flag1,  false,         Useless_bool,     Useless_bool      );
+   ReadPara->Add( "CCSN_CC_MaxRefine_Flag2",  &CCSN_CC_MaxRefine_Flag2,  false,         Useless_bool,     Useless_bool      );
+   ReadPara->Add( "CCSN_CC_MaxRefine_LV1",    &CCSN_CC_MaxRefine_LV1,    -1,            NoMin_int,        MAX_LEVEL-1       );
+   ReadPara->Add( "CCSN_CC_MaxRefine_LV2",    &CCSN_CC_MaxRefine_LV2,    -1,            NoMin_int,        MAX_LEVEL-1       );
+   ReadPara->Add( "CCSN_CC_MaxRefine_Dens1",  &CCSN_CC_MaxRefine_Dens1,  1.0e11,        0.0,              NoMax_double      );
+   ReadPara->Add( "CCSN_CC_MaxRefine_Dens2",  &CCSN_CC_MaxRefine_Dens2,  1.0e12,        0.0,              NoMax_double      );
+   ReadPara->Add( "CCSN_CC_CentralDensFac",   &CCSN_CC_CentralDensFac,   1.0e13,        Eps_double,       NoMax_double      );
+   ReadPara->Add( "CCSN_CC_Red_DT",           &CCSN_CC_Red_DT,           1.0e-5,        Eps_double,       NoMax_double      );
+   ReadPara->Add( "CCSN_MaxRefine_RadFac",    &CCSN_MaxRefine_RadFac,    0.15,          0.0,              NoMax_double      );
+   ReadPara->Add( "CCSN_LB_TimeFac",          &CCSN_LB_TimeFac,          0.1,           Eps_double,       1.0               );
+   ReadPara->Add( "CCSN_CC_Rot",              &CCSN_CC_Rot,              2,             0,                2                 );
+   ReadPara->Add( "CCSN_CC_Rot_R0",           &CCSN_CC_Rot_R0,           2.0e8,         Eps_double,       NoMax_double      );
+   ReadPara->Add( "CCSN_CC_Rot_Omega0",       &CCSN_CC_Rot_Omega0,       0.5,           0.0,              NoMax_double      );
+   ReadPara->Add( "CCSN_CC_Rot_Fac",          &CCSN_CC_Rot_Fac,          -1.0,          NoMin_double,     NoMax_double      );
+   ReadPara->Add( "CCSN_Is_PostBounce",       &CCSN_Is_PostBounce,       false,         Useless_bool,     Useless_bool      );
 
    ReadPara->Read( FileName );
 
@@ -174,25 +184,25 @@ void SetParameter()
    {
       case Migration_Test : CCSN_NCol = 4;
                             CCSN_TargetCols[0] =  0;  CCSN_TargetCols[1] =  1;  CCSN_TargetCols[2] =  2;  CCSN_TargetCols[3] =  3;
-                            CCSN_TargetCols[4] = -1;  CCSN_TargetCols[5] = -1;  CCSN_TargetCols[6] = -1;
+                            CCSN_TargetCols[4] = -1;  CCSN_TargetCols[5] = -1;  CCSN_TargetCols[6] = -1;  CCSN_TargetCols[7] = -1;
                             CCSN_ColIdx_R      =  0;  CCSN_ColIdx_Dens   =  2;  CCSN_ColIdx_Pres   =  3;  CCSN_ColIdx_Velr   =  1;
-                            CCSN_ColIdx_Ye     = -1;  CCSN_ColIdx_Temp   = -1;  CCSN_ColIdx_Entr   = -1;
+                            CCSN_ColIdx_Ye     = -1;  CCSN_ColIdx_Temp   = -1;  CCSN_ColIdx_Entr   = -1;  CCSN_ColIdx_Omega  = -1;
                             sprintf( CCSN_Name, "GREP migration test" );
                             break;
 
       case Post_Bounce    : CCSN_NCol = 7;
                             CCSN_TargetCols[0] =  0;  CCSN_TargetCols[1] =  2;  CCSN_TargetCols[2] =  3;  CCSN_TargetCols[3] =  4;
-                            CCSN_TargetCols[4] =  5;  CCSN_TargetCols[5] =  6;  CCSN_TargetCols[6] =  7;
+                            CCSN_TargetCols[4] =  5;  CCSN_TargetCols[5] =  6;  CCSN_TargetCols[6] =  7;  CCSN_TargetCols[7] = -1;
                             CCSN_ColIdx_R      =  0;  CCSN_ColIdx_Dens   =  1;  CCSN_ColIdx_Pres   =  5;  CCSN_ColIdx_Velr   =  3;
-                            CCSN_ColIdx_Ye     =  2;  CCSN_ColIdx_Temp   =  4;  CCSN_ColIdx_Entr   =  6;
+                            CCSN_ColIdx_Ye     =  2;  CCSN_ColIdx_Temp   =  4;  CCSN_ColIdx_Entr   =  6;  CCSN_ColIdx_Omega  = -1;
                             sprintf( CCSN_Name, "Post bounce test" );
                             break;
 
-      case Core_Collapse  : CCSN_NCol = 6;
+      case Core_Collapse  : CCSN_NCol = 7;
                             CCSN_TargetCols[0] =  0;  CCSN_TargetCols[1] =  1;  CCSN_TargetCols[2] =  2;  CCSN_TargetCols[3] =  3;
-                            CCSN_TargetCols[4] =  4;  CCSN_TargetCols[5] =  5;  CCSN_TargetCols[6] = -1;
+                            CCSN_TargetCols[4] =  4;  CCSN_TargetCols[5] =  5;  CCSN_TargetCols[6] =  6;  CCSN_TargetCols[7] = -1;
                             CCSN_ColIdx_R      =  0;  CCSN_ColIdx_Dens   =  1;  CCSN_ColIdx_Pres   =  5;  CCSN_ColIdx_Velr   =  3;
-                            CCSN_ColIdx_Ye     =  4;  CCSN_ColIdx_Temp   =  2;  CCSN_ColIdx_Entr   = -1;
+                            CCSN_ColIdx_Ye     =  4;  CCSN_ColIdx_Temp   =  2;  CCSN_ColIdx_Entr   = -1;  CCSN_ColIdx_Omega  =  6;
                             sprintf( CCSN_Name, "Core collapse test" );
                             break;
 
@@ -249,6 +259,10 @@ void SetParameter()
                        CCSN_CC_MaxRefine_Dens2, "CCSN_CC_MaxRefine_Dens1", CCSN_CC_MaxRefine_Dens1 );
       }
 
+//    do not mix formulated-rotation and CCSN_CC_Rot_Fac
+      if ( CCSN_CC_Rot == 1  &&  CCSN_CC_Rot_Fac > 0.0 )
+         Aux_Error( ERROR_INFO, "%s = %d and %s shouldn't be mixed\n", "CCSN_CC_Rot", CCSN_CC_Rot, "CCSN_CC_Rot_Fac" );
+
 //    core bounce must be disabled for core collapse
       if ( CCSN_Is_PostBounce == 1 )
          Aux_Error( ERROR_INFO, "Incorrect parameter %s = %d !!\n", "CCSN_Is_PostBounce", CCSN_Is_PostBounce );
@@ -303,6 +317,12 @@ void SetParameter()
       Aux_Message( stdout, "  central density threshold for CCSN_CC_MaxRefine_LV2 = %13.7e\n", CCSN_CC_MaxRefine_Dens2  ); }
       Aux_Message( stdout, "  central density factor for reducing dt              = %13.7e\n", CCSN_CC_CentralDensFac   );
       Aux_Message( stdout, "  reduced dt near bounce                              = %13.7e\n", CCSN_CC_Red_DT           );   }
+      Aux_Message( stdout, "  mode for rotational profile                         = %d\n",     CCSN_CC_Rot              );
+      if ( CCSN_CC_Rot == 1 ) {
+      Aux_Message( stdout, "  characteristic rotational radius R_0 (in cm)        = %13.7e\n", CCSN_CC_Rot_R0           );
+      Aux_Message( stdout, "  central angular frequency Omega_0 (in rad/s)        = %13.7e\n", CCSN_CC_Rot_Omega0       ); }
+      if ( CCSN_CC_Rot == 2 )
+      Aux_Message( stdout, "  multiplication factor for rotational profile        = %13.7e\n", CCSN_CC_Rot_Fac          );
       Aux_Message( stdout, "=======================================================================================\n"  );
    }
 
@@ -388,6 +408,37 @@ void SetGridIC( real fluid[], const double x, const double y, const double z, co
    Momx = Dens*Velr*x0/r;
    Momy = Dens*Velr*y0/r;
    Momz = Dens*Velr*z0/r;
+
+// add angular momentum in a core collapse test, if any
+   if ( CCSN_CC_Rot  &&  CCSN_Prob == Core_Collapse ) {
+      const double r_xy    = sqrt( SQR(x0) + SQR(y0) );
+      const double Cos_phi = x0/r_xy;
+      const double Sin_phi = y0/r_xy;
+            double Omega_r, Vel_phi;
+
+//    rotational profile from the formula ( Omega(r)=Omega_0*[R_0^2/(r^2+R_0^2)], r: spherical radius )
+      if ( CCSN_CC_Rot == 1 )
+      {
+         const double R_0     = CCSN_CC_Rot_R0 / UNIT_L;
+         const double Omega_0 = CCSN_CC_Rot_Omega0 * UNIT_T;
+                      Omega_r = Omega_0 * SQR(R_0) / ( SQR(r) + SQR(R_0) );
+      }
+
+//    rotational profile from the table
+      else if ( CCSN_CC_Rot == 2 )
+      {
+         Omega_r  = Mis_InterpolateFromTable( CCSN_Prof_NBin, Table_R, CCSN_Prof+CCSN_ColIdx_Omega*CCSN_Prof_NBin, r );
+         Omega_r *= UNIT_T;
+
+//       check whether we are going to artificially increase or decrease the rotation
+         if ( CCSN_CC_Rot_Fac > 0.0 )
+            Omega_r *= CCSN_CC_Rot_Fac;
+      }
+
+      Vel_phi  = r_xy * Omega_r;
+      Momx    -= Dens * Vel_phi * Sin_phi;
+      Momy    += Dens * Vel_phi * Cos_phi;
+   }
 
 // calculate the internal energy
 #  if ( EOS == EOS_NUCLEAR )
@@ -835,7 +886,6 @@ void End_CCSN()
 {
 
    delete [] CCSN_Prof;         CCSN_Prof       = NULL;
-   delete [] CCSN_TargetCols;   CCSN_TargetCols = NULL;
 
 } // FUNCTION : End_CCSN
 
