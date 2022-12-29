@@ -74,10 +74,18 @@ double Mis_GetTimeStep_Lightbulb( const int lv, const double dTime_dt )
             const real Engy = amr->patch[ amr->FluSg[lv] ][lv][PID]->fluid[ENGY][k][j][i];
 
 #           ifdef MHD
-            const real Emag = MHD_GetCellCenteredBEnergyInPatch( lv, PID, i, j, k, amr->MagSg[lv] );
+            const real *Bx_FC = amr->patch[ amr->MagSg[lv] ][lv][PID]->magnetic[MAGX];
+            const real *By_FC = amr->patch[ amr->MagSg[lv] ][lv][PID]->magnetic[MAGY];
+            const real *Bz_FC = amr->patch[ amr->MagSg[lv] ][lv][PID]->magnetic[MAGZ];
+                  real B[NCOMP_MAG];
+
+            MHD_GetCellCenteredBField( B, Bx_FC, By_FC, Bz_FC, PS1, PS1, PS1, i, j, k );
+
+            const real  Emag = (real)0.5*(  SQR( B[MAGX] ) + SQR( B[MAGY] ) + SQR( B[MAGZ] )  );
 #           else
-            const real Emag = NULL_REAL;
-#           endif
+                  real *B    = NULL;
+            const real  Emag = NULL;
+#           endif // ifdef MHD ... else ...
 
             const real Eint_Code  = Hydro_Con2Eint( Dens, Momx, Momy, Momz, Engy, true, MIN_EINT, Emag );
                   real dEint_Code = NULL_REAL;
@@ -103,11 +111,6 @@ double Mis_GetTimeStep_Lightbulb( const int lv, const double dTime_dt )
 
                for (int v=0; v<FLU_NIN_S; v++)  fluid[v] = amr->patch[ amr->FluSg[lv] ][lv][PID]->fluid[v][k][j][i];
 
-#              ifdef MHD
-               real B[NCOMP_MAG] = { Emag, 0.0, 0.0 };
-#              else
-               real *B = NULL;
-#              endif
 
                SrcTerms.Lightbulb_CPUPtr( fluid, B, &SrcTerms, 0.0, NULL_REAL, x, y, z, NULL_REAL, NULL_REAL,
                                           MIN_DENS, MIN_PRES, MIN_EINT, NULL,
