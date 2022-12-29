@@ -81,9 +81,9 @@ double Mis_GetTimeStep_Lightbulb( const int lv, const double dTime_dt )
             const real Eint_Code = Hydro_Con2Eint( Dens, Momx, Momy, Momz, Engy, true, MIN_EINT, Emag );
 
 
-#           ifdef DEDT_LB
-            real dEint_Code     = amr->patch[     amr->FluSg[lv] ][lv][PID]->fluid[DEDT_LB][k][j][i];
-            real dEint_Code_Old = amr->patch[ 1 - amr->FluSg[lv] ][lv][PID]->fluid[DEDT_LB][k][j][i];
+#           ifdef DEDT_NU
+            real dEint_Code     = amr->patch[     amr->FluSg[lv] ][lv][PID]->fluid[DEDT_NU][k][j][i];
+            real dEint_Code_Old = amr->patch[ 1 - amr->FluSg[lv] ][lv][PID]->fluid[DEDT_NU][k][j][i];
 #           else
             real dEint_Code     = DEDT_UNINITIALIZED;
             real dEint_Code_Old = DEDT_UNINITIALIZED;
@@ -92,7 +92,7 @@ double Mis_GetTimeStep_Lightbulb( const int lv, const double dTime_dt )
 
 //          call Src_Lightbulb() to compute the neutrino heating/cooling rate if not initialized yet
 //
-//          check DEDT_LB at both the Sg = 0 and 1
+//          check DEDT_NU at both the Sg = 0 and 1
 //          since the sandglass Sg = amr->FluSg[lv] may not equal to that used during initialization
             if ( dEint_Code     == DEDT_UNINITIALIZED ||
                  dEint_Code_Old == DEDT_UNINITIALIZED    )
@@ -117,8 +117,8 @@ double Mis_GetTimeStep_Lightbulb( const int lv, const double dTime_dt )
                                           MIN_DENS, MIN_PRES, MIN_EINT, NULL,
                                           Src_Lightbulb_AuxArray_Flt, Src_Lightbulb_AuxArray_Int );
 
-#              ifdef DEDT_LB
-               dEint_Code = fluid[DEDT_LB];
+#              ifdef DEDT_NU
+               dEint_Code = fluid[DEDT_NU];
 #              endif
             } // if ( dEint_Code == DEDT_UNINITIALIZED )
 
