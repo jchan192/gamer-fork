@@ -2,6 +2,7 @@
 #include "NuclearEoS.h"
 
 
+extern bool   IsInit_dEdt_Nu;
 extern double CCSN_LB_TimeFac;
 extern double CCSN_CC_CentralDensFac;
 extern double CCSN_CC_Red_DT;
@@ -78,29 +79,24 @@ double Mis_GetTimeStep_Lightbulb( const int lv, const double dTime_dt )
             const real Emag = NULL_REAL;
 #           endif
 
-            const real Eint_Code = Hydro_Con2Eint( Dens, Momx, Momy, Momz, Engy, true, MIN_EINT, Emag );
+            const real Eint_Code  = Hydro_Con2Eint( Dens, Momx, Momy, Momz, Engy, true, MIN_EINT, Emag );
+                  real dEint_Code = NULL_REAL;
 
 
-#           ifdef DEDT_NU
-            real dEint_Code     = amr->patch[     amr->FluSg[lv] ][lv][PID]->fluid[DEDT_NU][k][j][i];
-            real dEint_Code_Old = amr->patch[ 1 - amr->FluSg[lv] ][lv][PID]->fluid[DEDT_NU][k][j][i];
-#           else
-            real dEint_Code     = DEDT_UNINITIALIZED;
-            real dEint_Code_Old = DEDT_UNINITIALIZED;
-#           endif
-
-
-//          call Src_Lightbulb() to compute the neutrino heating/cooling rate if not initialized yet
-//
-//          check DEDT_NU at both the Sg = 0 and 1
-//          since the sandglass Sg = amr->FluSg[lv] may not equal to that used during initialization
-            if ( dEint_Code     == DEDT_UNINITIALIZED ||
-                 dEint_Code_Old == DEDT_UNINITIALIZED    )
+            if ( IsInit_dEdt_Nu )
             {
+//             use the stored neutrino heating/cooling rate
+#              ifdef DEDT_NU
+               dEint_Code = amr->patch[ amr->FluSg[lv] ][lv][PID]->fluid[DEDT_NU][k][j][i];
+#              endif
+            }
+
+            else
+            {
+//             call Src_Lightbulb() to compute the neutrino heating/cooling rate if not initialized yet
                const double z = amr->patch[0][lv][PID]->EdgeL[2] + (k+0.5)*dh;
                const double y = amr->patch[0][lv][PID]->EdgeL[1] + (j+0.5)*dh;
                const double x = amr->patch[0][lv][PID]->EdgeL[0] + (i+0.5)*dh;
-
 
 //             get the input arrays
                real fluid[FLU_NIN_S];
@@ -120,7 +116,7 @@ double Mis_GetTimeStep_Lightbulb( const int lv, const double dTime_dt )
 #              ifdef DEDT_NU
                dEint_Code = fluid[DEDT_NU];
 #              endif
-            } // if ( dEint_Code == DEDT_UNINITIALIZED )
+            } // if ( IsInit_dEdt_Nu ) ... else ...
 
 
             const double dt_LB_Inv_ThisCell = FABS( dEint_Code / Eint_Code );

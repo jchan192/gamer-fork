@@ -441,7 +441,7 @@ void SetGridIC( real fluid[], const double x, const double y, const double z, co
    real *Passive = new real [NCOMP_PASSIVE];
 
    Passive[ YE      - NCOMP_FLUID ] = Ye*Dens;
-   Passive[ DEDT_NU - NCOMP_FLUID ] = DEDT_UNINITIALIZED;
+   Passive[ DEDT_NU - NCOMP_FLUID ] = TINY_NUMBER;
 #  ifdef TEMP_IG
    Passive[ TEMP_IG - NCOMP_FLUID ] = Temp;
 #  endif
