@@ -74,12 +74,9 @@ double Mis_GetTimeStep_Lightbulb( const int lv, const double dTime_dt )
             const real Engy = amr->patch[ amr->FluSg[lv] ][lv][PID]->fluid[ENGY][k][j][i];
 
 #           ifdef MHD
-            const real *Bx_FC = amr->patch[ amr->MagSg[lv] ][lv][PID]->magnetic[MAGX];
-            const real *By_FC = amr->patch[ amr->MagSg[lv] ][lv][PID]->magnetic[MAGY];
-            const real *Bz_FC = amr->patch[ amr->MagSg[lv] ][lv][PID]->magnetic[MAGZ];
                   real B[NCOMP_MAG];
 
-            MHD_GetCellCenteredBField( B, Bx_FC, By_FC, Bz_FC, PS1, PS1, PS1, i, j, k );
+            MHD_GetCellCenteredBFieldInPatch( B, lv, PID, i, j, k, amr->MagSg[lv] );
 
             const real  Emag = (real)0.5*(  SQR( B[MAGX] ) + SQR( B[MAGY] ) + SQR( B[MAGZ] )  );
 #           else
