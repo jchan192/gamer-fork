@@ -299,11 +299,19 @@ void Flu_FixUp_Restrict( const int FaLv, const int SonFluSg, const int FaFluSg, 
 //    pressure, total energy density, and the dual-energy variable
 #     if ( MODEL == HYDRO )
 //    apply this correction only when preparing all fluid variables or magnetic field
+#     ifdef DEDT_NU
+#     ifdef MHD
+      if (  ( TVarCC & _TOTAL ) == ( _TOTAL - _DEDT_NU )  ||  ResMag  )
+#     else
+      if (  ( TVarCC & _TOTAL ) == ( _TOTAL - _DEDT_NU )  )
+#     endif
+#     else
 #     ifdef MHD
       if (  ( TVarCC & _TOTAL ) == _TOTAL  ||  ResMag  )
 #     else
       if (  ( TVarCC & _TOTAL ) == _TOTAL  )
 #     endif
+#     endif // #ifdef DEDT_NU ... else ...
       for (int k=0; k<PS1; k++)
       for (int j=0; j<PS1; j++)
       for (int i=0; i<PS1; i++)
