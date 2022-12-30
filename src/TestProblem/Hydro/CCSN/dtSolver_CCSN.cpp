@@ -81,7 +81,7 @@ double Mis_GetTimeStep_Lightbulb( const int lv, const double dTime_dt )
             const real  Emag = (real)0.5*(  SQR( B[MAGX] ) + SQR( B[MAGY] ) + SQR( B[MAGZ] )  );
 #           else
                   real *B    = NULL;
-            const real  Emag = NULL;
+            const real  Emag = NULL_REAL;
 #           endif // ifdef MHD ... else ...
 
             const real Eint_Code  = Hydro_Con2Eint( Dens, Momx, Momy, Momz, Engy, true, MIN_EINT, Emag );
