@@ -116,8 +116,8 @@ void Init_Field()
    if ( Idx_Temp_IG != TEMP_IG )    Aux_Error( ERROR_INFO, "inconsistent Idx_Temp_IG (%d != %d) !!\n", Idx_Temp_IG, TEMP_IG );
 #  endif
 
-   Idx_dEdt_LB = AddField( "dEdt_LB", NORMALIZE_NO, INTERP_FRAC_NO  );
-   if ( Idx_dEdt_LB != DEDT_LB )    Aux_Error( ERROR_INFO, "inconsistent Idx_dEdt_LB (%d != %d) !!\n", Idx_dEdt_LB, DEDT_LB );
+   Idx_dEdt_Nu = AddField( "dEdt_Nu", NORMALIZE_NO, INTERP_FRAC_NO  );
+   if ( Idx_dEdt_Nu != DEDT_NU )    Aux_Error( ERROR_INFO, "inconsistent Idx_dEdt_Nu (%d != %d) !!\n", Idx_dEdt_Nu, DEDT_NU );
 
    Idx_Ye      = AddField( "Ye",      NORMALIZE_NO, INTERP_FRAC_YES );
    if ( Idx_Ye      != YE      )    Aux_Error( ERROR_INFO, "inconsistent Idx_Ye      (%d != %d) !!\n", Idx_Ye,      YE   );

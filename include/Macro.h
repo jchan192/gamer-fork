@@ -275,7 +275,7 @@
 
 # if ( EOS == EOS_NUCLEAR )
 #  define YE                  ( PASSIVE_NEXT_IDX2 )
-#  define DEDT_LB             ( YE - 1            )
+#  define DEDT_NU             ( YE - 1            )
 # if ( NUC_TABLE_MODE == NUC_TABLE_MODE_TEMP )
 #  define TEMP_IG             ( YE - 2            )
 #  define PASSIVE_NEXT_IDX3   ( YE - 3            )
@@ -324,7 +324,7 @@
 
 # if ( EOS == EOS_NUCLEAR )
 #  define FLUX_YE          ( FLUX_NEXT_IDX2  )
-#  define FLUX_DEDT_LB     ( FLUX_YE - 1     )
+#  define FLUX_DEDT_NU     ( FLUX_YE - 1     )
 # if ( NUC_TABLE_MODE == NUC_TABLE_MODE_TEMP )
 #  define FLUX_TEMP_IG     ( FLUX_YE - 2     )
 #  define FLUX_NEXT_IDX3   ( FLUX_YE - 3     )
@@ -359,7 +359,7 @@
 
 # if ( EOS == EOS_NUCLEAR )
 #  define _YE                 ( 1L << YE      )
-#  define _DEDT_LB            ( 1L << DEDT_LB )
+#  define _DEDT_NU            ( 1L << DEDT_NU )
 # if ( NUC_TABLE_MODE == NUC_TABLE_MODE_TEMP )
 #  define _TEMP_IG            ( 1L << TEMP_IG )
 # endif
@@ -396,7 +396,7 @@
 
 # if ( EOS == EOS_NUCLEAR )
 #  define _FLUX_YE            ( 1L << FLUX_YE      )
-#  define _FLUX_DEDT_LB       ( 1L << FLUX_DEDT_LB )
+#  define _FLUX_DEDT_NU       ( 1L << FLUX_DEDT_NU )
 # if ( NUC_TABLE_MODE == NUC_TABLE_MODE_TEMP )
 #  define _FLUX_TEMP_IG       ( 1L << FLUX_TEMP_IG )
 # endif
@@ -959,10 +959,6 @@
 #else
 #  define MPI_GAMER_REAL MPI_FLOAT
 #endif
-
-
-// values for uninitialized variables
-#define DEDT_UNINITIALIZED (real)0.0
 
 
 

@@ -91,7 +91,11 @@ void Flu_FixUp_Restrict( const int FaLv, const int SonFluSg, const int FaFluSg, 
 #  else
    const bool ResMag  = false;
 #  endif
-   const int PS1_half = PS1 / 2;
+#  ifndef _DEDT_NU
+   const long _DEDT_NU = 0;
+#  endif
+   const long EoSVar   = _TOTAL - _DEDT_NU;
+   const int  PS1_half = PS1 / 2;
 
 
 // determine the components to be restricted (TFluVarIdx : target fluid variable indices ( = [0 ... NCOMP_TOTAL-1] )
@@ -299,11 +303,7 @@ void Flu_FixUp_Restrict( const int FaLv, const int SonFluSg, const int FaFluSg, 
 //    pressure, total energy density, and the dual-energy variable
 #     if ( MODEL == HYDRO )
 //    apply this correction only when preparing all fluid variables or magnetic field
-#     ifdef MHD
-      if (  ( TVarCC & _TOTAL ) == _TOTAL  ||  ResMag  )
-#     else
-      if (  ( TVarCC & _TOTAL ) == _TOTAL  )
-#     endif
+      if (  ( TVarCC & EoSVar ) == EoSVar  ||  ResMag  )
       for (int k=0; k<PS1; k++)
       for (int j=0; j<PS1; j++)
       for (int i=0; i<PS1; i++)
