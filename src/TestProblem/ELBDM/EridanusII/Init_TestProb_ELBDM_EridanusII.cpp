@@ -892,8 +892,8 @@ void Record_EridanusII()
 // Return      :  true  : This cell has been reset
 //                false : This cell has not been reset
 //-------------------------------------------------------------------------------------------------------
-bool Reset( real fluid[], const double x, const double y, const double z, const double Time,
-            const double dt, const int lv, double AuxArray[] )
+int Reset( real fluid[], const double x, const double y, const double z, const double Time,
+           const double dt, const int lv, double AuxArray[] )
 {
 
    const real dr[3] = { x-Tidal_CM[0], y-Tidal_CM[1], z-Tidal_CM[2] };
