@@ -522,17 +522,16 @@ void SetBFieldIC( real magnetic[], const double x, const double y, const double 
 // Return      :  true  : This cell has been reset
 //                false : This cell has not been reset
 //-------------------------------------------------------------------------------------------------------
-bool Flu_ResetByUser_Riemann( real fluid[], const double Emag, const double x, const double y, const double z, const double Time,
-                              const double dt, const int lv, double AuxArray[] )
+int Flu_ResetByUser_Riemann( real fluid[], const double Emag, const double x, const double y, const double z, const double Time,
+                             const double dt, const int lv, double AuxArray[] )
 {
 
-      const bool CheckMinTemp_No = false;
-      fluid[TEMP_IG] = Hydro_Con2Temp( fluid[DENS], fluid[MOMX], fluid[MOMY], fluid[MOMZ], fluid[ENGY],
-                                       fluid+NCOMP_FLUID, CheckMinTemp_No, NULL_REAL, Emag,
-                                       EoS_DensEint2Temp_CPUPtr, EoS_AuxArray_Flt, EoS_AuxArray_Int, h_EoS_Table );
+   const bool CheckMinTemp_No = false;
+   fluid[TEMP_IG] = Hydro_Con2Temp( fluid[DENS], fluid[MOMX], fluid[MOMY], fluid[MOMZ], fluid[ENGY],
+                                    fluid+NCOMP_FLUID, CheckMinTemp_No, NULL_REAL, Emag,
+                                    EoS_DensEint2Temp_CPUPtr, EoS_AuxArray_Flt, EoS_AuxArray_Int, h_EoS_Table );
 
-      return true;
-
+   return true;
 
 } // FUNCTION : Flu_ResetByUser_Riemann
 #endif // #if ( EOS == EOS_NUCLEAR  &&  NUC_TABLE_MODE == NUC_TABLE_MODE_TEMP )
@@ -571,7 +570,7 @@ void Init_TestProb_Hydro_Riemann()
    Init_Function_BField_User_Ptr = SetBFieldIC;
 #  endif
 #  if ( EOS == EOS_NUCLEAR  &&  NUC_TABLE_MODE == NUC_TABLE_MODE_TEMP )
-   Flu_ResetByUser_Func_Ptr = Flu_ResetByUser_Riemann;
+   Flu_ResetByUser_Func_Ptr      = Flu_ResetByUser_Riemann;
 #  endif
 #  endif // #if ( MODEL == HYDRO )
 
