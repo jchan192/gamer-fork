@@ -446,7 +446,7 @@ const SF_CreateStarScheme_t
 #endif
 
 
-// options in Aux_ComputeProfile()
+// options in Aux_ComputeProfile() and Aux_FindExtrema()
 typedef int PatchType_t;
 const PatchType_t
    PATCH_LEAF                 = 0,
@@ -462,6 +462,13 @@ const Nuc_IntScheme_t
    NUC_INT_LINEAR = 1,
    NUC_INT_CUBIC  = 2;
 #endif
+
+
+// options in Aux_FindExtrema()
+typedef int ExtremaMode_t;
+const ExtremaMode_t
+   EXTREMA_MIN = 1,
+   EXTREMA_MAX = 2;
 
 
 // function pointers
