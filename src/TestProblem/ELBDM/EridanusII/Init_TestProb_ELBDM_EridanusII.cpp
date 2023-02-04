@@ -12,10 +12,10 @@ static char     Soliton_DensProf_Filename[MAX_STRING];   // filename of the refe
 
 static int      Soliton_DensProf_NBin;                   // number of radial bins of the soliton density profile
 static double  *Soliton_DensProf   = NULL;               // soliton density profile [radius/density]
-static double   Soliton_ScaleL     = NULL;               // L/D: length/density scale factors of each soliton
+static double   Soliton_ScaleL     = NULL_REAL;          // L/D: length/density scale factors of each soliton
                                                          //      (defined as the ratio between the core radii/peak
                                                          //      density of the target and reference soliton profiles)
-static double   Soliton_ScaleD     = NULL;
+static double   Soliton_ScaleD     = NULL_REAL;
 static double   Soliton_CM_MaxR;                         // maximum radius for determining CM
 static double   Soliton_CM_TolErrR;                      // maximum allowed errors for determining CM
 
