@@ -3,9 +3,7 @@
 
 
 // flag for checking whether the dEdt_Nu field is initialized
-#if ( EOS == EOS_NUCLEAR )
 bool IsInit_dEdt_Nu = false;
-#endif
 
 
 
