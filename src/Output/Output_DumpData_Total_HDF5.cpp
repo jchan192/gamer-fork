@@ -69,7 +69,7 @@ Procedure for outputting new variables:
 
 
 //-------------------------------------------------------------------------------------------------------
-// Function    :  Output_DumpData_Total_HDF5 (FormatVersion = 2469)
+// Function    :  Output_DumpData_Total_HDF5 (FormatVersion = 2470)
 // Description :  Output all simulation data in the HDF5 format, which can be used as a restart file
 //                or loaded by YT
 //
@@ -242,6 +242,7 @@ Procedure for outputting new variables:
 //                2467 : 2020/12/06 --> output GREP runtime parameters and EXT_POT_GREP_NAUX_MAX
 //                2468 : 2020/10/29 --> output the parameters of external potential table
 //                2469 : 2022/09/25 --> remove SRC_DLEP_PROF_NVAR and SRC_DLEP_PROF_NBINMAX that no longer exist
+//                2470 : 2023/05/08 --> output OPT__FFTW_STARTUP
 //-------------------------------------------------------------------------------------------------------
 void Output_DumpData_Total_HDF5( const char *FileName )
 {
@@ -1415,7 +1416,7 @@ void FillIn_KeyInfo( KeyInfo_t &KeyInfo, const int NFieldStored )
 
    const time_t CalTime = time( NULL );   // calendar time
 
-   KeyInfo.FormatVersion        = 2469;
+   KeyInfo.FormatVersion        = 2470;
    KeyInfo.Model                = MODEL;
    KeyInfo.NLevel               = NLEVEL;
    KeyInfo.NCompFluid           = NCOMP_FLUID;
@@ -2379,7 +2380,9 @@ void FillIn_InputPara( InputPara_t &InputPara, const int NFieldStored, char Fiel
 #  ifdef MHD
    InputPara.Opt__InitBFieldByFile   = OPT__INIT_BFIELD_BYFILE;
 #  endif
-
+#  ifdef SUPPORT_FFTW
+   InputPara.Opt__FFTW_Startup       = OPT__FFTW_STARTUP;
+#  endif
 // interpolation schemes
    InputPara.Opt__Int_Time           = OPT__INT_TIME;
 #  if ( MODEL == HYDRO )
@@ -3270,6 +3273,9 @@ void GetCompound_InputPara( hid_t &H5_TypeID, const int NFieldStored )
    H5Tinsert( H5_TypeID, "Init_Subsampling_NCell",  HOFFSET(InputPara_t,Init_Subsampling_NCell ), H5T_NATIVE_INT              );
 #  ifdef MHD
    H5Tinsert( H5_TypeID, "Opt__InitBFieldByFile",   HOFFSET(InputPara_t,Opt__InitBFieldByFile  ), H5T_NATIVE_INT              );
+#  endif
+#  ifdef SUPPORT_FFTW
+   H5Tinsert( H5_TypeID, "Opt__FFTW_Startup",       HOFFSET(InputPara_t,Opt__FFTW_Startup      ), H5T_NATIVE_INT              );
 #  endif
 
 // interpolation schemes
