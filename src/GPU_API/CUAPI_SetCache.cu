@@ -117,6 +117,15 @@ __global__ void CUPOT_PoissonSolver_MG( const real g_Rho_Array    [][ CUBE(RHO_N
                                         const real dh_Min, const int Max_Iter, const int NPre_Smooth,
                                         const int NPost_Smooth, const real Tolerated_Error, const real Poi_Coeff,
                                         const IntScheme_t IntScheme );
+
+#elif ( POT_SCHEME == DST )
+__global__ void CUPOT_PoissonSolver_DST(       real g_Rho_Array    [][ CUBE(RHO_NXT) ],
+                                               real g_Pot_Array_In [][ CUBE(POT_NXT) ],
+					       real g_Pot_Array_Out[][ CUBE(GRA_NXT) ],
+                                         const real Const, 
+					 const IntScheme_t IntScheme,
+					 typename FFT_DST::workspace_type workspace );
+
 #endif // POT_SCHEME
 
 
@@ -205,6 +214,8 @@ void CUAPI_SetCache()
    CUDA_CHECK_ERROR(  cudaFuncSetCacheConfig( CUPOT_PoissonSolver_SOR,            cudaFuncCachePreferShared )  );
 #  elif ( POT_SCHEME == MG )
    CUDA_CHECK_ERROR(  cudaFuncSetCacheConfig( CUPOT_PoissonSolver_MG,             cudaFuncCachePreferShared )  );
+#  elif ( POT_SCHEME == DST )
+   CUDA_CHECK_ERROR(  cudaFuncSetCacheConfig( CUPOT_PoissonSolver_DST,             cudaFuncCachePreferShared )  );
 #  endif // POT_SCHEME
 
 

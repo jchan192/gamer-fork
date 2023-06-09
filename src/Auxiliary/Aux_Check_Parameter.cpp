@@ -1234,8 +1234,8 @@ void Aux_Check_Parameter()
 #     error : ERROR : SUPPORT_FFTW != FFTW2/FFTW3 !!
 #  endif
 
-#  if ( POT_SCHEME != SOR  &&  POT_SCHEME != MG )
-#     error : ERROR : unsupported Poisson solver in the makefile (SOR/MG) !!
+#  if ( POT_SCHEME != SOR  &&  POT_SCHEME != MG &&  POT_SCHEME != DST)
+#     error : ERROR : unsupported Poisson solver in the makefile (SOR/MG/DST) !!
 #  endif
 
 #  if ( POT_GHOST_SIZE <= GRA_GHOST_SIZE )
@@ -1251,8 +1251,15 @@ void Aux_Check_Parameter()
 #        error : ERROR : POT_GHOST_SIZE must <= 5 for the GPU Poisson solver !!
 #     endif
 
+# if (POT_SCHEME == SOR)
    if ( OPT__SELF_GRAVITY  &&  PATCH_SIZE != 8 )
-      Aux_Error( ERROR_INFO, "PATCH_SIZE must == 8 for the GPU Poisson solver (OPT__SELF_GRAVITY) !!\n" );
+      Aux_Error( ERROR_INFO, "PATCH_SIZE must == 8 for the GPU SOR Poisson solver (OPT__SELF_GRAVITY) !!\n" );
+
+# elif (POT_SCHEME == DST)
+   if ( OPT__SELF_GRAVITY  &&  PATCH_SIZE != 16  )
+      Aux_Error( ERROR_INFO, "PATCH_SIZE must == 16 for the GPU DST Poisson solver (OPT__SELF_GRAVITY) !!\n" );
+# endif
+
 #  endif // GPU
 
 #  ifndef LOAD_BALANCE
