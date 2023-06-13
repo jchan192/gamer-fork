@@ -1256,8 +1256,8 @@ void Aux_Check_Parameter()
       Aux_Error( ERROR_INFO, "PATCH_SIZE must == 8 for the GPU SOR Poisson solver (OPT__SELF_GRAVITY) !!\n" );
 
 # elif (POT_SCHEME == DST)
-   if ( OPT__SELF_GRAVITY  &&  PATCH_SIZE != 16  )
-      Aux_Error( ERROR_INFO, "PATCH_SIZE must == 16 for the GPU DST Poisson solver (OPT__SELF_GRAVITY) !!\n" );
+   // if ( OPT__SELF_GRAVITY  &&  (PATCH_SIZE == 8 || PATCH_SIZE == 16)   )
+   //    Aux_Error( ERROR_INFO, "PATCH_SIZE must == 16 for the GPU DST Poisson solver (OPT__SELF_GRAVITY) !!\n" );
 # endif
 
 #  endif // GPU
