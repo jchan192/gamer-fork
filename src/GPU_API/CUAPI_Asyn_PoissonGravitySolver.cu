@@ -1,9 +1,9 @@
 #include "CUAPI.h"
 #include "CUPOT.h"
+#include <cuda_runtime_api.h>
+#include <cufftdx.hpp>
 
 #if ( defined GPU  &&  defined GRAVITY )
-
-
 
 // Poisson solver prototypes
 #if   ( POT_SCHEME == SOR )
@@ -20,6 +20,17 @@ __global__ void CUPOT_PoissonSolver_MG( const real g_Rho_Array    [][ RHO_NXT*RH
                                         const real dh_Min, const int Max_Iter, const int NPre_Smooth,
                                         const int NPost_Smooth, const real Tolerated_Error, const real Poi_Coeff,
                                         const IntScheme_t IntScheme );
+
+
+#elif ( POT_SCHEME == DST  )
+__launch_bounds__(FFT_DST::max_threads_per_block)
+__global__ void CUPOT_PoissonSolver_DST(       real g_Rho_Array    [][ RHO_NXT*RHO_NXT*RHO_NXT ],
+					       real g_Pot_Array_In [][ POT_NXT*POT_NXT*POT_NXT ],
+					       real g_Pot_Array_Out[][ GRA_NXT*GRA_NXT*GRA_NXT ],
+					 const real Const, 
+					 const IntScheme_t IntScheme,
+					 typename FFT_DST::workspace_type workspace);
+
 #endif // POT_SCHEME
 
 __global__
@@ -176,7 +187,7 @@ void CUAPI_Asyn_PoissonGravitySolver( const real h_Rho_Array    [][RHO_NXT][RHO_
    const dim3 ExtPot_Block_Dim( EXTPOT_BLOCK_SIZE );
    const dim3 Gra_Block_Dim( GRA_BLOCK_SIZE );
    const int  NPatch      = NPatchGroup*8;
-#  if   ( POT_SCHEME == SOR )
+#  if   ( POT_SCHEME == SOR || POT_SCHEME == DST)
    const real Poi_Const   = Poi_Coeff*dh*dh;
    const real SOR_Omega_6 = SOR_Omega/6.0;
 #  endif
@@ -316,6 +327,18 @@ void CUAPI_Asyn_PoissonGravitySolver( const real h_Rho_Array    [][RHO_NXT][RHO_
 #     endif
    }
 
+   
+// for CUFFTDX-DFT
+
+#  if   ( POT_SCHEME == DST )
+   cudaError_t error_work = cudaSuccess;
+   auto workspace_dft = cufftdx::make_workspace<FFT_DST>(error_work);
+
+   CUDA_CHECK_ERROR(cudaFuncSetAttribute(
+   					 CUPOT_PoissonSolver_DST,
+   					 cudaFuncAttributeMaxDynamicSharedMemorySize,
+   					 FFT_DST::shared_memory_size));
+# endif
 
 // a. copy data from host to device
 //=========================================================================================
@@ -390,21 +413,28 @@ void CUAPI_Asyn_PoissonGravitySolver( const real h_Rho_Array    [][RHO_NXT][RHO_
          if ( SelfGravity )
          {
 #           if ( POT_SCHEME == SOR )
-
-            CUPOT_PoissonSolver_SOR <<< NPatch_per_Stream[s], Poi_Block_Dim, 0, Stream[s] >>>
-                                    ( d_Rho_Array_P     + UsedPatch[s],
-                                      d_Pot_Array_P_In  + UsedPatch[s],
-                                      d_Pot_Array_P_Out + UsedPatch[s],
-                                      SOR_Min_Iter, SOR_Max_Iter, SOR_Omega_6, Poi_Const, IntScheme );
-
+	   CUPOT_PoissonSolver_SOR <<< NPatch_per_Stream[s], Poi_Block_Dim, 0, Stream[s] >>>
+		     ( d_Rho_Array_P     + UsedPatch[s],
+		       d_Pot_Array_P_In  + UsedPatch[s],
+		       d_Pot_Array_P_Out + UsedPatch[s],
+		       SOR_Min_Iter, SOR_Max_Iter, SOR_Omega_6, Poi_Const, IntScheme);
+	   	 
 #           elif ( POT_SCHEME == MG  )
-
             CUPOT_PoissonSolver_MG  <<< NPatch_per_Stream[s], Poi_Block_Dim, 0, Stream[s] >>>
                                     ( d_Rho_Array_P     + UsedPatch[s],
                                       d_Pot_Array_P_In  + UsedPatch[s],
                                       d_Pot_Array_P_Out + UsedPatch[s],
                                       dh, MG_Max_Iter, MG_NPre_Smooth, MG_NPost_Smooth, MG_Tolerated_Error,
                                       Poi_Coeff, IntScheme );
+
+#           elif ( POT_SCHEME == DST  )
+	    CUPOT_PoissonSolver_DST <<< NPatch_per_Stream[s], FFT_DST::block_dim, FFT_DST::shared_memory_size, Stream[s] >>>
+		     ( d_Rho_Array_P     + UsedPatch[s],
+		       d_Pot_Array_P_In  + UsedPatch[s],
+		       d_Pot_Array_P_Out + UsedPatch[s],
+		       Poi_Const, 
+		       IntScheme,
+		       workspace_dft);
 
 #           else
 
