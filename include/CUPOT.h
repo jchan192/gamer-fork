@@ -224,27 +224,3 @@
 #endif // #ifndef __CUPOT_H__
 
 
-
-/// for DST scheme
-#ifdef __CUDACC__
-
-#include <cufftdx.hpp>
-using namespace cufftdx;
-
-//static constexpr unsigned int Nsubb = 16;  
-static constexpr unsigned int Nslab =  RHO_NXT; 
-using FFT_DST          = decltype(Block() +
-				  Size<2*(RHO_NXT+1)>() +   // 2*(N+1)
-				  Type<fft_type::r2c>() +
-				  Direction<fft_direction::forward>() +
-				  Precision<float>() +
-				  ElementsPerThread<4>() +  // within [2,32]? cannot be odd number?
-				  FFTsPerBlock<RHO_NXT*RHO_NXT/Nslab>() +
-				  SM<750>());
-
-using complex_type = typename FFT_DST::value_type;
-using real_type    = typename complex_type::value_type;
-
-
-#endif // #ifndef __CUFLU_H__
-

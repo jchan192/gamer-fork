@@ -1,3 +1,6 @@
+
+
+
 # ===========================================================================
 # INSTRUCTIONS
 #
@@ -34,7 +37,7 @@ SIMU_OPTION += -DMODEL=HYDRO
 
 # enable gravity
 # --> must define SUPPORT_FFTW=FFTW2 or FFTW3
-SIMU_OPTION += -DGRAVITY
+#SIMU_OPTION += -DGRAVITY
 
 # enable particles
 #SIMU_OPTION += -DPARTICLE
@@ -129,8 +132,7 @@ ifeq "$(filter -DGRAVITY, $(SIMU_OPTION))" "-DGRAVITY"
 # Poisson solver: SOR/MG (successive-overrelaxation (recommended)/multigrid/DST)
 # --> must be set when GRAVITY is enabled
 # --> for DST only: must turn on GPU. only support Patchsize=8 and 16
-#SIMU_OPTION += -DPOT_SCHEME=SOR
-SIMU_OPTION += -DPOT_SCHEME=DST
+SIMU_OPTION += -DPOT_SCHEME=SOR
 
 # store GRA_GHOST_SIZE ghost-zone potential for each patch on each side
 # --> recommended when PARTICLE is enabled for improving accuracy for particles around the patch boundaries
@@ -139,7 +141,7 @@ SIMU_OPTION += -DSTORE_POT_GHOST
 
 # use unsplitting method to couple gravity to the target model (recommended)
 # --> for HYDRO only; ELBDM is not supported yet
-#SIMU_OPTION += -DUNSPLIT_GRAVITY
+SIMU_OPTION += -DUNSPLIT_GRAVITY
 
 # comoving frame for cosmological simulations
 #SIMU_OPTION += -DCOMOVING
@@ -184,7 +186,7 @@ SIMU_OPTION += -DPATCH_SIZE=8
 
 # GPU acceleration
 # --> must set GPU_ARCH as well
-SIMU_OPTION += -DGPU
+#SIMU_OPTION += -DGPU
 
 # GPU architecture: FERMI/KEPLER/MAXWELL/PASCAL/VOLTA/TURING/AMPERE
 SIMU_OPTION += -DGPU_ARCH=TURING
@@ -207,11 +209,11 @@ SIMU_OPTION += -DTIMING
 
 # serial mode (in which no MPI libraries are required)
 # --> must disable LOAD_BALANCE
-#SIMU_OPTION += -DSERIAL
+SIMU_OPTION += -DSERIAL
 
 # load-balance parallelization: HILBERT
 # --> must disable SERIAL
-SIMU_OPTION += -DLOAD_BALANCE=HILBERT
+#SIMU_OPTION += -DLOAD_BALANCE=HILBERT
 
 # overlap MPI communication with computation
 # --> NOT supported yet; must enable LOAD_BALANCE
@@ -224,7 +226,7 @@ SIMU_OPTION += -DOPENMP
 #SIMU_OPTION += -DLAOHU
 
 # support HDF5 format
-SIMU_OPTION += -DSUPPORT_HDF5
+#SIMU_OPTION += -DSUPPORT_HDF5
 
 # support GNU scientific library
 #SIMU_OPTION += -DSUPPORT_GSL
@@ -233,7 +235,7 @@ SIMU_OPTION += -DSUPPORT_HDF5
 # --> SUPPORT_FFTW must be defined when GRAVITY is enabled
 # --> use FFTW3 for fftw3 support
 #     use FFTW2 for fftw2 support
-SIMU_OPTION += -DSUPPORT_FFTW=FFTW3
+#SIMU_OPTION += -DSUPPORT_FFTW=FFTW3
 
 
 # support yt inline analysis
@@ -289,19 +291,19 @@ SIMU_OPTION += -DRANDOM_NUMBER=RNG_GNU_EXT
 
 # gnu
 # -------------------------------------------------------------------------------
-# CXX         = g++                                       # serial compiler
-CXX         = $(MPI_PATH)/bin/mpicxx                    # MPI compiler
+ CXX         = g++                                       # serial compiler
+#CXX         = $(MPI_PATH)/bin/mpicxx                    # MPI compiler
 #CXX         = CC                                        # cray wrapper script
-# CXXFLAG     = -g -O3                                    # general flags
-CXXFLAG     = -g -O3 -std=c++11
+ CXXFLAG     = -g -O3                                    # general flags
+#CXXFLAG     = -g -O3 -std=c++11
 #CXXFLAG     = -g -Ofast
  CXXFLAG    += -Wall -Wextra                             # warning flags
- # CXXFLAG    += -Wno-unused-variable -Wno-unused-parameter \
- #               -Wno-maybe-uninitialized -Wno-unused-but-set-variable \
- #               -Wno-unused-result -Wno-unused-function \
- #               -Wno-implicit-fallthrough -Wno-parentheses
+ CXXFLAG    += -Wno-unused-variable -Wno-unused-parameter \
+               -Wno-maybe-uninitialized -Wno-unused-but-set-variable \
+               -Wno-unused-result -Wno-unused-function \
+               -Wno-implicit-fallthrough -Wno-parentheses
  OPENMPFLAG  = -fopenmp                                  # openmp flag
- LIB         = -limf                                           # libraries and linker flags
+ LIB         =                                           # libraries and linker flags
 
 # for debug only
 ifeq "$(filter -DGAMER_DEBUG, $(SIMU_OPTION))" "-DGAMER_DEBUG"
@@ -318,7 +320,7 @@ endif
 
 # CUDA
 # -------------------------------------------------------------------------------
- NVCC = $(CUDA_PATH)/bin/nvcc  -std=c++17                            # CUDA compiler
+ NVCC = $(CUDA_PATH)/bin/nvcc                            # CUDA compiler
 #NVCC = $(CUDA_PATH)/bin/nvcc -ccbin YOUR_G++            # with a specified host compiler
 #NVCC = nvcc -ccbin CC                                   # for the Cray environment
 
@@ -329,15 +331,15 @@ endif
 #######################################################################################################
 
 # template
-CUDA_PATH    := /software/cuda/default
-FFTW2_PATH   := /software/fftw/default
-FFTW3_PATH   := /software/fftw/3.3.10-intel-2022.0.1-openmpi-4.1.1-ucx_mt
-MPI_PATH     := /software/openmpi/default
-HDF5_PATH    := /software/hdf5/default
+CUDA_PATH    :=
+FFTW2_PATH   :=
+FFTW3_PATH   :=
+MPI_PATH     :=
+HDF5_PATH    :=
 GRACKLE_PATH :=
-GSL_PATH     := /software/gsl/default
+GSL_PATH     :=
 LIBYT_PATH   :=
-CUFFTDX_PATH := /software/cuFFTDx/22.11/
+CUFFTDX_PATH :=
 
 # NCSA-bluewaters (only need to specify the path of user-installed packages)
 #GRACKLE_PATH :=
@@ -886,9 +888,10 @@ endif
 
 ifeq "$(filter -DGPU, $(SIMU_OPTION))" "-DGPU"
    ifeq "$(filter -DPOT_SCHEME=DST, $(SIMU_OPTION))" "-DPOT_SCHEME=DST"
-         INCLUDE += -I$(CUFFTDX_PATH)/include
+      INCLUDE += -I$(CUFFTDX_PATH)/include
    endif	
 endif
+
 # CXX flags
 # -------------------------------------------------------------------------------
 # remove the OpenMP flag if OPENMP is disabled
