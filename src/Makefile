@@ -128,6 +128,7 @@ endif # MODEL
 ifeq "$(filter -DGRAVITY, $(SIMU_OPTION))" "-DGRAVITY"
 # Poisson solver: SOR/MG (successive-overrelaxation (recommended)/multigrid/DST)
 # --> must be set when GRAVITY is enabled
+# --> for DST only: must turn on GPU. only support Patchsize=8 and 167
 #SIMU_OPTION += -DPOT_SCHEME=SOR
 SIMU_OPTION += -DPOT_SCHEME=DST
 
@@ -179,7 +180,7 @@ SIMU_OPTION += -DMAX_PATCH=1000000
 
 # number of cells along each direction in a single patch
 # --> must be an even number greater than or equal to 8
-SIMU_OPTION += -DPATCH_SIZE=16
+SIMU_OPTION += -DPATCH_SIZE=8
 
 # GPU acceleration
 # --> must set GPU_ARCH as well

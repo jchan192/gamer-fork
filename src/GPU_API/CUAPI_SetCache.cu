@@ -122,9 +122,9 @@ __global__ void CUPOT_PoissonSolver_MG( const real g_Rho_Array    [][ CUBE(RHO_N
 __global__ void CUPOT_PoissonSolver_DST(       real g_Rho_Array    [][ CUBE(RHO_NXT) ],
                                                real g_Pot_Array_In [][ CUBE(POT_NXT) ],
 					       real g_Pot_Array_Out[][ CUBE(GRA_NXT) ],
-                                         const real Const, 
-					 const IntScheme_t IntScheme,
-					 typename FFT_DST::workspace_type workspace );
+					       const real Const, 
+					       const IntScheme_t IntScheme);
+					       //					       typename FFT_DST::workspace_type workspace );
 
 #endif // POT_SCHEME
 
