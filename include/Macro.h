@@ -82,7 +82,7 @@
 // Poisson solvers
 #define SOR          1
 #define MG           2
-
+#define DST          3
 
 // load-balance parallelization
 #define HILBERT      1
